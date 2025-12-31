@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { groupWorkoutsByDate } from '../utils/csvParser';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
+import WorkoutDetailModal from './WorkoutDetailModal';
 import '../styles/Calendar.css';
 
 /**
@@ -12,6 +13,8 @@ import '../styles/Calendar.css';
 function Calendar({ workouts = [], initialDate = new Date() }) {
   const [currentDate, setCurrentDate] = useState(new Date(initialDate));
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
@@ -162,9 +165,22 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
                             <div
                               key={idx}
                               className="workout-badge"
+                              onClick={() => {
+                                setSelectedWorkout(workout);
+                                setIsModalOpen(true);
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  setSelectedWorkout(workout);
+                                  setIsModalOpen(true);
+                                }
+                              }}
                               style={{
                                 backgroundColor: style.backgroundColor,
                                 borderLeft: `4px solid ${style.color}`,
+                                cursor: 'pointer',
                               }}
                             >
                               <span className="workout-icon">{style.icon}</span>
@@ -206,9 +222,22 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
                               <div
                                 key={idx}
                                 className="workout-badge"
+                                onClick={() => {
+                                  setSelectedWorkout(workout);
+                                  setIsModalOpen(true);
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    setSelectedWorkout(workout);
+                                    setIsModalOpen(true);
+                                  }
+                                }}
                                 style={{
                                   backgroundColor: style.backgroundColor,
                                   borderLeft: `4px solid ${style.color}`,
+                                  cursor: 'pointer',
                                 }}
                               >
                                 <span className="workout-icon">{style.icon}</span>
@@ -228,6 +257,15 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
           }
         })}
       </div>
+
+      <WorkoutDetailModal
+        workout={selectedWorkout}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedWorkout(null);
+        }}
+      />
     </div>
   );
 }

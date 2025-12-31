@@ -8,7 +8,7 @@ describe('Calendar Component', () => {
     {
       title: 'Morning Run',
       workoutType: 'Run',
-      workoutDate: new Date('2026-01-15'),
+      workoutDate: new Date(2026, 0, 15),
       plannedDuration: 0.75,
       plannedDistance: 5000,
       description: 'Easy 5k run',
@@ -17,7 +17,7 @@ describe('Calendar Component', () => {
     {
       title: 'Evening Swim',
       workoutType: 'Swim',
-      workoutDate: new Date('2026-01-15'),
+      workoutDate: new Date(2026, 0, 15),
       plannedDuration: 1,
       plannedDistance: 2000,
       description: 'Swim workout',
@@ -40,7 +40,7 @@ describe('Calendar Component', () => {
   });
 
   it('should display the current month and year', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={[]} initialDate={testDate} />);
     expect(screen.getByText('January 2026')).toBeInTheDocument();
   });
@@ -72,7 +72,7 @@ describe('Calendar Component', () => {
   });
 
   it('should navigate to next month', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={[]} initialDate={testDate} />);
     
     // Switch to month view first
@@ -83,7 +83,7 @@ describe('Calendar Component', () => {
   });
 
   it('should display workout titles for days with workouts', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
     // January 15 has 2 workouts - now displayed as titles
@@ -94,7 +94,7 @@ describe('Calendar Component', () => {
   });
 
   it('should display rest day for days without workouts', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
     const restDayElements = screen.getAllByText('Rest day');
@@ -103,7 +103,7 @@ describe('Calendar Component', () => {
 
   it('should correctly match workout dates regardless of timezone', () => {
     // Workouts are stored with dates and the calendar displays them correctly
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
     // Both Jan 15 workouts should be displayed (Morning Run and Evening Swim)
@@ -137,7 +137,7 @@ describe('Calendar Component', () => {
   });
 
   it('should display day numbers correctly', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={[]} initialDate={testDate} />);
     
     // In week view, we should see day 15 and surrounding days
@@ -152,7 +152,7 @@ describe('Calendar Component', () => {
   });
 
   it('should navigate multiple months correctly', () => {
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     render(<Calendar workouts={[]} initialDate={testDate} />);
     
     // Switch to month view first
@@ -193,7 +193,7 @@ describe('Calendar Component', () => {
       {
         title: 'January Workout',
         workoutType: 'Run',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new Date(2026, 0, 15),
       },
       {
         title: 'February Workout',
@@ -202,7 +202,7 @@ describe('Calendar Component', () => {
       },
     ];
 
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     const { rerender } = render(<Calendar workouts={workouts} initialDate={testDate} />);
     
     expect(screen.getByText('January Workout')).toBeInTheDocument();
@@ -232,7 +232,7 @@ describe('Calendar Component', () => {
 
   it('should display workouts correctly in month view', () => {
     // Verify that month view displays workouts with titles and styling
-    const testDate = new Date('2026-01-15');
+    const testDate = new Date(2026, 0, 15);
     const { rerender } = render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
     // Start in week view (default) - should see workout titles
@@ -264,17 +264,17 @@ describe('Calendar Component', () => {
       {
         title: 'Morning Run',
         workoutType: 'Run',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new Date(2026, 0, 15),
       },
       {
         title: 'Evening Swim',
         workoutType: 'Swim',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new Date(2026, 0, 15),
       },
     ];
 
     it('should display workout titles instead of just counts', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       expect(screen.getByText('Morning Run')).toBeInTheDocument();
@@ -282,7 +282,7 @@ describe('Calendar Component', () => {
     });
 
     it('should display workout badges with correct styling classes', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const workoutBadges = container.querySelectorAll('.workout-badge');
@@ -290,7 +290,7 @@ describe('Calendar Component', () => {
     });
 
     it('should display workout icons with emoji', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const workoutIcons = container.querySelectorAll('.workout-icon');
@@ -298,7 +298,7 @@ describe('Calendar Component', () => {
     });
 
     it('should apply correct background color and border to workout badges', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const workoutBadges = container.querySelectorAll('.workout-badge');
@@ -313,7 +313,7 @@ describe('Calendar Component', () => {
     });
 
     it('should display different colors for different workout types', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const runBadges = Array.from(container.querySelectorAll('.workout-badge')).filter(badge =>
@@ -336,7 +336,7 @@ describe('Calendar Component', () => {
     });
 
     it('should display all workouts for a single day', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       // Jan 15 has 2 workouts
@@ -345,7 +345,7 @@ describe('Calendar Component', () => {
     });
 
     it('should display workout titles in the correct element', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const workoutTitles = container.querySelectorAll('.workout-title');
@@ -358,7 +358,7 @@ describe('Calendar Component', () => {
     });
 
     it('should handle workout display in week and month view', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       // In week view, titles are displayed
@@ -367,7 +367,7 @@ describe('Calendar Component', () => {
     });
 
     it('should apply styling to workout badges', () => {
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
       
       const workoutBadges = container.querySelectorAll('.workout-badge');
@@ -420,26 +420,26 @@ describe('Calendar Component', () => {
         {
           title: 'Swim Test',
           workoutType: 'Swim',
-          workoutDate: new Date('2026-01-15'),
+          workoutDate: new Date(2026, 0, 15),
         },
         {
           title: 'Run Test',
           workoutType: 'Run',
-          workoutDate: new Date('2026-01-15'),
+          workoutDate: new Date(2026, 0, 15),
         },
         {
           title: 'Bike Test',
           workoutType: 'Bike',
-          workoutDate: new Date('2026-01-15'),
+          workoutDate: new Date(2026, 0, 15),
         },
         {
           title: 'Strength Test',
           workoutType: 'Strength',
-          workoutDate: new Date('2026-01-15'),
+          workoutDate: new Date(2026, 0, 15),
         },
       ];
 
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={parsedWorkouts} initialDate={testDate} />);
 
       // Verify all workout types are rendered
@@ -460,13 +460,13 @@ describe('Calendar Component', () => {
 
     it('should display correct icons for each parsed workout type', () => {
       const parsedWorkouts = [
-        { title: 'Swim', workoutType: 'Swim', workoutDate: new Date('2026-01-15') },
-        { title: 'Run', workoutType: 'Run', workoutDate: new Date('2026-01-15') },
-        { title: 'Bike', workoutType: 'Bike', workoutDate: new Date('2026-01-15') },
-        { title: 'Strength', workoutType: 'Strength', workoutDate: new Date('2026-01-15') },
+        { title: 'Swim', workoutType: 'Swim', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Run', workoutType: 'Run', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Bike', workoutType: 'Bike', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Strength', workoutType: 'Strength', workoutDate: new Date(2026, 0, 15) },
       ];
 
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={parsedWorkouts} initialDate={testDate} />);
 
       const icons = container.querySelectorAll('.workout-icon');
@@ -483,10 +483,10 @@ describe('Calendar Component', () => {
     it('should not display gray clipboard icon but colored badges with emojis', () => {
       // This test verifies the visual fix - no more generic gray bars with clipboard
       const workouts = [
-        { title: 'Test Swim', workoutType: 'Swim', workoutDate: new Date('2026-01-15') },
+        { title: 'Test Swim', workoutType: 'Swim', workoutDate: new Date(2026, 0, 15) },
       ];
 
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={workouts} initialDate={testDate} />);
 
       // Should have workout badges
@@ -514,15 +514,15 @@ describe('Calendar Component', () => {
     it('should handle all workout types with distinct visual styling', () => {
       // Verify multiple workout types on the same day display correctly
       const workoutsByType = [
-        { title: 'Swim Workout', workoutType: 'Swim', workoutDate: new Date('2026-01-15') },
-        { title: 'Run Workout', workoutType: 'Run', workoutDate: new Date('2026-01-15') },
-        { title: 'Bike Workout', workoutType: 'Bike', workoutDate: new Date('2026-01-15') },
-        { title: 'Strength Workout', workoutType: 'Strength', workoutDate: new Date('2026-01-15') },
+        { title: 'Swim Workout', workoutType: 'Swim', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Run Workout', workoutType: 'Run', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Bike Workout', workoutType: 'Bike', workoutDate: new Date(2026, 0, 15) },
+        { title: 'Strength Workout', workoutType: 'Strength', workoutDate: new Date(2026, 0, 15) },
         { title: 'Rest Day', workoutType: 'Day Off', workoutDate: new Date('2026-01-16') },
         { title: 'Other Workout', workoutType: 'Other', workoutDate: new Date('2026-01-17') },
       ];
 
-      const testDate = new Date('2026-01-15');
+      const testDate = new Date(2026, 0, 15);
       const { container } = render(<Calendar workouts={workoutsByType} initialDate={testDate} />);
 
       // Verify all titles are present
@@ -551,6 +551,103 @@ describe('Calendar Component', () => {
         expect(title).toBeTruthy();
         expect(title.textContent.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  describe('Workout Modal Interaction', () => {
+    it('should open modal when workout card is clicked', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Find and click a workout badge
+      const workoutBadge = screen.getByText('Morning Run');
+      fireEvent.click(workoutBadge);
+
+      // Modal should display
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+    });
+
+    it('should display correct workout details in modal', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Click a workout - get the badge specifically
+      const workoutBadge = screen.getAllByText('Morning Run')[0];
+      fireEvent.click(workoutBadge);
+
+      // Verify modal shows the right details
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+      expect(screen.getByText('Keep it easy')).toBeInTheDocument();
+    });
+
+    it('should close modal when close button is clicked', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Open modal
+      const workoutBadge = screen.getByText('Morning Run');
+      fireEvent.click(workoutBadge);
+
+      // Modal is visible
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+
+      // Close modal
+      const closeButton = document.querySelector('.modal-close');
+      fireEvent.click(closeButton);
+
+      // Modal should be gone
+      expect(screen.queryByText('Easy 5k run')).not.toBeInTheDocument();
+    });
+
+    it('should close modal when clicking overlay', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Open modal
+      const workoutBadge = screen.getByText('Morning Run');
+      fireEvent.click(workoutBadge);
+
+      // Modal is visible
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+
+      // Click overlay
+      const overlay = document.querySelector('.modal-overlay');
+      fireEvent.click(overlay);
+
+      // Modal should be gone
+      expect(screen.queryByText('Easy 5k run')).not.toBeInTheDocument();
+    });
+
+    it('should allow keyboard navigation to open modal', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Get the workout badge and trigger keyboard event
+      const workoutBadge = screen.getAllByText('Morning Run')[0].closest('.workout-badge');
+      fireEvent.keyDown(workoutBadge, { key: 'Enter', code: 'Enter' });
+
+      // Modal should open
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+    });
+
+    it('should display different modal for each clicked workout', () => {
+      const testDate = new Date(2026, 0, 15);
+      render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+
+      // Click first workout
+      let workoutBadge = screen.getByText('Morning Run');
+      fireEvent.click(workoutBadge);
+      expect(screen.getByText('Easy 5k run')).toBeInTheDocument();
+
+      // Close modal
+      let closeButton = document.querySelector('.modal-close');
+      fireEvent.click(closeButton);
+      expect(screen.queryByText('Easy 5k run')).not.toBeInTheDocument();
+
+      // Click second workout
+      workoutBadge = screen.getByText('Evening Swim');
+      fireEvent.click(workoutBadge);
+      expect(screen.getByText('Swim workout')).toBeInTheDocument();
     });
   });
 });

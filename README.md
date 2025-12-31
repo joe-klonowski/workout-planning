@@ -99,6 +99,19 @@ The app displays distances in user-friendly units based on the workout type:
 
 Internal data is stored in meters (as provided by TrainingPeaks), but converted for display.
 
+### Workout Date Handling and Timezones
+**Important**: Workout dates represent calendar days without timezone information. A workout scheduled for "January 15" should be completed on January 15 in the athlete's local timezone, regardless of where the coach is located.
+
+**Implementation Details**:
+- Dates should be created using the local date constructor: `new Date(year, month - 1, day)` (e.g., `new Date(2026, 0, 15)` for January 15, 2026)
+- **Avoid** parsing dates from ISO strings like `new Date('2026-01-15')` as this creates UTC dates that may display as the previous day in some timezones
+- When handling date strings for the workout day field, parse them as local dates:
+  ```javascript
+  const [year, month, day] = dateString.split('-').map(Number);
+  const localDate = new Date(year, month - 1, day);
+  ```
+- This ensures the workout date remains consistent with the coach's intent across all timezones (Chicago, Seattle, etc.)
+
 ## Technology Stack
 
 - **Frontend**: React (created with create-react-app)
