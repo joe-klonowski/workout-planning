@@ -119,9 +119,9 @@
   gap: 4px;
 }
 
-.workout-count {
-  background-color: #007bff;
-  color: white;
+.workouts-container .workout-count {
+  background-color: #ADD8E6;
+  color: black;
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
