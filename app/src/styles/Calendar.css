@@ -49,6 +49,37 @@
   background-color: #1e7e34;
 }
 
+/* View Toggle */
+.view-toggle {
+  display: flex;
+  gap: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  padding: 2px;
+}
+
+.toggle-button {
+  padding: 8px 14px;
+  background-color: transparent;
+  color: #333;
+  border: none;
+  border-radius: 3px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.toggle-button:hover {
+  background-color: #f0f0f0;
+}
+
+.toggle-button.active {
+  background-color: #007bff;
+  color: white;
+}
+
 /* Weekday Headers */
 .day-of-week-headers {
   display: grid;
@@ -72,6 +103,14 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;
+  min-height: 600px;
+}
+
+.calendar-grid.week {
+  min-height: 350px;
+}
+
+.calendar-grid.month {
   min-height: 600px;
 }
 

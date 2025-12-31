@@ -4,12 +4,13 @@ import WorkoutCard from './WorkoutCard';
 import '../styles/Calendar.css';
 
 /**
- * Calendar component displays workouts in a monthly calendar view
+ * Calendar component displays workouts in a weekly or monthly calendar view
  * @param {Array} workouts - Array of workout objects
  * @param {Date} initialDate - Starting date (defaults to today)
  */
 function Calendar({ workouts = [], initialDate = new Date() }) {
   const [currentDate, setCurrentDate] = useState(new Date(initialDate));
+  const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
@@ -32,6 +33,19 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
+  // Navigation handlers for week view
+  const goToPreviousWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setCurrentDate(newDate);
+  };
+
+  const goToNextWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setCurrentDate(newDate);
+  };
+
   const goToToday = () => {
     setCurrentDate(new Date());
   };
@@ -39,14 +53,33 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
   // Build calendar grid
   const days = [];
   
-  // Add empty cells for days before the first day of the month
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-  
-  // Add cells for each day of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(day);
+  if (viewMode === 'week') {
+    // For week view, get the Monday of the current week
+    const dayOfWeek = (currentDate.getDay() + 6) % 7; // 0 = Monday
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(weekStart.getDate() - dayOfWeek);
+    
+    // Add 7 days starting from Monday
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(dayDate.getDate() + i);
+      days.push({
+        day: dayDate.getDate(),
+        year: dayDate.getFullYear(),
+        month: dayDate.getMonth(),
+        date: new Date(dayDate)
+      });
+    }
+  } else {
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
   }
 
   // Month and year display
@@ -56,26 +89,40 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
   }).format(currentDate);
 
   // Get workouts for a specific day
-  const getWorkoutsForDay = (day) => {
+  const getWorkoutsForDay = (day, dayYear, dayMonth) => {
     if (!day) return [];
     // Create the date string in YYYY-MM-DD format without timezone conversion
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateStr = `${dayYear}-${String(dayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return workoutsByDate[dateStr] || [];
   };
 
   return (
     <div className="calendar">
       <div className="calendar-header">
-        <button onClick={goToPreviousMonth} className="nav-button">
+        <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
           ← Previous
         </button>
         <h2 className="month-year">{monthYear}</h2>
-        <button onClick={goToNextMonth} className="nav-button">
+        <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
           Next →
         </button>
         <button onClick={goToToday} className="today-button">
           Today
         </button>
+        <div className="view-toggle">
+          <button
+            onClick={() => setViewMode('week')}
+            className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => setViewMode('month')}
+            className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
+          >
+            Month
+          </button>
+        </div>
       </div>
 
       <div className="day-of-week-headers">
@@ -88,23 +135,23 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
         <div className="day-of-week">Sun</div>
       </div>
 
-      <div className="calendar-grid">
-        {days.map((day, index) => {
-          const dayWorkouts = day ? getWorkoutsForDay(day) : [];
-          const isToday =
-            day &&
-            new Date(year, month, day).toDateString() === new Date().toDateString();
+      <div className={`calendar-grid ${viewMode}`}>
+        {days.map((dayObj, index) => {
+          if (viewMode === 'week') {
+            // Week view rendering
+            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
+            const isToday =
+              dayObj.date.toDateString() === new Date().toDateString();
 
-          return (
-            <div
-              key={index}
-              className={`calendar-day ${day ? 'has-date' : 'empty'} ${
-                isToday ? 'is-today' : ''
-              }`}
-            >
-              {day && (
+            return (
+              <div
+                key={index}
+                className={`calendar-day ${
+                  isToday ? 'is-today' : ''
+                }`}
+              >
                 <>
-                  <div className="day-number">{day}</div>
+                  <div className="day-number">{dayObj.day}</div>
                   <div className="workouts-container">
                     {dayWorkouts.length > 0 ? (
                       <div className="workout-count">{dayWorkouts.length} workout{dayWorkouts.length !== 1 ? 's' : ''}</div>
@@ -113,9 +160,37 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
                     )}
                   </div>
                 </>
-              )}
-            </div>
-          );
+              </div>
+            );
+          } else {
+            // Month view rendering
+            const dayWorkouts = dayObj ? getWorkoutsForDay(dayObj, year, month) : [];
+            const isToday =
+              dayObj &&
+              new Date(year, month, dayObj).toDateString() === new Date().toDateString();
+
+            return (
+              <div
+                key={index}
+                className={`calendar-day ${dayObj ? 'has-date' : 'empty'} ${
+                  isToday ? 'is-today' : ''
+                }`}
+              >
+                {dayObj && (
+                  <>
+                    <div className="day-number">{dayObj}</div>
+                    <div className="workouts-container">
+                      {dayWorkouts.length > 0 ? (
+                        <div className="workout-count">{dayWorkouts.length} workout{dayWorkouts.length !== 1 ? 's' : ''}</div>
+                      ) : (
+                        <div className="no-workouts">Rest day</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          }
         })}
       </div>
     </div>
