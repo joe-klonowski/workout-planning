@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { groupWorkoutsByDate } from '../utils/csvParser';
+import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
 import '../styles/Calendar.css';
 
@@ -154,7 +155,24 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
                   <div className="day-number">{dayObj.day}</div>
                   <div className="workouts-container">
                     {dayWorkouts.length > 0 ? (
-                      <div className="workout-count">{dayWorkouts.length} workout{dayWorkouts.length !== 1 ? 's' : ''}</div>
+                      <div className="workouts-list">
+                        {dayWorkouts.map((workout, idx) => {
+                          const style = getWorkoutTypeStyle(workout.workoutType);
+                          return (
+                            <div
+                              key={idx}
+                              className="workout-badge"
+                              style={{
+                                backgroundColor: style.backgroundColor,
+                                borderLeft: `4px solid ${style.color}`,
+                              }}
+                            >
+                              <span className="workout-icon">{style.icon}</span>
+                              <span className="workout-title">{workout.title}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
                       <div className="no-workouts">Rest day</div>
                     )}
@@ -181,7 +199,24 @@ function Calendar({ workouts = [], initialDate = new Date() }) {
                     <div className="day-number">{dayObj}</div>
                     <div className="workouts-container">
                       {dayWorkouts.length > 0 ? (
-                        <div className="workout-count">{dayWorkouts.length} workout{dayWorkouts.length !== 1 ? 's' : ''}</div>
+                        <div className="workouts-list">
+                          {dayWorkouts.map((workout, idx) => {
+                            const style = getWorkoutTypeStyle(workout.workoutType);
+                            return (
+                              <div
+                                key={idx}
+                                className="workout-badge"
+                                style={{
+                                  backgroundColor: style.backgroundColor,
+                                  borderLeft: `4px solid ${style.color}`,
+                                }}
+                              >
+                                <span className="workout-icon">{style.icon}</span>
+                                <span className="workout-title">{workout.title}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       ) : (
                         <div className="no-workouts">Rest day</div>
                       )}
