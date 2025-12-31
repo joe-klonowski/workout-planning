@@ -18,6 +18,66 @@ Currently, the app isn't finished, we're working through iteratively adding feat
 6. **Summarize**: Review weekly summaries of planned workouts
 7. **Export**: Send the final plan to Garmin Connect and/or Hammerhead
 
+## Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+
+### Installation
+```bash
+cd app
+npm install
+```
+
+### Running the App
+```bash
+cd app
+npm start
+```
+
+This starts the development server at `http://localhost:3000`. The app will automatically reload when you make changes.
+
+### Running Tests
+```bash
+cd app
+npm test
+```
+
+This launches the test runner in interactive watch mode. Press `q` to quit or use these commands:
+- `a` - Run all tests
+- `p` - Filter tests by filename pattern
+- `t` - Filter tests by test name
+- `q` - Quit
+
+#### Run Tests Once (CI Mode)
+```bash
+cd app
+npm test -- --watchAll=false
+```
+
+#### Run Specific Test Files
+```bash
+cd app
+npm test -- --testPathPattern="csvParser.test.js" --watchAll=false
+npm test -- --testPathPattern="Calendar.test.js" --watchAll=false
+npm test -- --testPathPattern="WorkoutCard.test.js" --watchAll=false
+```
+
+#### Run All Tests
+```bash
+cd app
+npm test -- --testPathPattern="(csvParser|Calendar|WorkoutCard).test.js" --watchAll=false
+```
+
+### Building for Production
+```bash
+cd app
+npm run build
+```
+
+This creates an optimized production build in the `app/build` folder.
+
 ## Data Format
 
 ### Input: TrainingPeaks CSV
@@ -26,10 +86,18 @@ See `inputs/workouts.csv` for an example. Key fields:
 - `WorkoutType`: Category (Swim, Run, Strength, Cycling, etc.)
 - `WorkoutDescription`: Detailed instructions and notes from coach
 - `PlannedDuration`: Expected workout length (in hours)
-- `PlannedDistanceInMeters`: Target distance (optional, varies by sport)
+- `PlannedDistanceInMeters`: Target distance in meters (optional, varies by sport)
 - `WorkoutDay`: Planned date (YYYY-MM-DD format)
 - `CoachComments`: Additional notes from the coach
 - Additional fields: TSS, IF, and various power/heart rate zones (metadata)
+
+### Distance Display Format
+The app displays distances in user-friendly units based on the workout type:
+- **Swim workouts**: Displayed in **yards**
+- **Run workouts**: Displayed in **miles**
+- **Cycling workouts**: Displayed in **miles**
+
+Internal data is stored in meters (as provided by TrainingPeaks), but converted for display.
 
 ## Technology Stack
 
