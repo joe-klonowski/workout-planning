@@ -3,6 +3,8 @@
  * Handles parsing CSV data and converting to Workout objects
  */
 
+import { DateOnly } from './DateOnly';
+
 /**
  * Parse CSV text content into an array of objects
  * @param {string} csvText - The raw CSV text content
@@ -125,32 +127,18 @@ export function rowToWorkout(row) {
 /**
  * Parse the WorkoutDay field (YYYY-MM-DD format)
  * @param {string} dateString - Date string in YYYY-MM-DD format
- * @returns {Date|null} Date object or null if invalid
+ * @returns {DateOnly|null} DateOnly object or null if invalid
  */
 function parseWorkoutDate(dateString) {
   if (!dateString || typeof dateString !== 'string') {
     return null;
   }
 
-  const trimmed = dateString.trim();
-  if (!trimmed) {
+  try {
+    return DateOnly.fromString(dateString);
+  } catch (error) {
     return null;
   }
-
-  // Validate YYYY-MM-DD format
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(trimmed)) {
-    return null;
-  }
-
-  const date = new Date(trimmed);
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date;
 }
 
 /**
@@ -166,8 +154,8 @@ export function parseWorkoutsCSV(csvText) {
 /**
  * Filter workouts by date range
  * @param {Array} workouts - Array of workout objects
- * @param {Date} startDate - Start date (inclusive)
- * @param {Date} endDate - End date (inclusive)
+ * @param {DateOnly} startDate - Start date (inclusive)
+ * @param {DateOnly} endDate - End date (inclusive)
  * @returns {Array} Filtered workouts
  */
 export function filterWorkoutsByDateRange(workouts, startDate, endDate) {
@@ -175,15 +163,15 @@ export function filterWorkoutsByDateRange(workouts, startDate, endDate) {
     throw new Error('Workouts must be an array');
   }
 
-  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
-    throw new Error('Start and end dates must be Date objects');
+  if (!(startDate instanceof DateOnly) || !(endDate instanceof DateOnly)) {
+    throw new Error('Start and end dates must be DateOnly objects');
   }
 
   return workouts.filter(workout => {
     if (!workout.workoutDate) {
       return false;
     }
-    return workout.workoutDate >= startDate && workout.workoutDate <= endDate;
+    return workout.workoutDate.isBetween(startDate, endDate);
   });
 }
 
@@ -201,7 +189,7 @@ export function groupWorkoutsByDate(workouts) {
 
   workouts.forEach(workout => {
     if (workout.workoutDate) {
-      const dateKey = workout.workoutDate.toISOString().split('T')[0];
+      const dateKey = workout.workoutDate.toISOString();
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }

@@ -1,6 +1,6 @@
-- Refactor to store workout date values as timezone-independent. Because JS doesn't natively support dates that are TZ-independent, this would likely require creating a small dumb date struct class that stores year, month, and date number.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Allow user to pick and choose which workouts they're going to plan to do or not do.
   - Temporarily hide workouts the user isn't planning to do.
   - Summarize how much the user is planning to do each week.
 - Export to other platforms such as Garmin Connect or Hammerhead.
+- Create separate documentation files for users and developers (currently this is all grouped together in README.md).

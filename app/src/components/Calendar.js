@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { groupWorkoutsByDate } from '../utils/csvParser';
+import { DateOnly } from '../utils/DateOnly';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
 import WorkoutDetailModal from './WorkoutDetailModal';
@@ -8,10 +9,13 @@ import '../styles/Calendar.css';
 /**
  * Calendar component displays workouts in a weekly or monthly calendar view
  * @param {Array} workouts - Array of workout objects
- * @param {Date} initialDate - Starting date (defaults to today)
+ * @param {DateOnly} initialDate - Starting date (defaults to today)
  */
-function Calendar({ workouts = [], initialDate = new Date() }) {
-  const [currentDate, setCurrentDate] = useState(new Date(initialDate));
+function Calendar({ workouts = [], initialDate = (() => {
+  const today = new Date();
+  return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
+})() }) {
+  const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

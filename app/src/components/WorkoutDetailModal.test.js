@@ -2,12 +2,13 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WorkoutDetailModal from './WorkoutDetailModal';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
+import { DateOnly } from '../utils/DateOnly';
 
 describe('WorkoutDetailModal Component', () => {
   const mockWorkout = {
     title: 'Morning Run 5k',
     workoutType: 'Run',
-    workoutDate: new Date(2026, 0, 15),
+    workoutDate: new DateOnly(2026, 1, 15),
     description: 'Easy 5k run in the morning',
     plannedDuration: 0.75,
     plannedDistance: 5000,
@@ -263,7 +264,7 @@ describe('WorkoutDetailModal Component', () => {
     const minimalWorkout = {
       title: 'Simple Workout',
       workoutType: 'Other',
-      workoutDate: new Date(2026, 0, 15),
+      workoutDate: new DateOnly(2026, 1, 15),
       description: '',
       plannedDuration: 0,
       plannedDistance: 0,
@@ -371,7 +372,7 @@ describe('WorkoutDetailModal Component', () => {
     const swimWorkout = {
       title: 'Morning Swim',
       workoutType: 'Swim',
-      workoutDate: new Date(2026, 0, 15),
+      workoutDate: new DateOnly(2026, 1, 15),
       description: '',
       plannedDuration: 1,
       plannedDistance: 1828,  // ~2000 yards
