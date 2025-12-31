@@ -5,6 +5,7 @@ import {
   filterWorkoutsByDateRange,
   groupWorkoutsByDate,
 } from './csvParser';
+import { DateOnly } from './DateOnly';
 
 describe('CSV Parser', () => {
   describe('parseCSV', () => {
@@ -110,11 +111,11 @@ describe('CSV Parser', () => {
     it('should parse the workout date correctly', () => {
       const workout = rowToWorkout(sampleRow);
 
-      expect(workout.workoutDate).toBeInstanceOf(Date);
-      expect(workout.workoutDate.getFullYear()).toBe(2026);
-      expect(workout.workoutDate.getMonth()).toBe(0); // January
-      // Use toISOString to get the UTC date representation
-      expect(workout.workoutDate.toISOString().split('T')[0]).toBe('2026-01-15');
+      expect(workout.workoutDate).toBeInstanceOf(DateOnly);
+      expect(workout.workoutDate.year).toBe(2026);
+      expect(workout.workoutDate.month).toBe(1); // January
+      expect(workout.workoutDate.day).toBe(15);
+      expect(workout.workoutDate.toISOString()).toBe('2026-01-15');
     });
 
     it('should parse numeric fields correctly', () => {
@@ -184,7 +185,7 @@ describe('CSV Parser', () => {
       expect(workouts).toHaveLength(1);
       expect(workouts[0].title).toBe('Run 5k');
       expect(workouts[0].workoutType).toBe('Run');
-      expect(workouts[0].workoutDate).toBeInstanceOf(Date);
+      expect(workouts[0].workoutDate).toBeInstanceOf(DateOnly);
     });
 
     it('should handle multiple workouts', () => {
@@ -205,15 +206,15 @@ describe('CSV Parser', () => {
     const workouts = [
       {
         title: 'Workout 1',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new DateOnly(2026, 1, 15),
       },
       {
         title: 'Workout 2',
-        workoutDate: new Date('2026-01-20'),
+        workoutDate: new DateOnly(2026, 1, 20),
       },
       {
         title: 'Workout 3',
-        workoutDate: new Date('2026-01-25'),
+        workoutDate: new DateOnly(2026, 1, 25),
       },
       {
         title: 'No Date Workout',
@@ -222,8 +223,8 @@ describe('CSV Parser', () => {
     ];
 
     it('should filter workouts within date range', () => {
-      const startDate = new Date('2026-01-15');
-      const endDate = new Date('2026-01-20');
+      const startDate = new DateOnly(2026, 1, 15);
+      const endDate = new DateOnly(2026, 1, 20);
 
       const filtered = filterWorkoutsByDateRange(workouts, startDate, endDate);
 
@@ -233,8 +234,8 @@ describe('CSV Parser', () => {
     });
 
     it('should include boundary dates', () => {
-      const startDate = new Date('2026-01-15');
-      const endDate = new Date('2026-01-25');
+      const startDate = new DateOnly(2026, 1, 15);
+      const endDate = new DateOnly(2026, 1, 25);
 
       const filtered = filterWorkoutsByDateRange(workouts, startDate, endDate);
 
@@ -242,8 +243,8 @@ describe('CSV Parser', () => {
     });
 
     it('should exclude workouts without dates', () => {
-      const startDate = new Date('2026-01-01');
-      const endDate = new Date('2026-01-31');
+      const startDate = new DateOnly(2026, 1, 1);
+      const endDate = new DateOnly(2026, 1, 31);
 
       const filtered = filterWorkoutsByDateRange(workouts, startDate, endDate);
 
@@ -253,14 +254,14 @@ describe('CSV Parser', () => {
 
     it('should throw error if workouts is not an array', () => {
       expect(() =>
-        filterWorkoutsByDateRange(null, new Date(), new Date())
+        filterWorkoutsByDateRange(null, new DateOnly(2026, 1, 15), new DateOnly(2026, 1, 20))
       ).toThrow('Workouts must be an array');
     });
 
-    it('should throw error if dates are not Date objects', () => {
+    it('should throw error if dates are not DateOnly objects', () => {
       expect(() =>
-        filterWorkoutsByDateRange(workouts, '2026-01-15', new Date())
-      ).toThrow('Start and end dates must be Date objects');
+        filterWorkoutsByDateRange(workouts, '2026-01-15', new DateOnly(2026, 1, 20))
+      ).toThrow('Start and end dates must be DateOnly objects');
     });
   });
 
@@ -268,15 +269,15 @@ describe('CSV Parser', () => {
     const workouts = [
       {
         title: 'Morning Run',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new DateOnly(2026, 1, 15),
       },
       {
         title: 'Evening Swim',
-        workoutDate: new Date('2026-01-15'),
+        workoutDate: new DateOnly(2026, 1, 15),
       },
       {
         title: 'Bike Ride',
-        workoutDate: new Date('2026-01-16'),
+        workoutDate: new DateOnly(2026, 1, 16),
       },
       {
         title: 'No Date',

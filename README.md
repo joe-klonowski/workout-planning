@@ -102,15 +102,12 @@ Internal data is stored in meters (as provided by TrainingPeaks), but converted 
 ### Workout Date Handling and Timezones
 **Important**: Workout dates represent calendar days without timezone information. A workout scheduled for "January 15" should be completed on January 15 in the athlete's local timezone, regardless of where the coach is located.
 
-**Implementation Details**:
-- Dates should be created using the local date constructor: `new Date(year, month - 1, day)` (e.g., `new Date(2026, 0, 15)` for January 15, 2026)
-- **Avoid** parsing dates from ISO strings like `new Date('2026-01-15')` as this creates UTC dates that may display as the previous day in some timezones
-- When handling date strings for the workout day field, parse them as local dates:
-  ```javascript
-  const [year, month, day] = dateString.split('-').map(Number);
-  const localDate = new Date(year, month - 1, day);
-  ```
-- This ensures the workout date remains consistent with the coach's intent across all timezones (Chicago, Seattle, etc.)
+**Implementation**: Workout dates use the `DateOnly` class (`src/utils/DateOnly.js`) which stores year, month, and day as separate integers with no timezone attachment.
+
+**Why DateOnly?**
+- JavaScript's `Date` object always includes timezone information, which can cause dates to shift when parsed or displayed across different timezones
+- DateOnly represents the coaching intent literally: "Do this workout on January 15" means January 15, regardless of what time zone the athlete is in.
+- No timezone conversions, no ambiguity, no DST issues
 
 ## Technology Stack
 
@@ -119,6 +116,7 @@ Internal data is stored in meters (as provided by TrainingPeaks), but converted 
 - **State Management**: React hooks (useState/useContext initially), may add Redux if needed
 - **Storage**: Browser localStorage (MVP), backend/database (possible later addition)
 - **Build/Dev**: npm, create-react-app scripts
+- **Date Handling**: Custom `DateOnly` class for timezone-independent dates
 
 ## Project Structure
 
@@ -138,7 +136,12 @@ workout-planning/
 │       ├── index.css            # Global styles
 │       ├── App.test.js
 │       ├── reportWebVitals.js
-│       └── setupTests.js
+│       ├── setupTests.js
+│       ├── components/          # React components
+│       ├── utils/
+│       │   ├── DateOnly.js      # Timezone-independent date class
+│       │   └── csvParser.js     # CSV parsing utilities
+│       └── styles/              # Component styles
 └── inputs/
     └── workouts.csv             # Example TrainingPeaks export
 ```
@@ -148,4 +151,5 @@ workout-planning/
 - Component-based architecture: Create reusable components for calendar, workout card, filters, etc.
 - Keep state management simple initially; refactor if complexity grows
 - Write tests for critical features (CSV parsing, filtering, calculations)
+- Use `DateOnly` for all workout date fields to ensure timezone independence
 

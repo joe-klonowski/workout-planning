@@ -1,5 +1,6 @@
 import React from 'react';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
+import { DateOnly } from '../utils/DateOnly';
 import '../styles/WorkoutDetailModal.css';
 
 /**
@@ -18,18 +19,12 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
   const formatDate = (date) => {
     if (!date) return 'N/A';
     
-    // Handle date strings by parsing them as local dates (no timezone)
-    let dateObj = date;
-    if (typeof date === 'string') {
-      const [year, month, day] = date.split('-').map(Number);
-      dateObj = new Date(year, month - 1, day);
+    // Handle DateOnly objects
+    if (date instanceof DateOnly) {
+      return date.toString();
     }
     
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(dateObj);
+    return 'N/A';
   };
 
   const formatDuration = (hours) => {
