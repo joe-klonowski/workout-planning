@@ -1,6 +1,12 @@
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
+- Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
+  - Probably this will require creating separate fields for:
+    - When the coach originally planned the workout (DateOnly datatype).
+    - When the athlete is planning to do the workout (can be something general like "Tuesday" or "Tuesday morning" or something more specific like "Tuesday 7am")
+- Allow user to move workouts to a different day and different time of day.
 - Allow user to pick and choose which workouts they're going to plan to do or not do.
   - Temporarily hide workouts the user isn't planning to do.
   - Summarize how much the user is planning to do each week.
+- Save changes to server/DB/backend so that calendar can be saved and accessed across devices.
 - Export to other platforms such as Garmin Connect or Hammerhead.
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
