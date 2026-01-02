@@ -144,6 +144,23 @@
   border: 2px solid #007bff;
 }
 
+.calendar-day.other-month {
+  background-color: #fafafa;
+  opacity: 0.6;
+}
+
+.calendar-day.other-month .day-number {
+  color: #999;
+}
+
+.calendar-day.other-month .workout-badge {
+  opacity: 0.7;
+}
+
+.calendar-day.other-month .no-workouts {
+  opacity: 0.5;
+}
+
 .day-number {
   font-weight: bold;
   font-size: 18px;

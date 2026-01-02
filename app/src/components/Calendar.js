@@ -76,18 +76,47 @@ function Calendar({ workouts = [], initialDate = (() => {
         day: dayDate.getDate(),
         year: dayDate.getFullYear(),
         month: dayDate.getMonth(),
-        date: new Date(dayDate)
+        date: new Date(dayDate),
+        isCurrentMonth: true // Week view always shows current context
       });
     }
   } else {
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+    // Add days from previous month before the first day of the current month
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const prevMonthDate = new Date(year, month, 0 - i);
+      days.push({
+        day: prevMonthDate.getDate(),
+        year: prevMonthDate.getFullYear(),
+        month: prevMonthDate.getMonth(),
+        date: new Date(prevMonthDate),
+        isCurrentMonth: false
+      });
     }
     
-    // Add cells for each day of the month
+    // Add cells for each day of the current month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
+      days.push({
+        day: day,
+        year: year,
+        month: month,
+        date: new Date(year, month, day),
+        isCurrentMonth: true
+      });
+    }
+    
+    // Add days from next month to complete the last week
+    const remainingCells = 7 - (days.length % 7);
+    if (remainingCells < 7) {
+      for (let i = 1; i <= remainingCells; i++) {
+        const nextMonthDate = new Date(year, month + 1, i);
+        days.push({
+          day: nextMonthDate.getDate(),
+          year: nextMonthDate.getFullYear(),
+          month: nextMonthDate.getMonth(),
+          date: new Date(nextMonthDate),
+          isCurrentMonth: false
+        });
+      }
     }
   }
 
@@ -203,60 +232,58 @@ function Calendar({ workouts = [], initialDate = (() => {
             );
           } else {
             // Month view rendering
-            const dayWorkouts = dayObj ? getWorkoutsForDay(dayObj, year, month) : [];
+            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
             const isToday =
-              dayObj &&
-              new Date(year, month, dayObj).toDateString() === new Date().toDateString();
+              dayObj.date.toDateString() === new Date().toDateString();
+            const isCurrentMonth = dayObj.isCurrentMonth;
 
             return (
               <div
                 key={index}
-                className={`calendar-day ${dayObj ? 'has-date' : 'empty'} ${
+                className={`calendar-day has-date ${
                   isToday ? 'is-today' : ''
-                }`}
+                } ${!isCurrentMonth ? 'other-month' : ''}`}
               >
-                {dayObj && (
-                  <>
-                    <div className="day-number">{dayObj}</div>
-                    <div className="workouts-container">
-                      {dayWorkouts.length > 0 ? (
-                        <div className="workouts-list">
-                          {dayWorkouts.map((workout, idx) => {
-                            const style = getWorkoutTypeStyle(workout.workoutType);
-                            return (
-                              <div
-                                key={idx}
-                                className="workout-badge"
-                                onClick={() => {
+                <>
+                  <div className="day-number">{dayObj.day}</div>
+                  <div className="workouts-container">
+                    {dayWorkouts.length > 0 ? (
+                      <div className="workouts-list">
+                        {dayWorkouts.map((workout, idx) => {
+                          const style = getWorkoutTypeStyle(workout.workoutType);
+                          return (
+                            <div
+                              key={idx}
+                              className="workout-badge"
+                              onClick={() => {
+                                setSelectedWorkout(workout);
+                                setIsModalOpen(true);
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
                                   setSelectedWorkout(workout);
                                   setIsModalOpen(true);
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    setSelectedWorkout(workout);
-                                    setIsModalOpen(true);
-                                  }
-                                }}
-                                style={{
-                                  backgroundColor: style.backgroundColor,
-                                  borderLeft: `4px solid ${style.color}`,
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <span className="workout-icon">{style.icon}</span>
-                                <span className="workout-title">{workout.title}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="no-workouts">Rest day</div>
-                      )}
-                    </div>
-                  </>
-                )}
+                                }
+                              }}
+                              style={{
+                                backgroundColor: style.backgroundColor,
+                                borderLeft: `4px solid ${style.color}`,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <span className="workout-icon">{style.icon}</span>
+                              <span className="workout-title">{workout.title}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="no-workouts">Rest day</div>
+                    )}
+                  </div>
+                </>
               </div>
             );
           }
