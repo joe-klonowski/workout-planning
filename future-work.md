@@ -18,11 +18,15 @@
 - Export to other platforms such as Garmin Connect or Hammerhead.
 - Export to calendar apps. Likely start with my personal apple cal and or my family calendar which is a subscription/shared apple calendar.
 
-## Infra/architecture
+## Architecture/design
 - I (Joe, the owner of this code base) suspect that a coding agent has created a table in the DB that may be unneeded. Find out more about the current DB schema and consider changes as appropriate.
+- React PropTypes validation: I've been seeing a bunch of bugs where the names or types of fields in React components don't match the names of fields in the input files or in the database. Consider adding isRequired prop on appropriate fields to make it easier to catch these bugs.
+
+## Devops
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
 
 ## Testing
+- Consider adding contract tests for the API boundary between the frontend and backend.
 - Add end-to-end tests using something like selenium that can run in the browser or a headless browser.
   - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
 - Add a script that can run ALL THE TESTS in a single command, including:
