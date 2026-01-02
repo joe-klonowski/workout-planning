@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { groupWorkoutsByDate } from '../utils/csvParser';
 import { DateOnly } from '../utils/DateOnly';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
@@ -273,5 +274,30 @@ function Calendar({ workouts = [], initialDate = (() => {
     </div>
   );
 }
+
+Calendar.propTypes = {
+  workouts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      title: PropTypes.string.isRequired,
+      workoutType: PropTypes.string.isRequired,
+      workoutDate: PropTypes.instanceOf(DateOnly).isRequired,
+      workoutDay: PropTypes.string.isRequired,
+      workoutDescription: PropTypes.string,
+      plannedDuration: PropTypes.number,
+      plannedDistanceInMeters: PropTypes.number,
+      coachComments: PropTypes.string,
+    })
+  ),
+  initialDate: PropTypes.instanceOf(DateOnly),
+};
+
+Calendar.defaultProps = {
+  workouts: [],
+  initialDate: (() => {
+    const today = new Date();
+    return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  })(),
+};
 
 export default Calendar;

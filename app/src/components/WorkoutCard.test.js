@@ -208,4 +208,57 @@ describe('WorkoutCard Component', () => {
     expect(handleSelect).toHaveBeenCalled();
     expect(handleClick).not.toHaveBeenCalled();
   });
+
+  describe('PropTypes validation', () => {
+    const originalError = console.error;
+    
+    beforeAll(() => {
+      // Suppress console.error for PropTypes warnings
+      console.error = jest.fn();
+    });
+
+    afterAll(() => {
+      console.error = originalError;
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should accept valid workout prop with all fields', () => {
+      render(<WorkoutCard workout={mockWorkout} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept workout prop with missing optional fields', () => {
+      const minimalWorkout = {
+        title: 'Test',
+        workoutType: 'Run',
+      };
+      render(<WorkoutCard workout={minimalWorkout} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept null workout prop', () => {
+      render(<WorkoutCard workout={null} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept valid function props', () => {
+      render(
+        <WorkoutCard
+          workout={mockWorkout}
+          onClick={jest.fn()}
+          onSelect={jest.fn()}
+          isSelected={true}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept boolean isSelected prop', () => {
+      render(<WorkoutCard workout={mockWorkout} isSelected={false} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+  });
 });

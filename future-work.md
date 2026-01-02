@@ -20,7 +20,6 @@
 
 ## Architecture/design
 - I (Joe, the owner of this code base) suspect that a coding agent has created a table in the DB that may be unneeded. Find out more about the current DB schema and consider changes as appropriate.
-- React PropTypes validation: I've been seeing a bunch of bugs where the names or types of fields in React components don't match the names of fields in the input files or in the database. Consider adding isRequired prop on appropriate fields to make it easier to catch these bugs.
 
 ## Devops
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).

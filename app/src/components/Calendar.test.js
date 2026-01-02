@@ -653,4 +653,66 @@ describe('Calendar Component', () => {
       expect(screen.getByText('Swim workout')).toBeInTheDocument();
     });
   });
+
+  describe('PropTypes validation', () => {
+    const originalError = console.error;
+    
+    beforeAll(() => {
+      // Suppress console.error for PropTypes warnings
+      console.error = jest.fn();
+    });
+
+    afterAll(() => {
+      console.error = originalError;
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should accept valid workouts array with required fields', () => {
+      const validWorkouts = [
+        {
+          title: 'Test Workout',
+          workoutType: 'Run',
+        },
+      ];
+      render(<Calendar workouts={validWorkouts} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept workouts with all optional fields', () => {
+      render(<Calendar workouts={mockWorkouts} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept empty workouts array', () => {
+      render(<Calendar workouts={[]} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept undefined workouts (uses default)', () => {
+      render(<Calendar />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept DateOnly initialDate prop', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      render(<Calendar workouts={[]} initialDate={testDate} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept workout with DateOnly workoutDate', () => {
+      const workouts = [
+        {
+          title: 'Test',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          workoutDay: '2026-01-15',
+        },
+      ];
+      render(<Calendar workouts={workouts} />);
+      expect(console.error).not.toHaveBeenCalled();
+    });
+  });
 });

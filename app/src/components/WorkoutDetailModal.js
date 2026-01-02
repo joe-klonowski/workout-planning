@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
 import '../styles/WorkoutDetailModal.css';
@@ -160,5 +161,32 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
     </div>
   );
 }
+
+WorkoutDetailModal.propTypes = {
+  workout: PropTypes.shape({
+    id: PropTypes.number,
+    title: PropTypes.string.isRequired,
+    workoutType: PropTypes.string.isRequired,
+    workoutDate: PropTypes.instanceOf(DateOnly),
+    workoutDescription: PropTypes.string,
+    plannedDuration: PropTypes.number,
+    plannedDistanceInMeters: PropTypes.number,
+    actualDistance: PropTypes.number,
+    heartRateAverage: PropTypes.number,
+    heartRateMax: PropTypes.number,
+    powerAverage: PropTypes.number,
+    powerMax: PropTypes.number,
+    tss: PropTypes.number,
+    if: PropTypes.number,
+    coachComments: PropTypes.string,
+    athleteComments: PropTypes.string,
+  }),
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+WorkoutDetailModal.defaultProps = {
+  workout: null,
+};
 
 export default WorkoutDetailModal;

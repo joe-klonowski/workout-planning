@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import '../styles/WorkoutCard.css';
 
 /**
@@ -124,5 +125,26 @@ function getWorkoutTypeColor(workoutType) {
 
   return colors[workoutType] || 'type-other';
 }
+
+WorkoutCard.propTypes = {
+  workout: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    workoutType: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    plannedDuration: PropTypes.number,
+    plannedDistance: PropTypes.number,
+    coachComments: PropTypes.string,
+  }),
+  onClick: PropTypes.func,
+  onSelect: PropTypes.func,
+  isSelected: PropTypes.bool,
+};
+
+WorkoutCard.defaultProps = {
+  workout: null,
+  onClick: null,
+  onSelect: null,
+  isSelected: false,
+};
 
 export default WorkoutCard;

@@ -510,4 +510,81 @@ describe('WorkoutDetailModal Component', () => {
       expect(screen.getByText(/2350 yd/)).toBeInTheDocument();
     });
   });
+
+  describe('PropTypes validation', () => {
+    const originalError = console.error;
+    
+    beforeAll(() => {
+      // Suppress console.error for PropTypes warnings
+      console.error = jest.fn();
+    });
+
+    afterAll(() => {
+      console.error = originalError;
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should accept valid workout prop with required fields', () => {
+      const validWorkout = {
+        title: 'Test Workout',
+        workoutType: 'Run',
+        workoutDate: new DateOnly(2026, 1, 1),
+      };
+      render(
+        <WorkoutDetailModal
+          workout={validWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept workout with all optional fields', () => {
+      render(
+        <WorkoutDetailModal
+          workout={mockWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should accept null workout prop', () => {
+      render(
+        <WorkoutDetailModal
+          workout={null}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should require isOpen prop', () => {
+      render(
+        <WorkoutDetailModal
+          workout={mockWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should require onClose function prop', () => {
+      render(
+        <WorkoutDetailModal
+          workout={mockWorkout}
+          isOpen={false}
+          onClose={jest.fn()}
+        />
+      );
+      expect(console.error).not.toHaveBeenCalled();
+    });
+  });
 });
