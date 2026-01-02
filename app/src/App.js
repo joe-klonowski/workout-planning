@@ -44,7 +44,17 @@ function App() {
         setWorkouts(transformedWorkouts);
         setError(null);
       } catch (err) {
-        const errorMessage = err.message || 'Unknown error occurred';
+        let errorMessage;
+        
+        // Check if this is a network error (backend not running)
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          errorMessage = `Cannot connect to backend server at ${API_ENDPOINTS.WORKOUTS}. Make sure the backend is running.`;
+        } else if (err.message.includes('Failed to load workouts')) {
+          errorMessage = `${err.message}. The backend server responded with an error.`;
+        } else {
+          errorMessage = err.message || 'Unknown error occurred';
+        }
+        
         setError(errorMessage);
         console.error('Error loading workouts:', err);
         console.error('Error details:', {

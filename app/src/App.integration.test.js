@@ -241,14 +241,16 @@ describe('App Component', () => {
   });
 
   test('displays error message when network request fails', async () => {
+    // Simulate a fetch failure (TypeError is what fetch throws when it can't connect)
     global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Network error'))
+      Promise.reject(new TypeError('Failed to fetch'))
     );
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Error: Network error/)).toBeInTheDocument();
+      expect(screen.getByText(/Cannot connect to backend server/)).toBeInTheDocument();
+      expect(screen.getByText(/Make sure the backend is running/)).toBeInTheDocument();
     });
   });
 
