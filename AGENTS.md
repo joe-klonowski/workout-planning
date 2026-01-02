@@ -1,6 +1,7 @@
 This file contains instructions for agentic coding systems that are editing code in this repository or answering questions about the project.
 
 ## General instructions
+- Remove tasks from future-work.md as you complete them.
 - Always read the following files and load them into context before answering questions or writing code:
   - AGENTS.md
   - README.md
@@ -14,7 +15,6 @@ This file contains instructions for agentic coding systems that are editing code
   - If working with the frontend:
     - app/README.md
     - app/package.json (frontend dependencies and scripts)
-- Remove tasks from future-work.md as you complete them.
 
 ## How to edit or write new code
 - When you write new code, always write new tests that go with it. Then run the new tests to make sure they pass.
