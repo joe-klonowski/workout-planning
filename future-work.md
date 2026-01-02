@@ -19,6 +19,7 @@
 - Export to calendar apps. Likely start with my personal apple cal and or my family calendar which is a subscription/shared apple calendar.
 
 ## Infra/architecture
+- I (Joe, the owner of this code base) suspect that a coding agent has created a table in the DB that may be unneeded. Find out more about the current DB schema and consider changes as appropriate.
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
 
 ## Testing
