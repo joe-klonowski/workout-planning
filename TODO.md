@@ -1,4 +1,4 @@
-## Functionality
+## App features
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
   - Probably this will require creating separate fields for:
@@ -9,7 +9,10 @@
   - Temporarily hide workouts the user isn't planning to do.
   - Summarize how much the user is planning to do each week.
 - Add support for mobile
+
+## Export funtionality
 - Export to other platforms such as Garmin Connect or Hammerhead.
+- Export to calendar apps. Likely start with my personal apple cal and or my family calendar which is a subscription/shared apple calendar.
 
 ## Infra/architecture
 - May want to add a DB migration manager like SQLAlchemy
