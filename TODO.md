@@ -10,7 +10,8 @@
   - Summarize how much the user is planning to do each week.
 - Add support for mobile
 
-## Export funtionality
+## Integrations with other apps/platforms
+- Import past workout data from Strava (probably via API?)
 - Export to other platforms such as Garmin Connect or Hammerhead.
 - Export to calendar apps. Likely start with my personal apple cal and or my family calendar which is a subscription/shared apple calendar.
 
