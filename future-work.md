@@ -28,11 +28,6 @@
 - Consider adding contract tests for the API boundary between the frontend and backend.
 - Add end-to-end tests using something like selenium that can run in the browser or a headless browser.
   - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
-- Add a script that can run ALL THE TESTS in a single command, including:
-  - Backend tests (pytest)
-    - Including handling the venv setup
-  - Frontend tests (npm test)
-  - Selenium if that's added by this stage
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
