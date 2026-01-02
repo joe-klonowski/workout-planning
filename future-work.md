@@ -12,7 +12,6 @@ So some of the future feature work here is to enable that plan.
 ## Specific app features to add
 - Import more workouts from new TrainingPeaks CSVs and "merge" them with existing plan.
   - Will require some way to deduplicate workouts in the new CSV with workouts in the existing plan. This will be tricky for workouts where the athlete/user has changed the planned date of the workout.
-- Add workout planned duration to workout card so you can see what's a big one and what's a quick one at a glance.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
@@ -25,6 +24,18 @@ So some of the future feature work here is to enable that plan.
   - Maybe we want to temporarily hide planned workouts also?
 - Summarize how much the user is planning to do each week.
 - Add support for mobile
+
+## Look/feel/CSS
+- Add workout planned duration to workout card so user can see what's a big one and what's a quick one at a glance.
+- Make 7 days of the week take up all the width in the window.
+- Add summary of the week on the right with:
+  - Number of hours
+  - Duration for swim, bike, run, and strength training
+  - Distance for swim and run
+  - If/when the app has data on completed workouts, add bars that show completion percentage.
+- Get fonts exactly the right size in workout card.
+- Add first bit of description to card
+
 
 ## Integrations with other apps/platforms
 - Import past workout data from Strava (probably via API?)
