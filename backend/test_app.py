@@ -12,9 +12,8 @@ import io
 @pytest.fixture
 def app():
     """Create and configure a test app instance"""
-    app = create_app('development')
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    # Use the testing config which has in-memory database
+    app = create_app('testing')
     
     with app.app_context():
         db.create_all()
