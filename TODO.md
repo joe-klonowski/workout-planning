@@ -20,6 +20,7 @@
   - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
 - Add a script that can run ALL THE TESTS in a single command, including:
   - Backend tests (pytest)
+    - Including handling the venv setup
   - Frontend tests (npm test)
   - Selenium if that's added by this stage
 
