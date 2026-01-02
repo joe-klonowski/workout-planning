@@ -1,3 +1,4 @@
+## Functionality
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
   - Probably this will require creating separate fields for:
@@ -7,6 +8,19 @@
 - Allow user to pick and choose which workouts they're going to plan to do or not do.
   - Temporarily hide workouts the user isn't planning to do.
   - Summarize how much the user is planning to do each week.
-- Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
+- Add support for mobile
 - Export to other platforms such as Garmin Connect or Hammerhead.
+
+## Infra/architecture
+- Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
+
+## Testing
+- Add end-to-end tests using something like selenium that can run in the browser or a headless browser.
+  - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
+- Add a script that can run ALL THE TESTS in a single command, including:
+  - Backend tests (pytest)
+  - Frontend tests (npm test)
+  - Selenium if that's added by this stage
+
+## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
