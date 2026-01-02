@@ -1,6 +1,7 @@
 ## App features
 - Import more workouts from new TrainingPeaks CSVs and "merge" them with existing plan.
   - Will require some way to deduplicate workouts in the new CSV with workouts in the existing plan. This will be tricky for workouts where the athlete/user has changed the planned date of the workout.
+- When you're looking at the first or last week of a month in the calendar view, it should show the dates in that week that are from the previous or next month. Maybe gray them out a little bit or something to make it more visually clear that that date is in a different month.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
