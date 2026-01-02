@@ -358,4 +358,76 @@ describe('App Component', () => {
     // Should not crash with null values
     expect(screen.getByTestId('mock-calendar')).toBeInTheDocument();
   });
+
+  test('transforms workouts with selection data', async () => {
+    const mockWorkouts = [
+      {
+        id: 1,
+        title: 'Selected Workout',
+        workoutType: 'Run',
+        workoutDescription: 'Test',
+        plannedDuration: 1.0,
+        plannedDistanceInMeters: 5000,
+        workoutDay: '2026-01-15',
+        coachComments: '',
+        selection: {
+          id: 1,
+          workoutId: 1,
+          isSelected: true,
+          actualDate: null,
+          timeOfDay: null,
+          userNotes: null,
+        },
+      },
+      {
+        id: 2,
+        title: 'Unselected Workout',
+        workoutType: 'Swim',
+        workoutDescription: 'Test',
+        plannedDuration: 1.0,
+        plannedDistanceInMeters: 2000,
+        workoutDay: '2026-01-16',
+        coachComments: '',
+        selection: {
+          id: 2,
+          workoutId: 2,
+          isSelected: false,
+          actualDate: null,
+          timeOfDay: null,
+          userNotes: null,
+        },
+      },
+      {
+        id: 3,
+        title: 'No Selection',
+        workoutType: 'Bike',
+        workoutDescription: 'Test',
+        plannedDuration: 2.0,
+        plannedDistanceInMeters: 40000,
+        workoutDay: '2026-01-17',
+        coachComments: '',
+        selection: null,
+      },
+    ];
+
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ workouts: mockWorkouts, count: 3 }),
+      })
+    );
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 3 workouts')).toBeInTheDocument();
+    });
+
+    // All workouts should be transformed
+    const calendar = screen.getByTestId('mock-calendar');
+    expect(calendar).toBeInTheDocument();
+    
+    // Should have all 3 workouts passed to Calendar
+    expect(screen.getByTestId('calendar-workout-count').textContent).toBe('3');
+  });
 });

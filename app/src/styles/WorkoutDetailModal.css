@@ -93,6 +93,19 @@
   color: #999;
 }
 
+.workout-status {
+  font-weight: 600;
+}
+
+.workout-status.planned {
+  color: #28a745;
+}
+
+.workout-status.not-planned {
+  color: #dc3545;
+  font-weight: 700;
+}
+
 .modal-body {
   padding: 24px;
 }

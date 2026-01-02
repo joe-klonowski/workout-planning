@@ -62,7 +62,17 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
           <span className="modal-icon">{style.icon}</span>
           <div className="modal-title-section">
             <h2 className="modal-title">{workout.title}</h2>
-            <p className="modal-type">{style.label} • {formatDate(workout.workoutDate)}</p>
+            <p className="modal-type">
+              {style.label} • {formatDate(workout.workoutDate)}
+              {workout.isSelected !== undefined && (
+                <>
+                  {' • '}
+                  <span className={`workout-status ${workout.isSelected ? 'planned' : 'not-planned'}`}>
+                    {workout.isSelected ? 'Planned' : 'NOT planned'}
+                  </span>
+                </>
+              )}
+            </p>
           </div>
         </div>
 
@@ -180,6 +190,7 @@ WorkoutDetailModal.propTypes = {
     if: PropTypes.number,
     coachComments: PropTypes.string,
     athleteComments: PropTypes.string,
+    isSelected: PropTypes.bool,
   }),
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,

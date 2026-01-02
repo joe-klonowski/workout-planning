@@ -403,3 +403,42 @@ def test_workout_with_selection_relationship(client, sample_workout):
     assert data['selection'] is not None
     assert data['selection']['isSelected'] is True
     assert data['selection']['timeOfDay'] == 'morning'
+
+
+def test_toggle_workout_selection(client, sample_workout):
+    """Test toggling workout selection from planned to not planned"""
+    # Initially select the workout (add to plan)
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'isSelected': True}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is True
+    
+    # Remove from plan
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'isSelected': False}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is False
+    
+    # Verify the workout still includes the selection
+    response = client.get(f'/api/workouts/{sample_workout}')
+    assert response.status_code == 200
+    workout_data = json.loads(response.data)
+    assert workout_data['selection']['isSelected'] is False
+    
+    # Add back to plan
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'isSelected': True}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is True

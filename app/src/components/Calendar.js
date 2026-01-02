@@ -11,11 +11,12 @@ import '../styles/Calendar.css';
  * Calendar component displays workouts in a weekly or monthly calendar view
  * @param {Array} workouts - Array of workout objects
  * @param {DateOnly} initialDate - Starting date (defaults to today)
+ * @param {Function} onWorkoutSelectionToggle - Callback for when user toggles workout selection
  */
 function Calendar({ workouts = [], initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})() }) {
+})(), onWorkoutSelectionToggle }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
@@ -131,7 +132,15 @@ function Calendar({ workouts = [], initialDate = (() => {
     if (!day) return [];
     // Create the date string in YYYY-MM-DD format without timezone conversion
     const dateStr = `${dayYear}-${String(dayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return workoutsByDate[dateStr] || [];
+    const dayWorkouts = workoutsByDate[dateStr] || [];
+    
+    // Sort workouts: selected first, then unselected at bottom
+    return dayWorkouts.sort((a, b) => {
+      // If both have same selection status, maintain original order
+      if (a.isSelected === b.isSelected) return 0;
+      // Selected workouts come first (isSelected = true should come before false)
+      return a.isSelected ? -1 : 1;
+    });
   };
 
   return (
@@ -198,27 +207,51 @@ function Calendar({ workouts = [], initialDate = (() => {
                           return (
                             <div
                               key={idx}
-                              className="workout-badge"
-                              onClick={() => {
-                                setSelectedWorkout(workout);
-                                setIsModalOpen(true);
-                              }}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  setSelectedWorkout(workout);
-                                  setIsModalOpen(true);
-                                }
-                              }}
+                              className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
                               style={{
                                 backgroundColor: style.backgroundColor,
                                 borderLeft: `4px solid ${style.color}`,
                                 cursor: 'pointer',
+                                opacity: workout.isSelected ? 1 : 0.5,
+                                position: 'relative',
                               }}
                             >
-                              <span className="workout-icon">{style.icon}</span>
-                              <span className="workout-title">{workout.title}</span>
+                              <div
+                                onClick={() => {
+                                  setSelectedWorkout(workout);
+                                  setIsModalOpen(true);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    setSelectedWorkout(workout);
+                                    setIsModalOpen(true);
+                                  }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                style={{ flex: 1 }}
+                              >
+                                <span className="workout-icon">{style.icon}</span>
+                                <span className="workout-title">{workout.title}</span>
+                              </div>
+                              {onWorkoutSelectionToggle && (
+                                <button
+                                  className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onWorkoutSelectionToggle(workout.id, !workout.isSelected);
+                                  }}
+                                  aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                  }}
+                                >
+                                  {workout.isSelected ? '✕' : '+'}
+                                </button>
+                              )}
                             </div>
                           );
                         })}
@@ -254,27 +287,51 @@ function Calendar({ workouts = [], initialDate = (() => {
                           return (
                             <div
                               key={idx}
-                              className="workout-badge"
-                              onClick={() => {
-                                setSelectedWorkout(workout);
-                                setIsModalOpen(true);
-                              }}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  setSelectedWorkout(workout);
-                                  setIsModalOpen(true);
-                                }
-                              }}
+                              className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
                               style={{
                                 backgroundColor: style.backgroundColor,
                                 borderLeft: `4px solid ${style.color}`,
                                 cursor: 'pointer',
+                                opacity: workout.isSelected ? 1 : 0.5,
+                                position: 'relative',
                               }}
                             >
-                              <span className="workout-icon">{style.icon}</span>
-                              <span className="workout-title">{workout.title}</span>
+                              <div
+                                onClick={() => {
+                                  setSelectedWorkout(workout);
+                                  setIsModalOpen(true);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    setSelectedWorkout(workout);
+                                    setIsModalOpen(true);
+                                  }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                                style={{ flex: 1 }}
+                              >
+                                <span className="workout-icon">{style.icon}</span>
+                                <span className="workout-title">{workout.title}</span>
+                              </div>
+                              {onWorkoutSelectionToggle && (
+                                <button
+                                  className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onWorkoutSelectionToggle(workout.id, !workout.isSelected);
+                                  }}
+                                  aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                  }}
+                                >
+                                  {workout.isSelected ? '✕' : '+'}
+                                </button>
+                              )}
                             </div>
                           );
                         })}
@@ -314,9 +371,11 @@ Calendar.propTypes = {
       plannedDuration: PropTypes.number,
       plannedDistanceInMeters: PropTypes.number,
       coachComments: PropTypes.string,
+      isSelected: PropTypes.bool,
     })
   ),
   initialDate: PropTypes.instanceOf(DateOnly),
+  onWorkoutSelectionToggle: PropTypes.func,
 };
 
 Calendar.defaultProps = {

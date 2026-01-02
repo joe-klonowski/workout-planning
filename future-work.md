@@ -1,6 +1,18 @@
-## App features
+## High-level plan
+I'm the only user of this app (for now, probably forever). I get workouts from a few different places. Most of the workouts come from another app called TrainingPeaks. TrainingPeaks has two types of workouts: from Joe Friel, who's a coach, and from my local triathlon club and its coach. Those workouts get combined into a csv file like workouts.csv and imported into this app.
+
+Friel's advice is to:
+
+- Adjust his workout plan based on my schedule (e.g. shift workouts over by a day or two).
+- Adjust his workout plan because we've agreed some weeks I'll want to train for fewer hours than his plan recommends. So likely I'll want to plan NOT to do some of his workouts for this reason.
+- Adjust his workout plan to substitute workouts with friends or groups that I train with. That's where the local triathlon club comes in, I also have an unstructured group ride that I do weekly that'll probably sub in for some of the bike workouts -- that's not in any of this data, yet, but I'll add it later.
+
+So some of the future feature work here is to enable that plan.
+
+## Specific app features to add
 - Import more workouts from new TrainingPeaks CSVs and "merge" them with existing plan.
   - Will require some way to deduplicate workouts in the new CSV with workouts in the existing plan. This will be tricky for workouts where the athlete/user has changed the planned date of the workout.
+- Add workout planned duration to workout card so you can see what's a big one and what's a quick one at a glance.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
@@ -8,9 +20,10 @@
     - When the coach originally planned the workout (DateOnly datatype).
     - When the athlete is planning to do the workout (can be something general like "Tuesday" or "Tuesday morning" or something more specific like "Tuesday 7am")
 - Allow user to move workouts to a different day and different time of day.
-- Allow user to pick and choose which workouts they're going to plan to do or not do.
-  - Temporarily hide workouts the user isn't planning to do.
-  - Summarize how much the user is planning to do each week.
+- Allow user to filter the UI to:
+  - Temporarily hide unplanned workouts.
+  - Maybe we want to temporarily hide planned workouts also?
+- Summarize how much the user is planning to do each week.
 - Add support for mobile
 
 ## Integrations with other apps/platforms

@@ -22,9 +22,11 @@ describe('WorkoutCard Component', () => {
     expect(screen.getByText('Morning Run')).toBeInTheDocument();
   });
 
-  it('should display the workout type badge', () => {
+  it('should display the workout type emoji', () => {
     render(<WorkoutCard workout={mockWorkout} />);
-    expect(screen.getByText('Run')).toBeInTheDocument();
+    // Run workout should show running emoji
+    expect(screen.getByTitle('Run')).toBeInTheDocument();
+    expect(screen.getByTitle('Run').textContent).toBe('🏃');
   });
 
   it('should display planned duration in human-readable format', () => {
@@ -59,6 +61,8 @@ describe('WorkoutCard Component', () => {
     render(<WorkoutCard workout={swimWorkout} />);
     // 2000 meters ≈ 2188 yards
     expect(screen.getByText('2188 yd')).toBeInTheDocument();
+    // Swim emoji
+    expect(screen.getByTitle('Swim').textContent).toBe('🏊');
   });
 
   it('should display planned distance in miles for bike workouts', () => {
@@ -70,6 +74,8 @@ describe('WorkoutCard Component', () => {
     render(<WorkoutCard workout={bikeWorkout} />);
     // 40000 meters ≈ 24.9 miles
     expect(screen.getByText('24.9 mi')).toBeInTheDocument();
+    // Bike emoji
+    expect(screen.getByTitle('Bike').textContent).toBe('🚴');
   });
 
   it('should handle zero distance gracefully', () => {
@@ -120,31 +126,49 @@ describe('WorkoutCard Component', () => {
     expect(handleClick).toHaveBeenCalled();
   });
 
-  it('should display checkbox when onSelect is provided', () => {
-    const handleSelect = jest.fn();
-    render(<WorkoutCard workout={mockWorkout} onSelect={handleSelect} />);
+  it('should display selection button when onSelectionToggle is provided', () => {
+    const handleSelectionToggle = jest.fn();
+    render(<WorkoutCard workout={mockWorkout} onSelectionToggle={handleSelectionToggle} isSelected={true} />);
     
-    const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /remove from plan/i });
+    expect(button).toBeInTheDocument();
   });
 
-  it('should call onSelect when checkbox is clicked', () => {
-    const handleSelect = jest.fn();
-    render(<WorkoutCard workout={mockWorkout} onSelect={handleSelect} />);
+  it('should call onSelectionToggle when selection button is clicked', () => {
+    const handleSelectionToggle = jest.fn();
+    render(<WorkoutCard workout={mockWorkout} onSelectionToggle={handleSelectionToggle} isSelected={true} />);
     
-    const checkbox = screen.getByRole('checkbox');
-    fireEvent.click(checkbox);
+    const button = screen.getByRole('button', { name: /remove from plan/i });
+    fireEvent.click(button);
     
-    expect(handleSelect).toHaveBeenCalledWith(true);
+    expect(handleSelectionToggle).toHaveBeenCalledWith(false);
   });
 
-  it('should display selected state when isSelected is true', () => {
+  it('should display unselected state when isSelected is false', () => {
     const { container } = render(
-      <WorkoutCard workout={mockWorkout} isSelected={true} />
+      <WorkoutCard workout={mockWorkout} isSelected={false} />
     );
     
-    const card = container.querySelector('.workout-card.selected');
+    const card = container.querySelector('.workout-card.unselected');
     expect(card).toBeInTheDocument();
+  });
+
+  it('should show add button for unselected workouts', () => {
+    const handleSelectionToggle = jest.fn();
+    render(<WorkoutCard workout={mockWorkout} onSelectionToggle={handleSelectionToggle} isSelected={false} />);
+    
+    const button = screen.getByRole('button', { name: /add to plan/i });
+    expect(button).toBeInTheDocument();
+    expect(button.textContent).toBe('+');
+  });
+
+  it('should show remove button for selected workouts', () => {
+    const handleSelectionToggle = jest.fn();
+    render(<WorkoutCard workout={mockWorkout} onSelectionToggle={handleSelectionToggle} isSelected={true} />);
+    
+    const button = screen.getByRole('button', { name: /remove from plan/i });
+    expect(button).toBeInTheDocument();
+    expect(button.textContent).toBe('✕');
   });
 
   it('should handle missing optional fields gracefully', () => {
@@ -155,7 +179,7 @@ describe('WorkoutCard Component', () => {
     
     render(<WorkoutCard workout={minimalWorkout} />);
     expect(screen.getByText('Minimal Workout')).toBeInTheDocument();
-    expect(screen.getByText('Other')).toBeInTheDocument();
+    expect(screen.getByTitle('Other').textContent).toBe('📝');
   });
 
   it('should handle undefined workout prop', () => {
@@ -163,21 +187,21 @@ describe('WorkoutCard Component', () => {
     expect(container.querySelector('.workout-card')).toBeInTheDocument();
   });
 
-  it('should apply correct CSS class for different workout types', () => {
-    const { container, rerender } = render(
+  it('should apply correct emoji for different workout types', () => {
+    const { rerender } = render(
       <WorkoutCard workout={{ ...mockWorkout, workoutType: 'Run' }} />
     );
     
-    let badge = container.querySelector('.type-run');
-    expect(badge).toBeInTheDocument();
+    expect(screen.getByTitle('Run').textContent).toBe('🏃');
     
     rerender(<WorkoutCard workout={{ ...mockWorkout, workoutType: 'Swim' }} />);
-    badge = container.querySelector('.type-swim');
-    expect(badge).toBeInTheDocument();
+    expect(screen.getByTitle('Swim').textContent).toBe('🏊');
     
     rerender(<WorkoutCard workout={{ ...mockWorkout, workoutType: 'Bike' }} />);
-    badge = container.querySelector('.type-bike');
-    expect(badge).toBeInTheDocument();
+    expect(screen.getByTitle('Bike').textContent).toBe('🚴');
+    
+    rerender(<WorkoutCard workout={{ ...mockWorkout, workoutType: 'Strength' }} />);
+    expect(screen.getByTitle('Strength').textContent).toBe('💪');
   });
 
   it('should handle long titles with word breaking', () => {
@@ -189,23 +213,24 @@ describe('WorkoutCard Component', () => {
     expect(screen.getByText(/This is a very long workout title/)).toBeInTheDocument();
   });
 
-  it('should not trigger onClick when clicking checkbox', () => {
+  it('should not trigger onClick when clicking selection button', () => {
     const handleClick = jest.fn();
-    const handleSelect = jest.fn();
+    const handleSelectionToggle = jest.fn();
     
     render(
       <WorkoutCard
         workout={mockWorkout}
         onClick={handleClick}
-        onSelect={handleSelect}
+        onSelectionToggle={handleSelectionToggle}
+        isSelected={true}
       />
     );
     
-    const checkbox = screen.getByRole('checkbox');
-    fireEvent.click(checkbox);
+    const button = screen.getByRole('button', { name: /remove from plan/i });
+    fireEvent.click(button);
     
-    // onSelect should be called, but onClick should not
-    expect(handleSelect).toHaveBeenCalled();
+    // onSelectionToggle should be called, but onClick should not
+    expect(handleSelectionToggle).toHaveBeenCalled();
     expect(handleClick).not.toHaveBeenCalled();
   });
 
@@ -249,7 +274,7 @@ describe('WorkoutCard Component', () => {
         <WorkoutCard
           workout={mockWorkout}
           onClick={jest.fn()}
-          onSelect={jest.fn()}
+          onSelectionToggle={jest.fn()}
           isSelected={true}
         />
       );
@@ -257,7 +282,7 @@ describe('WorkoutCard Component', () => {
     });
 
     it('should accept boolean isSelected prop', () => {
-      render(<WorkoutCard workout={mockWorkout} isSelected={false} />);
+      render(<WorkoutCard workout={mockWorkout} isSelected={true} />);
       expect(console.error).not.toHaveBeenCalled();
     });
   });

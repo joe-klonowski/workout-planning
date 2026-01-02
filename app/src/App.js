@@ -29,6 +29,7 @@ function App() {
           const [year, month, day] = workout.workoutDay.split('-').map(Number);
           
           return {
+            id: workout.id,
             title: workout.title,
             workoutType: workout.workoutType,
             workoutDescription: workout.workoutDescription,
@@ -37,6 +38,8 @@ function App() {
             workoutDay: workout.workoutDay,
             workoutDate: new DateOnly(year, month, day),
             coachComments: workout.coachComments,
+            // Selection state - default to selected if no selection exists
+            isSelected: workout.selection ? workout.selection.isSelected : true,
           };
         });
         
@@ -70,6 +73,33 @@ function App() {
     loadWorkouts();
   }, []);
 
+  // Handle workout selection toggle
+  const handleWorkoutSelection = async (workoutId, isSelected) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isSelected }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update selection: ${response.status}`);
+      }
+
+      // Update local state
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout =>
+          workout.id === workoutId ? { ...workout, isSelected } : workout
+        )
+      );
+    } catch (err) {
+      console.error('Error updating workout selection:', err);
+      alert('Failed to update workout selection. Please try again.');
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -85,7 +115,10 @@ function App() {
             <p className="workout-count">
               Loaded {workouts.length} workouts
             </p>
-            <Calendar workouts={workouts} />
+            <Calendar 
+              workouts={workouts} 
+              onWorkoutSelectionToggle={handleWorkoutSelection}
+            />
           </>
         )}
       </main>
