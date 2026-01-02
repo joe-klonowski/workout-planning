@@ -26,7 +26,8 @@
 
 ## Copilot/Agentic coding related
 - Add instructions specifying my preferences for how AI coding agents should do work on this repo.
-  - Main thing that comes to mind at the moment is to ask it to do some version of TDD: when you see a bug, write a test that reproduces it first, then fix the bug, then verify by running the test.
+  - Ask it to do some version of TDD: when you see a bug, write a test that reproduces it first, then fix the bug, then verify by running the test.
+  - Ask it to remove items from TODO.md as it completes them.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
