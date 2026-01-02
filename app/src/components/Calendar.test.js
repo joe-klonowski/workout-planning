@@ -11,8 +11,8 @@ describe('Calendar Component', () => {
       workoutType: 'Run',
       workoutDate: new DateOnly(2026, 1, 15),
       plannedDuration: 0.75,
-      plannedDistance: 5000,
-      description: 'Easy 5k run',
+      plannedDistanceInMeters: 5000,
+      workoutDescription: 'Easy 5k run',
       coachComments: 'Keep it easy',
     },
     {
@@ -20,8 +20,8 @@ describe('Calendar Component', () => {
       workoutType: 'Swim',
       workoutDate: new DateOnly(2026, 1, 15),
       plannedDuration: 1,
-      plannedDistance: 2000,
-      description: 'Swim workout',
+      plannedDistanceInMeters: 2000,
+      workoutDescription: 'Swim workout',
       coachComments: '',
     },
     {
@@ -29,8 +29,8 @@ describe('Calendar Component', () => {
       workoutType: 'Bike',
       workoutDate: new DateOnly(2026, 1, 16),
       plannedDuration: 2,
-      plannedDistance: 40000,
-      description: 'Long ride',
+      plannedDistanceInMeters: 40000,
+      workoutDescription: 'Long ride',
       coachComments: '',
     },
   ];
