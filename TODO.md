@@ -28,6 +28,7 @@
 - Add instructions specifying my preferences for how AI coding agents should do work on this repo.
   - Ask it to do some version of TDD: when you see a bug, write a test that reproduces it first, then fix the bug, then verify by running the test.
   - Ask it to remove items from TODO.md as it completes them.
+  - Include a list of files that agents should always read and load into context before doing anything else.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
