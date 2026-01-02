@@ -12,6 +12,7 @@
 - Export to other platforms such as Garmin Connect or Hammerhead.
 
 ## Infra/architecture
+- May want to add a DB migration manager like SQLAlchemy
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
 
 ## Testing
@@ -21,6 +22,10 @@
   - Backend tests (pytest)
   - Frontend tests (npm test)
   - Selenium if that's added by this stage
+
+## Copilot/Agentic coding related
+- Add instructions specifying my preferences for how AI coding agents should do work on this repo.
+  - Main thing that comes to mind at the moment is to ask it to do some version of TDD: when you see a bug, write a test that reproduces it first, then fix the bug, then verify by running the test.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
