@@ -27,7 +27,6 @@ So some of the future feature work here is to enable that plan.
 
 ## Look/feel/CSS
 - Add workout planned duration to workout card so user can see what's a big one and what's a quick one at a glance.
-- Make 7 days of the week take up all the width in the window.
 - Add summary of the week on the right with:
   - Number of hours
   - Duration for swim, bike, run, and strength training
