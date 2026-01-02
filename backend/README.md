@@ -4,26 +4,35 @@ Flask API with SQLite for managing workout plans.
 
 ## Setup
 
-### 1. Create virtual environment
+### Create virtual environment
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 2. Install dependencies
+### Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run the development server
+### Initialize the database with Alembic
+```bash
+# Run database migrations to create tables
+alembic upgrade head
+
+# Import workout data from CSV
+python import_csv.py
+```
+
+### Run the development server
 ```bash
 python app.py
 ```
 
 The API will run at `http://localhost:5000`
 
-### 4. Run tests
+### Run tests
 ```bash
 # Run all tests
 pytest
@@ -74,6 +83,87 @@ Stores user modifications (selected/skipped, date moved, time of day)
 
 ### `custom_workouts` table
 Stores user-created workouts (group rides, custom training, etc.)
+
+## Database Migrations with Alembic
+
+This project uses [Alembic](https://alembic.sqlalchemy.org/) to manage database schema migrations.
+
+### Quick Start with Helper Script
+
+For convenience, use the `migrate.sh` helper script:
+
+```bash
+# Show all available commands
+./migrate.sh
+
+# Apply all pending migrations
+./migrate.sh upgrade
+
+# Check current migration version
+./migrate.sh current
+
+# View migration history
+./migrate.sh history
+
+# Create a new migration
+./migrate.sh create "Add new column to workouts"
+
+# Rollback one migration
+./migrate.sh downgrade
+```
+
+### Common Alembic Commands
+
+```bash
+# Apply all pending migrations (run this after setup or pulling new code)
+alembic upgrade head
+
+# Check current migration version
+alembic current
+
+# View migration history
+alembic history
+
+# Create a new migration after modifying models.py
+alembic revision --autogenerate -m "Description of changes"
+
+# Downgrade to previous migration (rollback)
+alembic downgrade -1
+
+# Downgrade to specific version
+alembic downgrade <revision_id>
+```
+
+### Creating a New Migration
+
+When you modify the database models in `models.py`:
+
+1. **Generate the migration**:
+   ```bash
+   alembic revision --autogenerate -m "Add new column to workouts"
+   ```
+
+2. **Review the generated migration** in `alembic/versions/` to ensure it captures your changes correctly
+
+3. **Apply the migration**:
+   ```bash
+   alembic upgrade head
+   ```
+
+4. **Test the changes** to ensure everything works
+
+### Migration Files
+
+- **alembic/versions/**: Contains all migration scripts
+- **alembic.ini**: Alembic configuration file
+- **alembic/env.py**: Migration environment setup (configured to work with Flask-SQLAlchemy)
+
+### Notes
+
+- The database schema is now managed by Alembic migrations, not by `db.create_all()`
+- Always create a migration when modifying models
+- Review auto-generated migrations before applying them
+- Test migrations on development database before deploying to production
 
 ## Import CSV Example
 
@@ -126,8 +216,8 @@ Run `pytest --cov` to see current test coverage percentage.
 
 ## Development Notes
 
-- SQLite database file: `workout_planner.db` (auto-created on first run)
+- SQLite database file: `workout_planner.db`
+- Database schema managed by Alembic migrations
 - Test database uses in-memory SQLite (`:memory:`)
-- Database tables are created automatically on app startup
 - CORS enabled for React frontend during development
 - Python 3.12+ recommended

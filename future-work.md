@@ -19,7 +19,6 @@
 - Export to calendar apps. Likely start with my personal apple cal and or my family calendar which is a subscription/shared apple calendar.
 
 ## Infra/architecture
-- May want to add a DB migration manager like SQLAlchemy
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
 
 ## Testing

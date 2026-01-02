@@ -8,6 +8,7 @@ from models import db, Workout, WorkoutSelection, CustomWorkout
 from datetime import datetime, date, timezone
 import csv
 import io
+import os
 
 
 def create_app(config_name='development'):
@@ -22,9 +23,10 @@ def create_app(config_name='development'):
     # Register routes
     register_routes(app)
     
-    # Create tables
-    with app.app_context():
-        db.create_all()
+    # Create tables (skip if running Alembic migrations)
+    if not os.environ.get('ALEMBIC_RUNNING'):
+        with app.app_context():
+            db.create_all()
     
     return app
 

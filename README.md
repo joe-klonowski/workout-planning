@@ -30,12 +30,13 @@ pytest -v                 # Verbose output
 pytest --cov=.            # With coverage report
 ```
 
-**Backend test coverage**: 92% (33 tests)
+**Backend test coverage**:
 - Model tests (Workout, WorkoutSelection, CustomWorkout)
 - API endpoint tests (all REST operations)
 - CSV import/export
 - Duplicate handling
 - Error cases
+- Alembic migration tests (create tables, upgrade/downgrade, version tracking)
 
 ### Frontend Tests
 Run frontend tests with npm:
