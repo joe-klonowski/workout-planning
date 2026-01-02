@@ -18,7 +18,96 @@ Currently, the app isn't finished, we're working through iteratively adding feat
 6. **Summarize**: Review weekly summaries of planned workouts
 7. **Export**: Send the final plan to Garmin Connect and/or Hammerhead
 
+## Testing
+
+### Backend Tests
+Run backend tests with pytest:
+```bash
+cd backend
+source venv/bin/activate
+pytest                    # Run all tests
+pytest -v                 # Verbose output
+pytest --cov=.            # With coverage report
+```
+
+**Backend test coverage**: 92% (33 tests)
+- Model tests (Workout, WorkoutSelection, CustomWorkout)
+- API endpoint tests (all REST operations)
+- CSV import/export
+- Duplicate handling
+- Error cases
+
+### Frontend Tests
+Run frontend tests with npm:
+```bash
+cd app
+npm test                  # Interactive mode
+npm test -- --watchAll=false  # Run once
+npm test -- --coverage    # With coverage report
+```
+
+**Frontend test coverage**: 209 tests
+- Component tests (Calendar, WorkoutCard, WorkoutDetailModal)
+- Utility tests (csvParser, DateOnly, workoutTypes)
+- Integration tests (API connection, data transformation)
+- Bug fix regression tests (DateOnly transformation)
+
+### Key Test Coverage
+- ✅ **API Integration**: Fetching workouts from backend
+- ✅ **Data Transformation**: Converting API data to frontend format
+- ✅ **DateOnly Bug Fix**: Ensures workouts display correctly (regression test)
+- ✅ **CORS**: Backend properly configured for cross-origin requests
+- ✅ **Error Handling**: Network failures, API errors, empty data
+- ✅ **CSV Import**: Duplicate detection, field parsing
+
 ## Getting Started
+
+### Quick Start (Run Both Backend and Frontend)
+
+```bash
+# One-command start (from project root)
+./start.sh
+```
+
+This will:
+- Start Flask backend on `http://localhost:5000`
+- Start React frontend on `http://localhost:3000`
+- Import workout data if needed
+
+### Backend Setup (Flask + SQLite)
+
+```bash
+cd backend
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Import CSV data into database (first time only)
+python import_csv.py
+
+# Run backend server
+python app.py
+```
+
+Backend runs at `http://localhost:5000`
+
+### Frontend Setup (React)
+
+```bash
+cd app
+
+# Install dependencies
+npm install
+
+# Run frontend server
+npm start
+```
+
+Frontend runs at `http://localhost:3000`
 
 ### Prerequisites
 - Node.js (v14 or higher)

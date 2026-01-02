@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import config
 from models import db, Workout, WorkoutSelection, CustomWorkout
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import csv
 import io
 
@@ -51,7 +51,9 @@ def register_routes(app):
     def get_workout(workout_id):
         """Get a specific workout by ID"""
         try:
-            workout = Workout.query.get_or_404(workout_id)
+            workout = db.session.get(Workout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Workout not found'}), 404
             return jsonify(workout.to_dict()), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 404
@@ -141,7 +143,9 @@ def register_routes(app):
         }
         """
         try:
-            workout = Workout.query.get_or_404(workout_id)
+            workout = db.session.get(Workout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Workout not found'}), 404
             data = request.get_json()
             
             # Get or create selection
@@ -173,7 +177,9 @@ def register_routes(app):
     def delete_selection(workout_id):
         """Delete a workout selection (resets to defaults)"""
         try:
-            workout = Workout.query.get_or_404(workout_id)
+            workout = db.session.get(Workout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Workout not found'}), 404
             if workout.selection:
                 db.session.delete(workout.selection)
                 db.session.commit()
@@ -237,7 +243,9 @@ def register_routes(app):
     def update_custom_workout(workout_id):
         """Update a custom workout"""
         try:
-            workout = CustomWorkout.query.get_or_404(workout_id)
+            workout = db.session.get(CustomWorkout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Custom workout not found'}), 404
             data = request.get_json()
             
             if 'title' in data:
@@ -266,7 +274,9 @@ def register_routes(app):
     def delete_custom_workout(workout_id):
         """Delete a custom workout"""
         try:
-            workout = CustomWorkout.query.get_or_404(workout_id)
+            workout = db.session.get(CustomWorkout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Custom workout not found'}), 404
             db.session.delete(workout)
             db.session.commit()
             return jsonify({'message': 'Custom workout deleted'}), 200
@@ -282,7 +292,7 @@ def register_routes(app):
         """Health check endpoint"""
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
 
 

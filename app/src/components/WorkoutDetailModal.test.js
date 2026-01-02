@@ -9,9 +9,9 @@ describe('WorkoutDetailModal Component', () => {
     title: 'Morning Run 5k',
     workoutType: 'Run',
     workoutDate: new DateOnly(2026, 1, 15),
-    description: 'Easy 5k run in the morning',
+    workoutDescription: 'Easy 5k run in the morning',
     plannedDuration: 0.75,
-    plannedDistance: 5000,
+    plannedDistanceInMeters: 5000,
     coachComments: 'Keep it easy and steady',
     athleteComments: 'Felt good',
     actualDistance: 5100,
@@ -248,7 +248,7 @@ describe('WorkoutDetailModal Component', () => {
   it('should format distance in miles for Run workouts', () => {
     const workout = {
       ...mockWorkout,
-      plannedDistance: 10000,
+      plannedDistanceInMeters: 10000,
     };
     render(
       <WorkoutDetailModal
@@ -265,9 +265,9 @@ describe('WorkoutDetailModal Component', () => {
       title: 'Simple Workout',
       workoutType: 'Other',
       workoutDate: new DateOnly(2026, 1, 15),
-      description: '',
+      workoutDescription: '',
       plannedDuration: 0,
-      plannedDistance: 0,
+      plannedDistanceInMeters: 0,
       coachComments: '',
       athleteComments: '',
       actualDistance: null,
@@ -373,9 +373,9 @@ describe('WorkoutDetailModal Component', () => {
       title: 'Morning Swim',
       workoutType: 'Swim',
       workoutDate: new DateOnly(2026, 1, 15),
-      description: '',
+      workoutDescription: '',
       plannedDuration: 1,
-      plannedDistance: 1828,  // ~2000 yards
+      plannedDistanceInMeters: 1828,  // ~2000 yards
       actualDistance: null,
       heartRateAverage: 120,
       heartRateMax: 140,
@@ -401,7 +401,7 @@ describe('WorkoutDetailModal Component', () => {
     const bikeWorkout = {
       ...mockWorkout,
       workoutType: 'Bike',
-      plannedDistance: 16093,  // ~10 miles
+      plannedDistanceInMeters: 16093,  // ~10 miles
     };
     render(
       <WorkoutDetailModal
@@ -418,7 +418,7 @@ describe('WorkoutDetailModal Component', () => {
     const otherWorkout = {
       ...mockWorkout,
       workoutType: 'Strength',
-      plannedDistance: 1609,  // ~1 mile
+      plannedDistanceInMeters: 1609,  // ~1 mile
     };
     render(
       <WorkoutDetailModal
@@ -429,5 +429,85 @@ describe('WorkoutDetailModal Component', () => {
     );
     // 1609 meters / 1609.34 ≈ 1 mile
     expect(screen.getByText(/1.00 mi/)).toBeInTheDocument();
+  });
+
+  // Regression test for API data format bug
+  describe('API Data Format Compatibility', () => {
+    it('should display workoutDescription property from API (not description)', () => {
+      const apiWorkout = {
+        title: 'AE1. Easy Ride 1h Power',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 3, 1),
+        workoutDescription: 'Ride in power zones 1-2, but mostly zone 1. Flat course or indoor trainer. Low effort—light on pedals. Comfortably high rpm.',
+        plannedDuration: 1.0,
+        plannedDistanceInMeters: 32000,
+        workoutDay: '2026-03-01',
+        coachComments: 'Keep it in zone 1',
+      };
+
+      render(
+        <WorkoutDetailModal
+          workout={apiWorkout}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+
+      // Verify workoutDescription is displayed (bug was modal looked for 'description')
+      expect(screen.getByText(/Ride in power zones 1-2/)).toBeInTheDocument();
+      expect(screen.getByText(/Comfortably high rpm/)).toBeInTheDocument();
+    });
+
+    it('should display plannedDistanceInMeters property from API (not plannedDistance)', () => {
+      const apiWorkout = {
+        title: 'ME2. Hill Cruise Intervals 1h Power',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 3, 5),
+        workoutDescription: 'Hill climbing workout',
+        plannedDuration: 1.0,
+        plannedDistanceInMeters: 40000, // 40km ≈ 24.85 miles
+        workoutDay: '2026-03-05',
+        coachComments: 'Push hard on the climbs',
+      };
+
+      render(
+        <WorkoutDetailModal
+          workout={apiWorkout}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+
+      // Verify plannedDistanceInMeters is displayed (bug was modal looked for 'plannedDistance')
+      expect(screen.getByText(/Planned Distance/)).toBeInTheDocument();
+      expect(screen.getByText(/24.85 mi/)).toBeInTheDocument();
+    });
+
+    it('should handle API workout with both workoutDescription and plannedDistanceInMeters', () => {
+      const apiWorkout = {
+        title: 'ME3. Ladder Down 2350y',
+        workoutType: 'Swim',
+        workoutDate: new DateOnly(2026, 3, 3),
+        workoutDescription: 'WU: 6 x 50 done as 25 drill of choice. MS: 500 at T-pace.',
+        plannedDuration: 0.54,
+        plannedDistanceInMeters: 2148.84, // yards converted to meters
+        workoutDay: '2026-03-03',
+        coachComments: 'Focus on form',
+      };
+
+      render(
+        <WorkoutDetailModal
+          workout={apiWorkout}
+          isOpen={true}
+          onClose={() => {}}
+        />
+      );
+
+      // Verify both properties are displayed correctly
+      expect(screen.getByText(/WU: 6 x 50 done as 25 drill/)).toBeInTheDocument();
+      expect(screen.getByText(/Planned Distance/)).toBeInTheDocument();
+      // Swim should display in yards: 2148.84 / 0.9144 ≈ 2350 yd
+      expect(screen.getByText(/2350 yd/)).toBeInTheDocument();
+    });
   });
 });

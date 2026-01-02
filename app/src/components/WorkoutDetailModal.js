@@ -66,10 +66,10 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
         </div>
 
         <div className="modal-body">
-          {workout.description && (
+          {workout.workoutDescription && (
             <div className="detail-section">
               <h3 className="detail-label">Description</h3>
-              <p className="detail-value">{workout.description}</p>
+              <p className="detail-value">{workout.workoutDescription}</p>
             </div>
           )}
 
@@ -81,10 +81,10 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
               </div>
             )}
 
-            {workout.plannedDistance > 0 && (
+            {workout.plannedDistanceInMeters > 0 && (
               <div className="detail-item">
                 <span className="detail-label">Planned Distance</span>
-                <span className="detail-value">{formatDistance(workout.plannedDistance)}</span>
+                <span className="detail-value">{formatDistance(workout.plannedDistanceInMeters)}</span>
               </div>
             )}
 

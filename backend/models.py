@@ -2,7 +2,7 @@
 Database models for workout planner
 """
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 db = SQLAlchemy()
 
@@ -30,7 +30,7 @@ class Workout(db.Model):
     intensity_factor = db.Column(db.Float)
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     selection = db.relationship('WorkoutSelection', backref='workout', uselist=False, 
@@ -75,7 +75,7 @@ class WorkoutSelection(db.Model):
     user_notes = db.Column(db.Text)
     
     # Timestamps
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     def to_dict(self):
         """Convert selection to dictionary"""
@@ -107,8 +107,8 @@ class CustomWorkout(db.Model):
     time_of_day = db.Column(db.String(50))
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     def to_dict(self):
         """Convert custom workout to dictionary"""
