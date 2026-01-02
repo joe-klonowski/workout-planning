@@ -8,5 +8,6 @@
   - Temporarily hide workouts the user isn't planning to do.
   - Summarize how much the user is planning to do each week.
 - Save changes to server/DB/backend so that calendar can be saved and accessed across devices.
+- Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
 - Export to other platforms such as Garmin Connect or Hammerhead.
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
