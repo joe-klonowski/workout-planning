@@ -5,7 +5,7 @@ Friel's advice is to:
 
 - Adjust his workout plan based on my schedule (e.g. shift workouts over by a day or two).
 - Adjust his workout plan because we've agreed some weeks I'll want to train for fewer hours than his plan recommends. So likely I'll want to plan NOT to do some of his workouts for this reason.
-- Adjust his workout plan to substitute workouts with friends or groups that I train with. That's where the local triathlon club comes in, I also have an unstructured group ride that I do weekly that'll probably sub in for some of the bike workouts -- that's not in any of this data, yet, but I'll add it later.
+- Adjust his workout plan to substitute workouts with friends or groups that I train with. That's where the local triathlon club comes in. I also have an unstructured group ride that I do weekly that'll probably sub in for some of the bike workouts -- that's not in any of this data, yet, but I'll add it later.
 
 So some of the future feature work here is to enable that plan.
 
