@@ -16,12 +16,24 @@
   gap: 20px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .calendar-header h2 {
   margin: 0;
   font-size: 28px;
   color: #333;
-  min-width: 250px;
-  text-align: center;
+  min-width: 200px;
+  text-align: left;
 }
 
 .nav-button,

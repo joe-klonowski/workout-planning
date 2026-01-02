@@ -146,29 +146,33 @@ function Calendar({ workouts = [], initialDate = (() => {
   return (
     <div className="calendar">
       <div className="calendar-header">
-        <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
-          ← Previous
-        </button>
-        <h2 className="month-year">{monthYear}</h2>
-        <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
-          Next →
-        </button>
-        <button onClick={goToToday} className="today-button">
-          Today
-        </button>
-        <div className="view-toggle">
-          <button
-            onClick={() => setViewMode('week')}
-            className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
-          >
-            Week
+        <div className="header-left">
+          <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
+            ← Previous
           </button>
-          <button
-            onClick={() => setViewMode('month')}
-            className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
-          >
-            Month
+          <h2 className="month-year">{monthYear}</h2>
+          <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
+            Next →
           </button>
+          <button onClick={goToToday} className="today-button">
+            Today
+          </button>
+        </div>
+        <div className="header-right">
+          <div className="view-toggle">
+            <button
+              onClick={() => setViewMode('week')}
+              className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setViewMode('month')}
+              className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
+            >
+              Month
+            </button>
+          </div>
         </div>
       </div>
 
