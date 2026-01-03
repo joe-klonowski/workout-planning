@@ -23,7 +23,14 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
-- Add support for exporting workout plan. Possibly PDF, possibly export to a .cal or similar file. Maybe even publish to a calendar that other people can subscribe to. The idea is to send this to my wife so that we can plan other things during the week like childcare.
+- Add support for exporting workout plan. Send the plan to Apple Calendar using CalDAV and python's caldav library. This is so that my wife can see the workout plan. She said that this Apple Calendar was her preferred way to see it. For now here's the format for sending the plan to an external calendar:
+  - For each day that has one or more workouts, create an all day event.
+  - The event name should be "Joe workout schedule"
+  - The "notes" field in the calendar event should list workouts for that day. In the description of each workout, include:
+    - Workout type (e.g. swim, bike, run).
+    - Workout location, if any
+    - Workout time of day (e.g. morning, afternoon, evening)
+    - Workout duration (e.g. 1 hour 30 minutes)
 
 ## Look/feel/CSS
 - Add summary of the week on the right with:
