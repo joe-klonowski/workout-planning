@@ -23,7 +23,8 @@ So some of the future feature work here is to enable that plan.
   - Temporarily hide unplanned workouts.
   - Maybe we want to temporarily hide planned workouts also?
 - Summarize how much the user is planning to do each week.
-- Add support for mobile
+- Add support for mobile.
+- Show weather forecast in calendar.
 
 ## Look/feel/CSS
 - Add summary of the week on the right with:
