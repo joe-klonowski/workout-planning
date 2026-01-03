@@ -39,6 +39,7 @@ So some of the future feature work here is to enable that plan.
       - Workout location, if any
       - Workout time of day (e.g. morning, afternoon, evening)
       - Workout duration (e.g. 1 hour 30 minutes)
+  - Export should delete events in that date range before adding new ones to avoid duplication of events that may already be in the calendar.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
