@@ -106,6 +106,15 @@
   font-weight: 700;
 }
 
+.time-of-day-badge {
+  font-weight: 600;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
 .modal-body {
   padding: 24px;
 }

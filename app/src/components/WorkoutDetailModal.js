@@ -64,6 +64,16 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
             <h2 className="modal-title">{workout.title}</h2>
             <p className="modal-type">
               {style.label} • {formatDate(workout.workoutDate)}
+              {workout.timeOfDay && (
+                <>
+                  {' • '}
+                  <span className="time-of-day-badge">
+                    {workout.timeOfDay === 'morning' && '🌅 Morning'}
+                    {workout.timeOfDay === 'afternoon' && '☀️ Afternoon'}
+                    {workout.timeOfDay === 'evening' && '🌙 Evening'}
+                  </span>
+                </>
+              )}
               {workout.isSelected !== undefined && (
                 <>
                   {' • '}
@@ -191,6 +201,7 @@ WorkoutDetailModal.propTypes = {
     coachComments: PropTypes.string,
     athleteComments: PropTypes.string,
     isSelected: PropTypes.bool,
+    timeOfDay: PropTypes.string,
   }),
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,

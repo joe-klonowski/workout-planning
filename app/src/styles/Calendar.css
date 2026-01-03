@@ -277,6 +277,91 @@
   margin-top: auto;
 }
 
+/* Time Slot Styles */
+.calendar-grid.dragging .calendar-day.time-slot-mode {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-slots-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.time-slot {
+  flex: 1;
+  min-height: 60px;
+  padding: 6px;
+  border: 2px dashed transparent;
+  border-radius: 4px;
+  background-color: #fafafa;
+  transition: all 0.2s;
+}
+
+.time-slot.drag-over {
+  background-color: #d4edda;
+  border-color: #28a745;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.time-slot-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+  padding: 2px 4px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.time-slot-workouts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time-slot-placeholder {
+  font-size: 10px;
+  color: #999;
+  text-align: center;
+  padding: 8px 4px;
+  font-style: italic;
+}
+
+/* Time-grouped workouts (non-dragging view) */
+.time-grouped-workouts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #6c757d;
+}
+
+.time-group-header {
+  font-size: 10px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-group .workout-badge {
+  margin: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .calendar {

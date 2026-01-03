@@ -15,16 +15,13 @@ So some of the future feature work here is to enable that plan.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
 - Allow user to select a specific time like 7:30am in the workout details modal.
-- Allow user to assign the workout to "morning", "afternoon" or "evening" in the calendar view by dragging the workout.
-  - When the workout is being dragged, each day cell in the calendar should split into four sub-cells: no planned time, morning, afternoon and evening.
-  - The user should be able to drag the workout to any of those four cells and have that choice be persisted in the backend.
-  - If a day in the calendar has one or more workouts that are planned for a specific time of day, then it should visually group those workouts into a box labeled with the appropriate time of day.
 - Allow user to filter the UI to:
   - Temporarily hide unplanned workouts.
   - Maybe we want to temporarily hide planned workouts also?
 - Summarize how much the user is planning to do each week.
 - Add support for mobile.
 - Show weather forecast in calendar.
+- Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
 
 ## Look/feel/CSS
 - Add summary of the week on the right with:

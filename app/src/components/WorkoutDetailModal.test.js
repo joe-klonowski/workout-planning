@@ -587,4 +587,90 @@ describe('WorkoutDetailModal Component', () => {
       expect(console.error).not.toHaveBeenCalled();
     });
   });
+
+  describe('Time of Day Display', () => {
+    it('should display morning time of day', () => {
+      const workoutWithTime = {
+        ...mockWorkout,
+        timeOfDay: 'morning',
+      };
+      
+      render(
+        <WorkoutDetailModal
+          workout={workoutWithTime}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      
+      expect(screen.getByText(/🌅 Morning/)).toBeInTheDocument();
+    });
+
+    it('should display afternoon time of day', () => {
+      const workoutWithTime = {
+        ...mockWorkout,
+        timeOfDay: 'afternoon',
+      };
+      
+      render(
+        <WorkoutDetailModal
+          workout={workoutWithTime}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      
+      expect(screen.getByText(/☀️ Afternoon/)).toBeInTheDocument();
+    });
+
+    it('should display evening time of day', () => {
+      const workoutWithTime = {
+        ...mockWorkout,
+        timeOfDay: 'evening',
+      };
+      
+      render(
+        <WorkoutDetailModal
+          workout={workoutWithTime}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      
+      expect(screen.getByText(/🌙 Evening/)).toBeInTheDocument();
+    });
+
+    it('should not display time of day when not set', () => {
+      render(
+        <WorkoutDetailModal
+          workout={mockWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      
+      // Should not have any time of day badge
+      expect(screen.queryByText(/🌅 Morning/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/☀️ Afternoon/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/🌙 Evening/)).not.toBeInTheDocument();
+    });
+
+    it('should have correct CSS class for time of day badge', () => {
+      const workoutWithTime = {
+        ...mockWorkout,
+        timeOfDay: 'morning',
+      };
+      
+      const { container } = render(
+        <WorkoutDetailModal
+          workout={workoutWithTime}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      
+      const badge = container.querySelector('.time-of-day-badge');
+      expect(badge).toBeInTheDocument();
+    });
+  });
 });

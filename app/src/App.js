@@ -42,6 +42,7 @@ function App() {
             coachComments: workout.coachComments,
             // Selection state - default to selected if no selection exists
             isSelected: workout.selection ? workout.selection.isSelected : true,
+            timeOfDay: workout.selection?.timeOfDay, // Time of day (morning, afternoon, evening, or null)
           };
         });
         
@@ -139,6 +140,39 @@ function App() {
     }
   };
 
+  // Handle workout time of day change (drag and drop to time slot)
+  const handleWorkoutTimeOfDayChange = async (workoutId, timeOfDay) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update workout time: ${response.status}`);
+      }
+
+      // Update local state
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout => {
+          if (workout.id === workoutId) {
+            return {
+              ...workout,
+              timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay
+            };
+          }
+          return workout;
+        })
+      );
+    } catch (err) {
+      console.error('Error updating workout time:', err);
+      alert('Failed to update workout time. Please try again.');
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -158,6 +192,7 @@ function App() {
               workouts={workouts} 
               onWorkoutSelectionToggle={handleWorkoutSelection}
               onWorkoutDateChange={handleWorkoutDateChange}
+              onWorkoutTimeOfDayChange={handleWorkoutTimeOfDayChange}
             />
           </>
         )}

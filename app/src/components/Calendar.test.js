@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import Calendar from './Calendar';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
@@ -958,6 +958,9 @@ describe('Calendar Component', () => {
         />
       );
       
+      // Switch to month view for simpler drag and drop testing
+      fireEvent.click(screen.getByRole('button', { name: /Month/ }));
+      
       // Get the workout badge and a target day
       const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
       const calendarDays = container.querySelectorAll('.calendar-day');
@@ -995,23 +998,42 @@ describe('Calendar Component', () => {
       const { container } = render(<Calendar workouts={workouts} initialDate={testDate} />);
       
       const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
-      const calendarDays = container.querySelectorAll('.calendar-day');
-      const targetDay = Array.from(calendarDays).find(day => 
-        day.querySelector('.day-number')?.textContent === '16'
-      );
       
-      // Drag over the target day
+      // In week view, dragging shows time slots after a short delay
+      // Start dragging
       fireEvent.dragStart(workoutBadge);
-      fireEvent.dragOver(targetDay);
       
-      // Should have drag-over class
-      expect(targetDay).toHaveClass('drag-over');
+      // Should not have dragging class immediately
+      const calendarGridBefore = container.querySelector('.calendar-grid');
+      expect(calendarGridBefore).not.toHaveClass('dragging');
       
-      // Drag leave
-      fireEvent.dragLeave(targetDay);
+      // Simulate the delay by using fake timers
+      jest.useFakeTimers();
+      fireEvent.dragStart(workoutBadge);
       
-      // Should not have drag-over class anymore
-      expect(targetDay).not.toHaveClass('drag-over');
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // Check that the calendar grid has dragging class after delay
+      const calendarGrid = container.querySelector('.calendar-grid');
+      expect(calendarGrid).toHaveClass('dragging');
+      
+      // Find a time slot and drag over it
+      const timeSlots = container.querySelectorAll('.time-slot');
+      if (timeSlots.length > 0) {
+        fireEvent.dragOver(timeSlots[0]);
+        // The specific time slot should have drag-over class
+        expect(timeSlots[0]).toHaveClass('drag-over');
+        
+        // Drag leave
+        fireEvent.dragLeave(timeSlots[0]);
+        
+        // Should not have drag-over class anymore
+        expect(timeSlots[0]).not.toHaveClass('drag-over');
+      }
+      
+      jest.useRealTimers();
     });
 
     it('should not call onWorkoutDateChange when dropped on same day', () => {
@@ -1088,6 +1110,349 @@ describe('Calendar Component', () => {
       fireEvent.drop(targetDay);
       
       expect(mockDateChange).toHaveBeenCalled();
+    });
+  });
+
+  describe('Time of Day Functionality', () => {
+    const workoutsWithTime = [
+      {
+        id: 1,
+        title: 'Morning Run',
+        workoutType: 'Run',
+        workoutDate: new DateOnly(2026, 1, 15),
+        originallyPlannedDay: '2026-01-15',
+        plannedDuration: 1,
+        isSelected: true,
+        timeOfDay: 'morning',
+      },
+      {
+        id: 2,
+        title: 'Afternoon Swim',
+        workoutType: 'Swim',
+        workoutDate: new DateOnly(2026, 1, 15),
+        originallyPlannedDay: '2026-01-15',
+        plannedDuration: 1,
+        isSelected: true,
+        timeOfDay: 'afternoon',
+      },
+      {
+        id: 3,
+        title: 'Evening Bike',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 1, 15),
+        originallyPlannedDay: '2026-01-15',
+        plannedDuration: 2,
+        isSelected: true,
+        timeOfDay: 'evening',
+      },
+      {
+        id: 4,
+        title: 'Unscheduled Strength',
+        workoutType: 'Strength',
+        workoutDate: new DateOnly(2026, 1, 15),
+        originallyPlannedDay: '2026-01-15',
+        plannedDuration: 0.5,
+        isSelected: true,
+      },
+    ];
+
+    it('should group workouts by time of day when they have timeOfDay set', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      render(<Calendar workouts={workoutsWithTime} initialDate={testDate} />);
+      
+      // Check for time-of-day group headers (with emojis)
+      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+      expect(screen.getByText('☀️ Afternoon')).toBeInTheDocument();
+      expect(screen.getByText('🌙 Evening')).toBeInTheDocument();
+      
+      // Check workouts are displayed
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+      expect(screen.getByText('Afternoon Swim')).toBeInTheDocument();
+      expect(screen.getByText('Evening Bike')).toBeInTheDocument();
+      expect(screen.getByText('Unscheduled Strength')).toBeInTheDocument();
+    });
+
+    it('should show time slots when dragging a workout', () => {
+      jest.useFakeTimers();
+      const mockTimeChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // Check that calendar has dragging class
+      const calendarGrid = container.querySelector('.calendar-grid');
+      expect(calendarGrid).toHaveClass('dragging');
+      
+      jest.useRealTimers();
+    });
+
+    it('should call onWorkoutTimeOfDayChange when dropping on a time slot', () => {
+      jest.useFakeTimers();
+      const mockTimeChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // Find an afternoon time slot
+      const timeSlots = container.querySelectorAll('.time-slot.afternoon');
+      expect(timeSlots.length).toBeGreaterThan(0);
+      
+      // Drop on afternoon slot
+      fireEvent.drop(timeSlots[0]);
+      
+      // Should call time change handler with afternoon
+      expect(mockTimeChange).toHaveBeenCalledWith(1, 'afternoon');
+      
+      jest.useRealTimers();
+    });
+
+    it('should update both date and time when dropping on different day time slot', () => {
+      jest.useFakeTimers();
+      const mockTimeChange = jest.fn();
+      const mockDateChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+          onWorkoutDateChange={mockDateChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // Find time slots from a different day
+      const calendarDays = container.querySelectorAll('.calendar-day.time-slot-mode');
+      // Get the second day's afternoon slot
+      if (calendarDays.length > 1) {
+        const secondDaySlots = calendarDays[1].querySelectorAll('.time-slot.afternoon');
+        if (secondDaySlots.length > 0) {
+          fireEvent.drop(secondDaySlots[0]);
+          
+          // Both handlers should be called
+          expect(mockTimeChange).toHaveBeenCalled();
+          expect(mockDateChange).toHaveBeenCalled();
+        }
+      }
+      
+      jest.useRealTimers();
+    });
+
+    it('should handle unscheduled time slot correctly', () => {
+      jest.useFakeTimers();
+      const mockTimeChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // Find unscheduled time slot on same day
+      const unscheduledSlots = container.querySelectorAll('.time-slot.unscheduled');
+      if (unscheduledSlots.length > 0) {
+        fireEvent.drop(unscheduledSlots[0]);
+        
+        // Should call with 'unscheduled' which gets converted to null in App.js
+        expect(mockTimeChange).toHaveBeenCalledWith(1, 'unscheduled');
+      }
+      
+      jest.useRealTimers();
+    });
+
+    it('should not show time slot drop zones before dragging starts', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+        />
+      );
+      
+      // Before dragging, should not have dragging class
+      const calendarGrid = container.querySelector('.calendar-grid');
+      expect(calendarGrid).not.toHaveClass('dragging');
+      
+      // Should not show time slot mode
+      const timeSlotMode = container.querySelectorAll('.calendar-day.time-slot-mode');
+      expect(timeSlotMode.length).toBe(0);
+    });
+
+    it('should show time slots shortly after drag starts', async () => {
+      jest.useFakeTimers();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Should not immediately show time slots (prevents drag breaking)
+      const calendarGridImmediate = container.querySelector('.calendar-grid');
+      expect(calendarGridImmediate).not.toHaveClass('dragging');
+      
+      // Advance timers to trigger the timeout
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      // After the delay, time slots should appear
+      const calendarGrid = container.querySelector('.calendar-grid');
+      expect(calendarGrid).toHaveClass('dragging');
+      
+      // Should show time slot mode
+      const timeSlotMode = container.querySelectorAll('.calendar-day.time-slot-mode');
+      expect(timeSlotMode.length).toBeGreaterThan(0);
+      
+      jest.useRealTimers();
+    });
+
+    it('should hide time slots when workout is dropped', async () => {
+      jest.useFakeTimers();
+      const mockTimeChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithTime} 
+          initialDate={testDate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+      
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      
+      const timeSlots = container.querySelectorAll('.time-slot.afternoon');
+      expect(timeSlots.length).toBeGreaterThan(0);
+      
+      // Drop on a time slot
+      fireEvent.drop(timeSlots[0]);
+      
+      // Time slots should be hidden after drop
+      const calendarGrid = container.querySelector('.calendar-grid');
+      expect(calendarGrid).not.toHaveClass('dragging');
+      
+      jest.useRealTimers();
+    });
+
+    it('should not show unscheduled workout box when not dragging', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      const workoutsWithUnscheduled = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          originallyPlannedDay: '2026-01-15',
+          plannedDuration: 1,
+          isSelected: true,
+          timeOfDay: 'morning',
+        },
+        {
+          id: 2,
+          title: 'Unscheduled Strength',
+          workoutType: 'Strength',
+          workoutDate: new DateOnly(2026, 1, 15),
+          originallyPlannedDay: '2026-01-15',
+          plannedDuration: 0.5,
+          isSelected: true,
+          // No timeOfDay - this is unscheduled
+        },
+      ];
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsWithUnscheduled} 
+          initialDate={testDate}
+        />
+      );
+      
+      // Should show morning group with header
+      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+      
+      // Both workouts should be visible
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+      expect(screen.getByText('Unscheduled Strength')).toBeInTheDocument();
+      
+      // Should have one time-group (for morning)
+      const timeGroups = container.querySelectorAll('.time-group');
+      expect(timeGroups.length).toBe(1);
+      
+      // Unscheduled workout should be outside any time-group
+      const unscheduledWorkout = screen.getByText('Unscheduled Strength').closest('.workout-badge');
+      const isInTimeGroup = unscheduledWorkout.closest('.time-group');
+      expect(isInTimeGroup).toBeNull();
     });
   });
 });

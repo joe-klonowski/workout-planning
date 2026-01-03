@@ -13,17 +13,20 @@ import '../styles/Calendar.css';
  * @param {DateOnly} initialDate - Starting date (defaults to today)
  * @param {Function} onWorkoutSelectionToggle - Callback for when user toggles workout selection
  * @param {Function} onWorkoutDateChange - Callback for when user drags workout to a new date
+ * @param {Function} onWorkoutTimeOfDayChange - Callback for when user drags workout to a time of day
  */
 function Calendar({ workouts = [], initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [draggedWorkout, setDraggedWorkout] = useState(null);
+  const [showTimeSlots, setShowTimeSlots] = useState(false); // Separate state to control time slot visibility
   const [dragOverDate, setDragOverDate] = useState(null);
+  const [dragOverTimeSlot, setDragOverTimeSlot] = useState(null);
 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
@@ -72,44 +75,66 @@ function Calendar({ workouts = [], initialDate = (() => {
     }
     // Add a subtle visual effect
     e.target.style.opacity = '0.4';
+    // Show time slots after a tiny delay to let drag operation establish
+    setTimeout(() => {
+      setShowTimeSlots(true);
+    }, 50);
   };
 
   const handleDragEnd = (e) => {
     e.target.style.opacity = '1';
     setDraggedWorkout(null);
+    setShowTimeSlots(false);
     setDragOverDate(null);
+    setDragOverTimeSlot(null);
   };
 
-  const handleDragOver = (e, date) => {
+  const handleDragOver = (e, date, timeSlot = null) => {
     e.preventDefault();
     if (e.dataTransfer) {
       e.dataTransfer.dropEffect = 'move';
     }
     setDragOverDate(date.toISOString());
+    setDragOverTimeSlot(timeSlot);
   };
 
   const handleDragLeave = () => {
     setDragOverDate(null);
+    setDragOverTimeSlot(null);
   };
 
-  const handleDrop = (e, dayObj) => {
+  const handleDrop = (e, dayObj, timeSlot = null) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOverDate(null);
+    setDragOverTimeSlot(null);
+    setShowTimeSlots(false);
     
-    if (draggedWorkout && onWorkoutDateChange) {
-      // Create a Date object for the new date
-      const newDate = new Date(dayObj.year, dayObj.month, dayObj.day);
-      
-      // Only update if the date actually changed
-      // Compare the actual Date values to see if they're the same day
-      const currentDate = draggedWorkout.workoutDate.toDate();
-      const sameDay = currentDate.getFullYear() === dayObj.year &&
-                      currentDate.getMonth() === dayObj.month &&
-                      currentDate.getDate() === dayObj.day;
-      
-      if (!sameDay) {
-        onWorkoutDateChange(draggedWorkout.id, newDate);
-      }
+    if (!draggedWorkout) {
+      setDraggedWorkout(null);
+      return;
+    }
+    
+    // Create a Date object for the new date
+    const newDate = new Date(dayObj.year, dayObj.month, dayObj.day);
+    
+    // Compare the actual Date values to see if they're the same day
+    const currentDate = draggedWorkout.workoutDate.toDate();
+    const sameDay = currentDate.getFullYear() === dayObj.year &&
+                    currentDate.getMonth() === dayObj.month &&
+                    currentDate.getDate() === dayObj.day;
+    
+    // Check if time slot changed
+    const timeSlotChanged = draggedWorkout.timeOfDay !== timeSlot;
+    
+    // Update date if changed
+    if (!sameDay && onWorkoutDateChange) {
+      onWorkoutDateChange(draggedWorkout.id, newDate);
+    }
+    
+    // Update time of day if changed
+    if (timeSlotChanged && onWorkoutTimeOfDayChange) {
+      onWorkoutTimeOfDayChange(draggedWorkout.id, timeSlot);
     }
     
     setDraggedWorkout(null);
@@ -198,6 +223,38 @@ function Calendar({ workouts = [], initialDate = (() => {
     });
   };
 
+  // Group workouts by time of day
+  const groupWorkoutsByTimeOfDay = (workouts) => {
+    const groups = {
+      morning: [],
+      afternoon: [],
+      evening: [],
+      unscheduled: []
+    };
+    
+    workouts.forEach(workout => {
+      const timeOfDay = workout.timeOfDay || 'unscheduled';
+      if (groups[timeOfDay]) {
+        groups[timeOfDay].push(workout);
+      } else {
+        groups.unscheduled.push(workout);
+      }
+    });
+    
+    return groups;
+  };
+
+  // Get label for time of day
+  const getTimeOfDayLabel = (timeSlot) => {
+    const labels = {
+      morning: '🌅 Morning',
+      afternoon: '☀️ Afternoon',
+      evening: '🌙 Evening',
+      unscheduled: 'Unscheduled'
+    };
+    return labels[timeSlot] || timeSlot;
+  };
+
   // Format duration to hours and minutes
   const formatDuration = (hours) => {
     if (hours === 0) return '';
@@ -210,6 +267,111 @@ function Calendar({ workouts = [], initialDate = (() => {
     } else {
       return `${m}m`;
     }
+  };
+
+  // Render a workout badge
+  const renderWorkoutBadge = (workout, idx) => {
+    const style = getWorkoutTypeStyle(workout.workoutType);
+    return (
+      <div
+        key={idx}
+        className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
+        style={{
+          backgroundColor: style.backgroundColor,
+          borderLeft: `4px solid ${style.color}`,
+          cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
+          opacity: workout.isSelected ? 1 : 0.5,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, workout)}
+        onDragEnd={handleDragEnd}
+      >
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '4px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="workout-icon">{style.icon}</span>
+            {workout.plannedDuration > 0 && (
+              <span className="workout-duration" style={{
+                fontSize: '11px',
+                fontWeight: '600',
+                color: '#666',
+                backgroundColor: '#f0f0f0',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                whiteSpace: 'nowrap'
+              }}>
+                {formatDuration(workout.plannedDuration)}
+              </span>
+            )}
+          </div>
+          {onWorkoutSelectionToggle && (
+            <button
+              className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onWorkoutSelectionToggle(workout.id, !workout.isSelected);
+              }}
+              aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+              title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+            >
+              {workout.isSelected ? '✕' : '+'}
+            </button>
+          )}
+        </div>
+        <div
+          onClick={() => {
+            setSelectedWorkout(workout);
+            setIsModalOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              setSelectedWorkout(workout);
+              setIsModalOpen(true);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="workout-title">{workout.title}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Render a time slot drop zone with workouts
+  const renderTimeSlot = (dayObj, timeSlot, workouts) => {
+    const isBeingDraggedOver = draggedWorkout && 
+      dragOverDate === dayObj.date.toISOString() && 
+      dragOverTimeSlot === timeSlot;
+    
+    return (
+      <div
+        key={timeSlot}
+        className={`time-slot ${timeSlot} ${isBeingDraggedOver ? 'drag-over' : ''}`}
+        onDragOver={(e) => handleDragOver(e, dayObj.date, timeSlot)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, dayObj, timeSlot)}
+      >
+        {workouts.length > 0 && (
+          <div className="time-slot-header">{getTimeOfDayLabel(timeSlot)}</div>
+        )}
+        <div className="time-slot-workouts">
+          {workouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+        </div>
+        {draggedWorkout && workouts.length === 0 && (
+          <div className="time-slot-placeholder">
+            {getTimeOfDayLabel(timeSlot)}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -255,116 +417,83 @@ function Calendar({ workouts = [], initialDate = (() => {
         <div className="day-of-week">Sun</div>
       </div>
 
-      <div className={`calendar-grid ${viewMode}`}>
+      <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
         {days.map((dayObj, index) => {
+          const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
+          const isToday = dayObj.date.toDateString() === new Date().toDateString();
+          
           if (viewMode === 'week') {
-            // Week view rendering
-            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
-            const isToday =
-              dayObj.date.toDateString() === new Date().toDateString();
-
-            return (
-              <div
-                key={index}
-                className={`calendar-day ${
-                  isToday ? 'is-today' : ''
-                } ${dragOverDate === dayObj.date.toISOString() ? 'drag-over' : ''}`}
-                onDragOver={(e) => handleDragOver(e, dayObj.date)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, dayObj)}
-              >
-                <>
+            // Week view rendering with time slots when dragging
+            if (showTimeSlots) {
+              // Show time slot drop zones when dragging
+              const workoutGroups = groupWorkoutsByTimeOfDay(dayWorkouts);
+              
+              return (
+                <div
+                  key={index}
+                  className={`calendar-day ${isToday ? 'is-today' : ''} time-slot-mode`}
+                >
+                  <div className="day-number">{dayObj.day}</div>
+                  <div className="time-slots-container">
+                    {renderTimeSlot(dayObj, 'morning', workoutGroups.morning)}
+                    {renderTimeSlot(dayObj, 'afternoon', workoutGroups.afternoon)}
+                    {renderTimeSlot(dayObj, 'evening', workoutGroups.evening)}
+                    {renderTimeSlot(dayObj, 'unscheduled', workoutGroups.unscheduled)}
+                  </div>
+                </div>
+              );
+            } else {
+              // Normal view when not dragging - group by time of day if any have times
+              const workoutGroups = groupWorkoutsByTimeOfDay(dayWorkouts);
+              const hasTimedWorkouts = workoutGroups.morning.length > 0 || 
+                                      workoutGroups.afternoon.length > 0 || 
+                                      workoutGroups.evening.length > 0;
+              
+              return (
+                <div
+                  key={index}
+                  className={`calendar-day ${isToday ? 'is-today' : ''}`}
+                >
                   <div className="day-number">{dayObj.day}</div>
                   <div className="workouts-container">
                     {dayWorkouts.length > 0 ? (
-                      <div className="workouts-list">
-                        {dayWorkouts.map((workout, idx) => {
-                          const style = getWorkoutTypeStyle(workout.workoutType);
-                          return (
-                            <div
-                              key={idx}
-                              className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
-                              style={{
-                                backgroundColor: style.backgroundColor,
-                                borderLeft: `4px solid ${style.color}`,
-                                cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
-                                opacity: workout.isSelected ? 1 : 0.5,
-                                position: 'relative',
-                                display: 'flex',
-                                flexDirection: 'column',
-                              }}
-                              draggable={true}
-                              onDragStart={(e) => handleDragStart(e, workout)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '4px'
-                              }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span className="workout-icon">{style.icon}</span>
-                                  {workout.plannedDuration > 0 && (
-                                    <span className="workout-duration" style={{
-                                      fontSize: '11px',
-                                      fontWeight: '600',
-                                      color: '#666',
-                                      backgroundColor: '#f0f0f0',
-                                      padding: '2px 6px',
-                                      borderRadius: '8px',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {formatDuration(workout.plannedDuration)}
-                                    </span>
-                                  )}
-                                </div>
-                                {onWorkoutSelectionToggle && (
-                                  <button
-                                    className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onWorkoutSelectionToggle(workout.id, !workout.isSelected);
-                                    }}
-                                    aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                    title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  >
-                                    {workout.isSelected ? '✕' : '+'}
-                                  </button>
-                                )}
-                              </div>
-                              <div
-                                onClick={() => {
-                                  setSelectedWorkout(workout);
-                                  setIsModalOpen(true);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    setSelectedWorkout(workout);
-                                    setIsModalOpen(true);
-                                  }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                              >
-                                <span className="workout-title">{workout.title}</span>
-                              </div>
+                      hasTimedWorkouts ? (
+                        <div className="time-grouped-workouts">
+                          {workoutGroups.morning.length > 0 && (
+                            <div className="time-group">
+                              <div className="time-group-header">🌅 Morning</div>
+                              {workoutGroups.morning.map((workout, idx) => renderWorkoutBadge(workout, `morning-${idx}`))}
                             </div>
-                          );
-                        })}
-                      </div>
+                          )}
+                          {workoutGroups.afternoon.length > 0 && (
+                            <div className="time-group">
+                              <div className="time-group-header">☀️ Afternoon</div>
+                              {workoutGroups.afternoon.map((workout, idx) => renderWorkoutBadge(workout, `afternoon-${idx}`))}
+                            </div>
+                          )}
+                          {workoutGroups.evening.length > 0 && (
+                            <div className="time-group">
+                              <div className="time-group-header">🌙 Evening</div>
+                              {workoutGroups.evening.map((workout, idx) => renderWorkoutBadge(workout, `evening-${idx}`))}
+                            </div>
+                          )}
+                          {/* Unscheduled workouts shown without time-group box */}
+                          {workoutGroups.unscheduled.map((workout, idx) => renderWorkoutBadge(workout, `unscheduled-${idx}`))}
+                        </div>
+                      ) : (
+                        <div className="workouts-list">
+                          {dayWorkouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+                        </div>
+                      )
                     ) : (
                       <div className="no-workouts">Rest day</div>
                     )}
                   </div>
-                </>
-              </div>
-            );
+                </div>
+              );
+            }
           } else {
-            // Month view rendering
-            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
-            const isToday =
-              dayObj.date.toDateString() === new Date().toDateString();
+            // Month view rendering - simpler, no time slots in month view
             const isCurrentMonth = dayObj.isCurrentMonth;
 
             return (
@@ -372,96 +501,21 @@ function Calendar({ workouts = [], initialDate = (() => {
                 key={index}
                 className={`calendar-day has-date ${
                   isToday ? 'is-today' : ''
-                } ${!isCurrentMonth ? 'other-month' : ''} ${dragOverDate === dayObj.date.toISOString() ? 'drag-over' : ''}`}
-                onDragOver={(e) => handleDragOver(e, dayObj.date)}
+                } ${!isCurrentMonth ? 'other-month' : ''} ${dragOverDate === dayObj.date.toISOString() && !dragOverTimeSlot ? 'drag-over' : ''}`}
+                onDragOver={(e) => handleDragOver(e, dayObj.date, null)}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, dayObj)}
+                onDrop={(e) => handleDrop(e, dayObj, null)}
               >
-                <>
-                  <div className="day-number">{dayObj.day}</div>
-                  <div className="workouts-container">
-                    {dayWorkouts.length > 0 ? (
-                      <div className="workouts-list">
-                        {dayWorkouts.map((workout, idx) => {
-                          const style = getWorkoutTypeStyle(workout.workoutType);
-                          return (
-                            <div
-                              key={idx}
-                              className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
-                              style={{
-                                backgroundColor: style.backgroundColor,
-                                borderLeft: `4px solid ${style.color}`,
-                                cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
-                                opacity: workout.isSelected ? 1 : 0.5,
-                                position: 'relative',
-                                display: 'flex',
-                                flexDirection: 'column',
-                              }}
-                              draggable={true}
-                              onDragStart={(e) => handleDragStart(e, workout)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '4px'
-                              }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span className="workout-icon">{style.icon}</span>
-                                  {workout.plannedDuration > 0 && (
-                                    <span className="workout-duration" style={{
-                                      fontSize: '11px',
-                                      fontWeight: '600',
-                                      color: '#666',
-                                      backgroundColor: '#f0f0f0',
-                                      padding: '2px 6px',
-                                      borderRadius: '8px',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {formatDuration(workout.plannedDuration)}
-                                    </span>
-                                  )}
-                                </div>
-                                {onWorkoutSelectionToggle && (
-                                  <button
-                                    className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onWorkoutSelectionToggle(workout.id, !workout.isSelected);
-                                    }}
-                                    aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                    title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  >
-                                    {workout.isSelected ? '✕' : '+'}
-                                  </button>
-                                )}
-                              </div>
-                              <div
-                                onClick={() => {
-                                  setSelectedWorkout(workout);
-                                  setIsModalOpen(true);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    setSelectedWorkout(workout);
-                                    setIsModalOpen(true);
-                                  }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                              >
-                                <span className="workout-title">{workout.title}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="no-workouts">Rest day</div>
-                    )}
-                  </div>
-                </>
+                <div className="day-number">{dayObj.day}</div>
+                <div className="workouts-container">
+                  {dayWorkouts.length > 0 ? (
+                    <div className="workouts-list">
+                      {dayWorkouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+                    </div>
+                  ) : (
+                    <div className="no-workouts">Rest day</div>
+                  )}
+                </div>
               </div>
             );
           }
@@ -493,11 +547,13 @@ Calendar.propTypes = {
       plannedDistanceInMeters: PropTypes.number,
       coachComments: PropTypes.string,
       isSelected: PropTypes.bool,
+      timeOfDay: PropTypes.string,
     })
   ),
   initialDate: PropTypes.instanceOf(DateOnly),
   onWorkoutSelectionToggle: PropTypes.func,
   onWorkoutDateChange: PropTypes.func,
+  onWorkoutTimeOfDayChange: PropTypes.func,
 };
 
 Calendar.defaultProps = {
