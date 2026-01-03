@@ -38,7 +38,7 @@ def sample_workout(app):
             workout_description="Test description",
             planned_duration=1.0,
             planned_distance_meters=2000.0,
-            workout_day=date(2026, 1, 15),
+            originally_planned_day=date(2026, 1, 15),
             coach_comments="Test comments"
         )
         db.session.add(workout)
@@ -65,7 +65,7 @@ def test_workout_model(app):
             workout_description="Test description",
             planned_duration=1.5,
             planned_distance_meters=10000.0,
-            workout_day=date(2026, 1, 15),
+            originally_planned_day=date(2026, 1, 15),
             coach_comments="Test comments",
             tss=60.0,
             intensity_factor=0.75
@@ -89,7 +89,7 @@ def test_workout_selection_model(app, sample_workout):
         selection = WorkoutSelection(
             workout_id=sample_workout,
             is_selected=True,
-            actual_date=date(2026, 1, 20),
+            current_plan_day=date(2026, 1, 20),
             time_of_day="morning",
             user_notes="Moved to Saturday"
         )
@@ -226,7 +226,7 @@ def test_update_selection(client, sample_workout):
     """Test creating/updating a workout selection"""
     selection_data = {
         'isSelected': True,
-        'actualDate': '2026-01-20',
+        'currentPlanDay': '2026-01-20',
         'timeOfDay': 'morning',
         'userNotes': 'Moved to Saturday'
     }
@@ -240,7 +240,7 @@ def test_update_selection(client, sample_workout):
     data = json.loads(response.data)
     assert data['isSelected'] is True
     assert data['timeOfDay'] == 'morning'
-    assert data['actualDate'] == '2026-01-20'
+    assert data['currentPlanDay'] == '2026-01-20'
 
 
 def test_update_selection_partial(client, sample_workout):
@@ -449,26 +449,26 @@ def test_workout_date_change_preserves_original(client, sample_workout):
     response = client.get(f'/api/workouts/{sample_workout}')
     assert response.status_code == 200
     workout = json.loads(response.data)
-    original_date = workout['workoutDay']
+    original_date = workout['originallyPlannedDay']
     assert original_date == '2026-01-15'
     
     # Move the workout to a different date
     new_date = '2026-01-20'
     response = client.put(
         f'/api/selections/{sample_workout}',
-        data=json.dumps({'actualDate': new_date}),
+        data=json.dumps({'currentPlanDay': new_date}),
         content_type='application/json'
     )
     assert response.status_code == 200
     selection = json.loads(response.data)
-    assert selection['actualDate'] == new_date
+    assert selection['currentPlanDay'] == new_date
     
     # Verify the original workout day is unchanged
     response = client.get(f'/api/workouts/{sample_workout}')
     assert response.status_code == 200
     workout = json.loads(response.data)
-    assert workout['workoutDay'] == original_date  # Original date unchanged
-    assert workout['selection']['actualDate'] == new_date  # New date stored in selection
+    assert workout['originallyPlannedDay'] == original_date  # Original date unchanged
+    assert workout['selection']['currentPlanDay'] == new_date  # New date stored in selection
     
     # Verify workout list shows the selection
     response = client.get('/api/workouts')
@@ -476,5 +476,5 @@ def test_workout_date_change_preserves_original(client, sample_workout):
     data = json.loads(response.data)
     workouts = data['workouts']
     moved_workout = next(w for w in workouts if w['id'] == sample_workout)
-    assert moved_workout['workoutDay'] == original_date
-    assert moved_workout['selection']['actualDate'] == new_date
+    assert moved_workout['originallyPlannedDay'] == original_date
+    assert moved_workout['selection']['currentPlanDay'] == new_date

@@ -487,7 +487,7 @@ Calendar.propTypes = {
       title: PropTypes.string.isRequired,
       workoutType: PropTypes.string.isRequired,
       workoutDate: PropTypes.instanceOf(DateOnly).isRequired,
-      workoutDay: PropTypes.string.isRequired,
+      originallyPlannedDay: PropTypes.string.isRequired,
       workoutDescription: PropTypes.string,
       plannedDuration: PropTypes.number,
       plannedDistanceInMeters: PropTypes.number,

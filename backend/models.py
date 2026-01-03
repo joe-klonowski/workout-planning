@@ -22,7 +22,7 @@ class Workout(db.Model):
     workout_description = db.Column(db.Text)
     planned_duration = db.Column(db.Float)  # in hours
     planned_distance_meters = db.Column(db.Float)
-    workout_day = db.Column(db.Date, nullable=False)
+    originally_planned_day = db.Column(db.Date, nullable=False)
     coach_comments = db.Column(db.Text)
     
     # Optional metadata
@@ -45,7 +45,7 @@ class Workout(db.Model):
             'workoutDescription': self.workout_description,
             'plannedDuration': self.planned_duration,
             'plannedDistanceInMeters': self.planned_distance_meters,
-            'workoutDay': self.workout_day.isoformat() if self.workout_day else None,
+            'originallyPlannedDay': self.originally_planned_day.isoformat() if self.originally_planned_day else None,
             'coachComments': self.coach_comments,
             'tss': self.tss,
             'intensityFactor': self.intensity_factor,
@@ -68,7 +68,7 @@ class WorkoutSelection(db.Model):
     
     # User's choices
     is_selected = db.Column(db.Boolean, default=True)  # True = planning to do it
-    actual_date = db.Column(db.Date)  # If moved from original date
+    current_plan_day = db.Column(db.Date)  # If moved from original date
     time_of_day = db.Column(db.String(50))  # e.g., "morning", "7am", "Tuesday evening"
     
     # Notes
@@ -83,7 +83,7 @@ class WorkoutSelection(db.Model):
             'id': self.id,
             'workoutId': self.workout_id,
             'isSelected': self.is_selected,
-            'actualDate': self.actual_date.isoformat() if self.actual_date else None,
+            'currentPlanDay': self.current_plan_day.isoformat() if self.current_plan_day else None,
             'timeOfDay': self.time_of_day,
             'userNotes': self.user_notes,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None

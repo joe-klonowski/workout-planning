@@ -25,8 +25,8 @@ function App() {
         
         // Transform API data to match existing workout format
         const transformedWorkouts = data.workouts.map(workout => {
-          // Use actualDate if it exists (user moved it), otherwise use workoutDay (original planned date)
-          const displayDate = workout.selection?.actualDate || workout.workoutDay;
+          // Use currentPlanDay if it exists (user moved it), otherwise use originallyPlannedDay (original planned date)
+          const displayDate = workout.selection?.currentPlanDay || workout.originallyPlannedDay;
           const [year, month, day] = displayDate.split('-').map(Number);
           
           return {
@@ -36,8 +36,8 @@ function App() {
             workoutDescription: workout.workoutDescription,
             plannedDuration: workout.plannedDuration,
             plannedDistanceInMeters: workout.plannedDistanceInMeters,
-            workoutDay: workout.workoutDay, // Original planned day from coach
-            actualDate: workout.selection?.actualDate, // User's chosen day (if moved)
+            originallyPlannedDay: workout.originallyPlannedDay, // Original planned day from coach
+            currentPlanDay: workout.selection?.currentPlanDay, // User's chosen day (if moved)
             workoutDate: new DateOnly(year, month, day), // Display date for calendar
             coachComments: workout.coachComments,
             // Selection state - default to selected if no selection exists
@@ -113,7 +113,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ actualDate: dateStr }),
+        body: JSON.stringify({ currentPlanDay: dateStr }),
       });
 
       if (!response.ok) {
@@ -126,7 +126,7 @@ function App() {
           if (workout.id === workoutId) {
             return {
               ...workout,
-              actualDate: dateStr,
+              currentPlanDay: dateStr,
               workoutDate: new DateOnly(newDate.getFullYear(), newDate.getMonth() + 1, newDate.getDate())
             };
           }

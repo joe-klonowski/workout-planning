@@ -19,27 +19,27 @@ def import_workouts_from_csv(csv_file_path):
             
             for row in csv_reader:
                 # Parse workout day
-                workout_day = None
+                originally_planned_day = None
                 if row.get('WorkoutDay'):
                     try:
-                        workout_day = datetime.strptime(row['WorkoutDay'], '%Y-%m-%d').date()
+                        originally_planned_day = datetime.strptime(row['WorkoutDay'], '%Y-%m-%d').date()
                     except ValueError:
                         print(f"Skipping row with invalid date: {row.get('WorkoutDay')}")
                         skipped_count += 1
                         continue
                 
-                if not workout_day:
+                if not originally_planned_day:
                     skipped_count += 1
                     continue
                 
                 # Check if workout already exists (avoid duplicates)
                 existing = Workout.query.filter_by(
                     title=row.get('Title', ''),
-                    workout_day=workout_day
+                    originally_planned_day=originally_planned_day
                 ).first()
                 
                 if existing:
-                    print(f"Skipping duplicate: {row.get('Title')} on {workout_day}")
+                    print(f"Skipping duplicate: {row.get('Title')} on {originally_planned_day}")
                     skipped_count += 1
                     continue
                 
@@ -50,7 +50,7 @@ def import_workouts_from_csv(csv_file_path):
                     workout_description=row.get('WorkoutDescription', ''),
                     planned_duration=float(row['PlannedDuration']) if row.get('PlannedDuration') else None,
                     planned_distance_meters=float(row['PlannedDistanceInMeters']) if row.get('PlannedDistanceInMeters') else None,
-                    workout_day=workout_day,
+                    originally_planned_day=originally_planned_day,
                     coach_comments=row.get('CoachComments', ''),
                     tss=float(row['TSS']) if row.get('TSS') else None,
                     intensity_factor=float(row['IF']) if row.get('IF') else None

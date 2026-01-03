@@ -40,7 +40,7 @@ def register_routes(app):
     def get_workouts():
         """Get all workouts with their selections"""
         try:
-            workouts = Workout.query.order_by(Workout.workout_day).all()
+            workouts = Workout.query.order_by(Workout.originally_planned_day).all()
             return jsonify({
                 'workouts': [w.to_dict() for w in workouts],
                 'count': len(workouts)
@@ -84,20 +84,20 @@ def register_routes(app):
             
             for row in csv_reader:
                 # Parse workout day
-                workout_day = None
+                originally_planned_day = None
                 if row.get('WorkoutDay'):
                     try:
-                        workout_day = datetime.strptime(row['WorkoutDay'], '%Y-%m-%d').date()
+                        originally_planned_day = datetime.strptime(row['WorkoutDay'], '%Y-%m-%d').date()
                     except ValueError:
                         continue  # Skip rows with invalid dates
                 
-                if not workout_day:
+                if not originally_planned_day:
                     continue
                 
                 # Check if workout already exists (avoid duplicates)
                 existing = Workout.query.filter_by(
                     title=row.get('Title', ''),
-                    workout_day=workout_day
+                    originally_planned_day=originally_planned_day
                 ).first()
                 
                 if existing:
@@ -110,7 +110,7 @@ def register_routes(app):
                     workout_description=row.get('WorkoutDescription', ''),
                     planned_duration=float(row['PlannedDuration']) if row.get('PlannedDuration') else None,
                     planned_distance_meters=float(row['PlannedDistanceInMeters']) if row.get('PlannedDistanceInMeters') else None,
-                    workout_day=workout_day,
+                    originally_planned_day=originally_planned_day,
                     coach_comments=row.get('CoachComments', ''),
                     tss=float(row['TSS']) if row.get('TSS') else None,
                     intensity_factor=float(row['IF']) if row.get('IF') else None
@@ -139,7 +139,7 @@ def register_routes(app):
         Create or update a workout selection
         Body: {
             "isSelected": true/false,
-            "actualDate": "2026-01-15" (optional),
+            "currentPlanDay": "2026-01-15" (optional),
             "timeOfDay": "morning" (optional),
             "userNotes": "..." (optional)
         }
@@ -159,8 +159,8 @@ def register_routes(app):
             # Update fields
             if 'isSelected' in data:
                 selection.is_selected = data['isSelected']
-            if 'actualDate' in data and data['actualDate']:
-                selection.actual_date = datetime.fromisoformat(data['actualDate']).date()
+            if 'currentPlanDay' in data and data['currentPlanDay']:
+                selection.current_plan_day = datetime.fromisoformat(data['currentPlanDay']).date()
             if 'timeOfDay' in data:
                 selection.time_of_day = data['timeOfDay']
             if 'userNotes' in data:

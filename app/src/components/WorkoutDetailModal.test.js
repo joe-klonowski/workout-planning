@@ -441,7 +441,7 @@ describe('WorkoutDetailModal Component', () => {
         workoutDescription: 'Ride in power zones 1-2, but mostly zone 1. Flat course or indoor trainer. Low effort—light on pedals. Comfortably high rpm.',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 32000,
-        workoutDay: '2026-03-01',
+        originallyPlannedDay: '2026-03-01',
         coachComments: 'Keep it in zone 1',
       };
 
@@ -466,7 +466,7 @@ describe('WorkoutDetailModal Component', () => {
         workoutDescription: 'Hill climbing workout',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 40000, // 40km ≈ 24.85 miles
-        workoutDay: '2026-03-05',
+        originallyPlannedDay: '2026-03-05',
         coachComments: 'Push hard on the climbs',
       };
 
@@ -491,7 +491,7 @@ describe('WorkoutDetailModal Component', () => {
         workoutDescription: 'WU: 6 x 50 done as 25 drill of choice. MS: 500 at T-pace.',
         plannedDuration: 0.54,
         plannedDistanceInMeters: 2148.84, // yards converted to meters
-        workoutDay: '2026-03-03',
+        originallyPlannedDay: '2026-03-03',
         coachComments: 'Focus on form',
       };
 

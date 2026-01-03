@@ -62,7 +62,7 @@ def test_alembic_migrations_create_tables(temp_db):
         workouts_columns = {col['name'] for col in inspector.get_columns('workouts')}
         expected_workouts_columns = {
             'id', 'title', 'workout_type', 'workout_description',
-            'planned_duration', 'planned_distance_meters', 'workout_day',
+            'planned_duration', 'planned_distance_meters', 'originally_planned_day',
             'coach_comments', 'tss', 'intensity_factor', 'created_at'
         }
         assert expected_workouts_columns.issubset(workouts_columns)
@@ -70,7 +70,7 @@ def test_alembic_migrations_create_tables(temp_db):
         # Verify workout_selections table schema
         selections_columns = {col['name'] for col in inspector.get_columns('workout_selections')}
         expected_selections_columns = {
-            'id', 'workout_id', 'is_selected', 'actual_date',
+            'id', 'workout_id', 'is_selected', 'current_plan_day',
             'time_of_day', 'user_notes', 'updated_at'
         }
         assert expected_selections_columns.issubset(selections_columns)
@@ -123,8 +123,8 @@ def test_alembic_current_shows_version(temp_db):
         )
         
         assert result.returncode == 0
-        # Should show the revision ID
-        assert '03fd3a7c24f0' in result.stdout or 'Initial migration' in result.stdout
+        # Should show the revision ID (current head is the rename migration)
+        assert 'c8881614f87a' in result.stdout or 'rename workout_day' in result.stdout
         
     finally:
         # Restore original environment
@@ -243,7 +243,7 @@ def test_app_works_with_migrated_database(temp_db):
             workout = Workout(
                 title='Test Workout',
                 workout_type='Bike',
-                workout_day=date(2026, 1, 15)
+                originally_planned_day=date(2026, 1, 15)
             )
             db.session.add(workout)
             db.session.commit()

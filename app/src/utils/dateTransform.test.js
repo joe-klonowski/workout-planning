@@ -34,12 +34,12 @@ describe('API Data Transformation - DateOnly Bug Fix', () => {
       workoutDescription: 'Easy 5k',
       plannedDuration: 0.5,
       plannedDistanceInMeters: 5000,
-      workoutDay: '2026-01-20',
+      originallyPlannedDay: '2026-01-20',
       coachComments: 'Take it easy',
     };
 
     // Transform like App.js does
-    const [year, month, day] = apiWorkout.workoutDay.split('-').map(Number);
+    const [year, month, day] = apiWorkout.originallyPlannedDay.split('-').map(Number);
     const transformed = {
       ...apiWorkout,
       workoutDate: new DateOnly(year, month, day),
@@ -55,13 +55,13 @@ describe('API Data Transformation - DateOnly Bug Fix', () => {
 
   test('multiple API workouts transformed correctly', () => {
     const apiWorkouts = [
-      { id: 1, title: 'Workout 1', workoutType: 'Run', workoutDay: '2026-01-15', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
-      { id: 2, title: 'Workout 2', workoutType: 'Bike', workoutDay: '2026-01-16', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
-      { id: 3, title: 'Workout 3', workoutType: 'Swim', workoutDay: '2026-01-17', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
+      { id: 1, title: 'Workout 1', workoutType: 'Run', originallyPlannedDay: '2026-01-15', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
+      { id: 2, title: 'Workout 2', workoutType: 'Bike', originallyPlannedDay: '2026-01-16', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
+      { id: 3, title: 'Workout 3', workoutType: 'Swim', originallyPlannedDay: '2026-01-17', workoutDescription: '', plannedDuration: null, plannedDistanceInMeters: null, coachComments: '' },
     ];
 
     const transformed = apiWorkouts.map(workout => {
-      const [year, month, day] = workout.workoutDay.split('-').map(Number);
+      const [year, month, day] = workout.originallyPlannedDay.split('-').map(Number);
       return {
         ...workout,
         workoutDate: new DateOnly(year, month, day),
@@ -72,7 +72,7 @@ describe('API Data Transformation - DateOnly Bug Fix', () => {
     
     transformed.forEach((workout, index) => {
       expect(workout.workoutDate).toBeInstanceOf(DateOnly);
-      expect(workout.workoutDate.toISOString()).toBe(apiWorkouts[index].workoutDay);
+      expect(workout.workoutDate.toISOString()).toBe(apiWorkouts[index].originallyPlannedDay);
     });
   });
 

@@ -61,7 +61,7 @@ describe('App Component', () => {
         workoutDescription: 'Easy 5k',
         plannedDuration: 0.5,
         plannedDistanceInMeters: 5000,
-        workoutDay: '2026-01-15',
+        originallyPlannedDay: '2026-01-15',
         coachComments: 'Take it easy',
       },
     ];
@@ -89,7 +89,7 @@ describe('App Component', () => {
         workoutDescription: 'Test description',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 2000,
-        workoutDay: '2026-01-15',
+        originallyPlannedDay: '2026-01-15',
         coachComments: 'Test comments',
       },
     ];
@@ -114,7 +114,7 @@ describe('App Component', () => {
     });
   });
 
-  test('creates DateOnly object from workoutDay string (bug fix test)', async () => {
+  test('creates DateOnly object from originallyPlannedDay string (bug fix test)', async () => {
     // This test verifies the fix for the bug where workouts weren't showing
     // because workoutDate DateOnly object was missing
     const mockWorkouts = [
@@ -125,7 +125,7 @@ describe('App Component', () => {
         workoutDescription: 'Testing date transformation',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 5000,
-        workoutDay: '2026-01-20',
+        originallyPlannedDay: '2026-01-20',
         coachComments: '',
       },
     ];
@@ -175,7 +175,7 @@ describe('App Component', () => {
         id: 1,
         title: 'Workout 1',
         workoutType: 'Run',
-        workoutDay: '2026-01-15',
+        originallyPlannedDay: '2026-01-15',
         workoutDescription: '',
         plannedDuration: null,
         plannedDistanceInMeters: null,
@@ -185,7 +185,7 @@ describe('App Component', () => {
         id: 2,
         title: 'Workout 2',
         workoutType: 'Bike',
-        workoutDay: '2026-01-16',
+        originallyPlannedDay: '2026-01-16',
         workoutDescription: '',
         plannedDuration: null,
         plannedDistanceInMeters: null,
@@ -195,7 +195,7 @@ describe('App Component', () => {
         id: 3,
         title: 'Workout 3',
         workoutType: 'Swim',
-        workoutDay: '2026-01-17',
+        originallyPlannedDay: '2026-01-17',
         workoutDescription: '',
         plannedDuration: null,
         plannedDistanceInMeters: null,
@@ -282,7 +282,7 @@ describe('App Component', () => {
       workoutDescription: 'Detailed description',
       plannedDuration: 1.5,
       plannedDistanceInMeters: 10000,
-      workoutDay: '2026-02-01',
+      originallyPlannedDay: '2026-02-01',
       coachComments: 'Important notes',
       tss: 75,
       intensityFactor: 0.85,
@@ -319,7 +319,7 @@ describe('App Component', () => {
       expect(workout.workoutDescription).toBe('Detailed description');
       expect(workout.plannedDuration).toBe(1.5);
       expect(workout.plannedDistanceInMeters).toBe(10000);
-      expect(workout.workoutDay).toBe('2026-02-01');
+      expect(workout.originallyPlannedDay).toBe('2026-02-01');
       expect(workout.coachComments).toBe('Important notes');
     }
 
@@ -332,7 +332,7 @@ describe('App Component', () => {
         id: 1,
         title: 'Minimal Workout',
         workoutType: 'Other',
-        workoutDay: '2026-01-15',
+        originallyPlannedDay: '2026-01-15',
         workoutDescription: null,
         plannedDuration: null,
         plannedDistanceInMeters: null,
@@ -368,13 +368,13 @@ describe('App Component', () => {
         workoutDescription: 'Test',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 5000,
-        workoutDay: '2026-01-15',
+        originallyPlannedDay: '2026-01-15',
         coachComments: '',
         selection: {
           id: 1,
           workoutId: 1,
           isSelected: true,
-          actualDate: null,
+          currentPlanDay: null,
           timeOfDay: null,
           userNotes: null,
         },
@@ -386,13 +386,13 @@ describe('App Component', () => {
         workoutDescription: 'Test',
         plannedDuration: 1.0,
         plannedDistanceInMeters: 2000,
-        workoutDay: '2026-01-16',
+        originallyPlannedDay: '2026-01-16',
         coachComments: '',
         selection: {
           id: 2,
           workoutId: 2,
           isSelected: false,
-          actualDate: null,
+          currentPlanDay: null,
           timeOfDay: null,
           userNotes: null,
         },
@@ -404,7 +404,7 @@ describe('App Component', () => {
         workoutDescription: 'Test',
         plannedDuration: 2.0,
         plannedDistanceInMeters: 40000,
-        workoutDay: '2026-01-17',
+        originallyPlannedDay: '2026-01-17',
         coachComments: '',
         selection: null,
       },
