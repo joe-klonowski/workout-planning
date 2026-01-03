@@ -33,7 +33,7 @@ So some of the future feature work here is to enable that plan.
   - Distance for swim and run
   - If/when the app has data on completed workouts, add bars that show completion percentage.
 - Get fonts exactly the right size in workout card.
-- Add first bit of description to card
+- Add first bit of description to workout card.
 
 
 ## Integrations with other apps/platforms
