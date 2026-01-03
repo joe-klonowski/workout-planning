@@ -1,5 +1,25 @@
 /* Calendar Component Styles */
 
+/* Calendar wrapper for side-by-side layout with summary */
+.calendar-wrapper {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.calendar-wrapper .calendar {
+  flex: 1;
+  min-width: 0; /* Allows flex item to shrink below content size */
+}
+
+.calendar-wrapper .weekly-summary {
+  /* Make summary same width as a day column */
+  flex: 0 0 calc((100% - 140px) / 7); /* Subtract gaps and divide by 7 days */
+  min-width: 180px;
+  max-width: 250px;
+}
+
 .calendar {
   width: 100%;
   margin: 0 auto;
@@ -363,7 +383,25 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .calendar-wrapper .weekly-summary {
+    flex: 0 0 200px;
+    max-width: 200px;
+  }
+}
+
 @media (max-width: 768px) {
+  .calendar-wrapper {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .calendar-wrapper .weekly-summary {
+    flex: 1 1 auto;
+    max-width: 100%;
+    width: 100%;
+  }
+
   .calendar {
     padding: 10px;
   }

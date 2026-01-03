@@ -23,6 +23,7 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
+- Add weekly summary to calendar month view (not just week view).
 - Add support for exporting workout plan. Send the plan to Apple Calendar using CalDAV and python's caldav library. This is so that my wife can see the workout plan. She said that this Apple Calendar was her preferred way to see it.
   - There should be a button on the calendar to export to Apple calendar.
     - This button should be in the summary column at the end of the week.
@@ -40,12 +41,7 @@ So some of the future feature work here is to enable that plan.
       - Workout duration (e.g. 1 hour 30 minutes)
 
 ## Look/feel/CSS
-- Add summary of the week on the right with:
-  - Number of hours
-  - Duration for swim, bike, run, and strength training
-  - Distance for swim and run
-  - If/when the app has data on completed workouts, add bars that show completion percentage.
-  - Weekly summary column should take up the same amount of width as the columns for each day of the week.
+- Weekly summary on the right needs a bunch of CSS tweaks.
 - Add first bit of description to workout card.
 - When date cell fills, don't limit the height of the date cell and force user to scroll to find workouts. Instead, just make the date cell longer to fit everything.
 

@@ -1,0 +1,196 @@
+/* WeeklySummary Component Styles */
+
+.weekly-summary {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: fit-content;
+  min-height: 350px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.summary-header {
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 12px;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+.summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.summary-value.large {
+  font-size: 32px;
+  color: #007bff;
+}
+
+.summary-detail {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Total Hours Section */
+.total-hours {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.total-hours .summary-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+}
+
+.total-hours .summary-value.large {
+  color: white;
+  margin: 8px 0;
+}
+
+.total-hours .summary-detail {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Breakdown Section */
+.breakdown {
+  padding: 0;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  background-color: #fafafa;
+  transition: all 0.2s;
+}
+
+.breakdown-item:hover {
+  background-color: #f0f0f0;
+  border-color: #d0d0d0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.breakdown-icon {
+  font-size: 20px;
+}
+
+.breakdown-type {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.breakdown-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdown-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.stat-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.stat-value {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .weekly-summary {
+    padding: 12px;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .summary-value.large {
+    font-size: 28px;
+  }
+
+  .breakdown-item {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .weekly-summary {
+    padding: 16px;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .summary-header h3 {
+    font-size: 18px;
+  }
+
+  .summary-value.large {
+    font-size: 24px;
+  }
+}

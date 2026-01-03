@@ -5,6 +5,7 @@ import { DateOnly } from '../utils/DateOnly';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
 import WorkoutDetailModal from './WorkoutDetailModal';
+import WeeklySummary from './WeeklySummary';
 import '../styles/Calendar.css';
 
 /**
@@ -234,6 +235,30 @@ function Calendar({ workouts = [], initialDate = (() => {
     });
   };
 
+  // Get all workouts for the current week (for weekly summary)
+  const getWorkoutsForCurrentWeek = () => {
+    if (viewMode !== 'week') return [];
+    
+    const weekWorkouts = [];
+    const dayOfWeek = (currentDate.getDay() + 6) % 7; // 0 = Monday
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(weekStart.getDate() - dayOfWeek);
+    
+    // Get workouts for all 7 days of the week
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(dayDate.getDate() + i);
+      const dayWorkouts = getWorkoutsForDay(
+        dayDate.getDate(),
+        dayDate.getFullYear(),
+        dayDate.getMonth()
+      );
+      weekWorkouts.push(...dayWorkouts);
+    }
+    
+    return weekWorkouts;
+  };
+
   // Group workouts by time of day
   const groupWorkoutsByTimeOfDay = (workouts) => {
     const groups = {
@@ -420,52 +445,53 @@ function Calendar({ workouts = [], initialDate = (() => {
   };
 
   return (
-    <div className="calendar">
-      <div className="calendar-header">
-        <div className="header-left">
-          <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
-            ← Previous
-          </button>
-          <h2 className="month-year">{monthYear}</h2>
-          <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
-            Next →
-          </button>
-          <button onClick={goToToday} className="today-button">
-            Today
-          </button>
-        </div>
-        <div className="header-right">
-          <div className="view-toggle">
-            <button
-              onClick={() => setViewMode('week')}
-              className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
-            >
-              Week
+    <div className="calendar-wrapper">
+      <div className="calendar">
+        <div className="calendar-header">
+          <div className="header-left">
+            <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
+              ← Previous
             </button>
-            <button
-              onClick={() => setViewMode('month')}
-              className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
-            >
-              Month
+            <h2 className="month-year">{monthYear}</h2>
+            <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
+              Next →
+            </button>
+            <button onClick={goToToday} className="today-button">
+              Today
             </button>
           </div>
+          <div className="header-right">
+            <div className="view-toggle">
+              <button
+                onClick={() => setViewMode('week')}
+                className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
+              >
+                Week
+              </button>
+              <button
+                onClick={() => setViewMode('month')}
+                className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
+              >
+                Month
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="day-of-week-headers">
-        <div className="day-of-week">Mon</div>
-        <div className="day-of-week">Tue</div>
-        <div className="day-of-week">Wed</div>
-        <div className="day-of-week">Thu</div>
-        <div className="day-of-week">Fri</div>
-        <div className="day-of-week">Sat</div>
-        <div className="day-of-week">Sun</div>
-      </div>
+        <div className="day-of-week-headers">
+          <div className="day-of-week">Mon</div>
+          <div className="day-of-week">Tue</div>
+          <div className="day-of-week">Wed</div>
+          <div className="day-of-week">Thu</div>
+          <div className="day-of-week">Fri</div>
+          <div className="day-of-week">Sat</div>
+          <div className="day-of-week">Sun</div>
+        </div>
 
-      <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
-        {days.map((dayObj, index) => {
-          const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
-          const isToday = dayObj.date.toDateString() === new Date().toDateString();
+        <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
+          {days.map((dayObj, index) => {
+            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
+            const isToday = dayObj.date.toDateString() === new Date().toDateString();
           
           if (viewMode === 'week') {
             // Week view rendering with time slots when dragging
@@ -577,6 +603,11 @@ function Calendar({ workouts = [], initialDate = (() => {
         onWorkoutLocationChange={onWorkoutLocationChange}
       />
     </div>
+
+    {viewMode === 'week' && (
+      <WeeklySummary workouts={getWorkoutsForCurrentWeek()} />
+    )}
+  </div>
   );
 }
 
