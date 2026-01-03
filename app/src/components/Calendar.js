@@ -12,15 +12,18 @@ import '../styles/Calendar.css';
  * @param {Array} workouts - Array of workout objects
  * @param {DateOnly} initialDate - Starting date (defaults to today)
  * @param {Function} onWorkoutSelectionToggle - Callback for when user toggles workout selection
+ * @param {Function} onWorkoutDateChange - Callback for when user drags workout to a new date
  */
 function Calendar({ workouts = [], initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [draggedWorkout, setDraggedWorkout] = useState(null);
+  const [dragOverDate, setDragOverDate] = useState(null);
 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
@@ -58,6 +61,58 @@ function Calendar({ workouts = [], initialDate = (() => {
 
   const goToToday = () => {
     setCurrentDate(new Date());
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, workout) => {
+    setDraggedWorkout(workout);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', e.target.innerHTML);
+    }
+    // Add a subtle visual effect
+    e.target.style.opacity = '0.4';
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = '1';
+    setDraggedWorkout(null);
+    setDragOverDate(null);
+  };
+
+  const handleDragOver = (e, date) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move';
+    }
+    setDragOverDate(date.toISOString());
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDate(null);
+  };
+
+  const handleDrop = (e, dayObj) => {
+    e.preventDefault();
+    setDragOverDate(null);
+    
+    if (draggedWorkout && onWorkoutDateChange) {
+      // Create a Date object for the new date
+      const newDate = new Date(dayObj.year, dayObj.month, dayObj.day);
+      
+      // Only update if the date actually changed
+      // Compare the actual Date values to see if they're the same day
+      const currentDate = draggedWorkout.workoutDate.toDate();
+      const sameDay = currentDate.getFullYear() === dayObj.year &&
+                      currentDate.getMonth() === dayObj.month &&
+                      currentDate.getDate() === dayObj.day;
+      
+      if (!sameDay) {
+        onWorkoutDateChange(draggedWorkout.id, newDate);
+      }
+    }
+    
+    setDraggedWorkout(null);
   };
 
   // Build calendar grid
@@ -213,7 +268,10 @@ function Calendar({ workouts = [], initialDate = (() => {
                 key={index}
                 className={`calendar-day ${
                   isToday ? 'is-today' : ''
-                }`}
+                } ${dragOverDate === dayObj.date.toISOString() ? 'drag-over' : ''}`}
+                onDragOver={(e) => handleDragOver(e, dayObj.date)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, dayObj)}
               >
                 <>
                   <div className="day-number">{dayObj.day}</div>
@@ -229,12 +287,15 @@ function Calendar({ workouts = [], initialDate = (() => {
                               style={{
                                 backgroundColor: style.backgroundColor,
                                 borderLeft: `4px solid ${style.color}`,
-                                cursor: 'pointer',
+                                cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
                                 opacity: workout.isSelected ? 1 : 0.5,
                                 position: 'relative',
                                 display: 'flex',
                                 flexDirection: 'column',
                               }}
+                              draggable={true}
+                              onDragStart={(e) => handleDragStart(e, workout)}
+                              onDragEnd={handleDragEnd}
                             >
                               <div style={{
                                 display: 'flex',
@@ -311,7 +372,10 @@ function Calendar({ workouts = [], initialDate = (() => {
                 key={index}
                 className={`calendar-day has-date ${
                   isToday ? 'is-today' : ''
-                } ${!isCurrentMonth ? 'other-month' : ''}`}
+                } ${!isCurrentMonth ? 'other-month' : ''} ${dragOverDate === dayObj.date.toISOString() ? 'drag-over' : ''}`}
+                onDragOver={(e) => handleDragOver(e, dayObj.date)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, dayObj)}
               >
                 <>
                   <div className="day-number">{dayObj.day}</div>
@@ -327,12 +391,15 @@ function Calendar({ workouts = [], initialDate = (() => {
                               style={{
                                 backgroundColor: style.backgroundColor,
                                 borderLeft: `4px solid ${style.color}`,
-                                cursor: 'pointer',
+                                cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
                                 opacity: workout.isSelected ? 1 : 0.5,
                                 position: 'relative',
                                 display: 'flex',
                                 flexDirection: 'column',
                               }}
+                              draggable={true}
+                              onDragStart={(e) => handleDragStart(e, workout)}
+                              onDragEnd={handleDragEnd}
                             >
                               <div style={{
                                 display: 'flex',
@@ -430,6 +497,7 @@ Calendar.propTypes = {
   ),
   initialDate: PropTypes.instanceOf(DateOnly),
   onWorkoutSelectionToggle: PropTypes.func,
+  onWorkoutDateChange: PropTypes.func,
 };
 
 Calendar.defaultProps = {

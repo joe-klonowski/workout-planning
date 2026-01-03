@@ -25,8 +25,9 @@ function App() {
         
         // Transform API data to match existing workout format
         const transformedWorkouts = data.workouts.map(workout => {
-          // Parse the date string (YYYY-MM-DD) into DateOnly object
-          const [year, month, day] = workout.workoutDay.split('-').map(Number);
+          // Use actualDate if it exists (user moved it), otherwise use workoutDay (original planned date)
+          const displayDate = workout.selection?.actualDate || workout.workoutDay;
+          const [year, month, day] = displayDate.split('-').map(Number);
           
           return {
             id: workout.id,
@@ -35,8 +36,9 @@ function App() {
             workoutDescription: workout.workoutDescription,
             plannedDuration: workout.plannedDuration,
             plannedDistanceInMeters: workout.plannedDistanceInMeters,
-            workoutDay: workout.workoutDay,
-            workoutDate: new DateOnly(year, month, day),
+            workoutDay: workout.workoutDay, // Original planned day from coach
+            actualDate: workout.selection?.actualDate, // User's chosen day (if moved)
+            workoutDate: new DateOnly(year, month, day), // Display date for calendar
             coachComments: workout.coachComments,
             // Selection state - default to selected if no selection exists
             isSelected: workout.selection ? workout.selection.isSelected : true,
@@ -100,6 +102,43 @@ function App() {
     }
   };
 
+  // Handle workout date change (drag and drop)
+  const handleWorkoutDateChange = async (workoutId, newDate) => {
+    try {
+      // newDate is a Date object, convert to YYYY-MM-DD format
+      const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
+      
+      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ actualDate: dateStr }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update workout date: ${response.status}`);
+      }
+
+      // Update local state
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout => {
+          if (workout.id === workoutId) {
+            return {
+              ...workout,
+              actualDate: dateStr,
+              workoutDate: new DateOnly(newDate.getFullYear(), newDate.getMonth() + 1, newDate.getDate())
+            };
+          }
+          return workout;
+        })
+      );
+    } catch (err) {
+      console.error('Error updating workout date:', err);
+      alert('Failed to move workout. Please try again.');
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -118,6 +157,7 @@ function App() {
             <Calendar 
               workouts={workouts} 
               onWorkoutSelectionToggle={handleWorkoutSelection}
+              onWorkoutDateChange={handleWorkoutDateChange}
             />
           </>
         )}

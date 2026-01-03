@@ -442,3 +442,39 @@ def test_toggle_workout_selection(client, sample_workout):
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['isSelected'] is True
+
+def test_workout_date_change_preserves_original(client, sample_workout):
+    """Test that moving a workout preserves the original workout day"""
+    # First get the workout to verify original date
+    response = client.get(f'/api/workouts/{sample_workout}')
+    assert response.status_code == 200
+    workout = json.loads(response.data)
+    original_date = workout['workoutDay']
+    assert original_date == '2026-01-15'
+    
+    # Move the workout to a different date
+    new_date = '2026-01-20'
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'actualDate': new_date}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    selection = json.loads(response.data)
+    assert selection['actualDate'] == new_date
+    
+    # Verify the original workout day is unchanged
+    response = client.get(f'/api/workouts/{sample_workout}')
+    assert response.status_code == 200
+    workout = json.loads(response.data)
+    assert workout['workoutDay'] == original_date  # Original date unchanged
+    assert workout['selection']['actualDate'] == new_date  # New date stored in selection
+    
+    # Verify workout list shows the selection
+    response = client.get('/api/workouts')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    workouts = data['workouts']
+    moved_workout = next(w for w in workouts if w['id'] == sample_workout)
+    assert moved_workout['workoutDay'] == original_date
+    assert moved_workout['selection']['actualDate'] == new_date

@@ -914,4 +914,180 @@ describe('Calendar Component', () => {
       expect(workoutBadge).toBeTruthy();
     });
   });
+
+  describe('Drag and Drop Functionality', () => {
+    it('should make workout badges draggable', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          plannedDuration: 1,
+          isSelected: true,
+        },
+      ];
+      
+      render(<Calendar workouts={workouts} initialDate={testDate} />);
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      expect(workoutBadge).toHaveAttribute('draggable', 'true');
+    });
+
+    it('should call onWorkoutDateChange when workout is dropped on a new day', () => {
+      const mockDateChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          workoutDay: '2026-01-15',
+          plannedDuration: 1,
+          isSelected: true,
+        },
+      ];
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workouts} 
+          initialDate={testDate}
+          onWorkoutDateChange={mockDateChange}
+        />
+      );
+      
+      // Get the workout badge and a target day
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      const calendarDays = container.querySelectorAll('.calendar-day');
+      // Find day 16 (next day)
+      const targetDay = Array.from(calendarDays).find(day => 
+        day.querySelector('.day-number')?.textContent === '16'
+      );
+      
+      // Simulate drag and drop
+      fireEvent.dragStart(workoutBadge);
+      fireEvent.dragOver(targetDay);
+      fireEvent.drop(targetDay);
+      
+      // Verify the callback was called with correct workout ID and new date
+      expect(mockDateChange).toHaveBeenCalledTimes(1);
+      const [workoutId, newDate] = mockDateChange.mock.calls[0];
+      expect(workoutId).toBe(1);
+      expect(newDate).toBeInstanceOf(Date);
+      expect(newDate.getDate()).toBe(16);
+    });
+
+    it('should add drag-over styling to calendar day during drag', () => {
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          plannedDuration: 1,
+          isSelected: true,
+        },
+      ];
+      
+      const { container } = render(<Calendar workouts={workouts} initialDate={testDate} />);
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      const calendarDays = container.querySelectorAll('.calendar-day');
+      const targetDay = Array.from(calendarDays).find(day => 
+        day.querySelector('.day-number')?.textContent === '16'
+      );
+      
+      // Drag over the target day
+      fireEvent.dragStart(workoutBadge);
+      fireEvent.dragOver(targetDay);
+      
+      // Should have drag-over class
+      expect(targetDay).toHaveClass('drag-over');
+      
+      // Drag leave
+      fireEvent.dragLeave(targetDay);
+      
+      // Should not have drag-over class anymore
+      expect(targetDay).not.toHaveClass('drag-over');
+    });
+
+    it('should not call onWorkoutDateChange when dropped on same day', () => {
+      const mockDateChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          workoutDay: '2026-01-15',
+          plannedDuration: 1,
+          isSelected: true,
+        },
+      ];
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workouts} 
+          initialDate={testDate}
+          onWorkoutDateChange={mockDateChange}
+        />
+      );
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      const calendarDays = container.querySelectorAll('.calendar-day');
+      const sameDay = Array.from(calendarDays).find(day => 
+        day.querySelector('.day-number')?.textContent === '15'
+      );
+      
+      // Drag and drop on same day
+      fireEvent.dragStart(workoutBadge);
+      fireEvent.drop(sameDay);
+      
+      // Should not call the handler since date didn't change
+      expect(mockDateChange).not.toHaveBeenCalled();
+    });
+
+    it('should work in month view as well', () => {
+      const mockDateChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          workoutDay: '2026-01-15',
+          plannedDuration: 1,
+          isSelected: true,
+        },
+      ];
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workouts} 
+          initialDate={testDate}
+          onWorkoutDateChange={mockDateChange}
+        />
+      );
+      
+      // Switch to month view
+      fireEvent.click(screen.getByRole('button', { name: /Month/ }));
+      
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+      const calendarDays = container.querySelectorAll('.calendar-day');
+      const targetDay = Array.from(calendarDays).find(day => 
+        day.querySelector('.day-number')?.textContent === '20'
+      );
+      
+      // Simulate drag and drop
+      fireEvent.dragStart(workoutBadge);
+      fireEvent.drop(targetDay);
+      
+      expect(mockDateChange).toHaveBeenCalled();
+    });
+  });
 });

@@ -160,6 +160,12 @@
   border: 2px solid #007bff;
 }
 
+.calendar-day.drag-over {
+  background-color: #d4edda;
+  border: 2px dashed #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
 .calendar-day.other-month {
   background-color: #fafafa;
   opacity: 0.6;

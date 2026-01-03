@@ -15,10 +15,6 @@ So some of the future feature work here is to enable that plan.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
 - Allow user to schedule workouts for a time of day (e.g. "morning" or "7am").
-  - Probably this will require creating separate fields for:
-    - When the coach originally planned the workout (DateOnly datatype).
-    - When the athlete is planning to do the workout (can be something general like "Tuesday" or "Tuesday morning" or something more specific like "Tuesday 7am")
-- Allow user to move workouts to a different day and different time of day.
 - Allow user to filter the UI to:
   - Temporarily hide unplanned workouts.
   - Maybe we want to temporarily hide planned workouts also?
@@ -43,6 +39,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Architecture/design
 - I (Joe, the owner of this code base) suspect that a coding agent has created a table in the DB that may be unneeded. Find out more about the current DB schema and consider changes as appropriate.
+- Rename original workout date field and user-planned workout date field. I don't really like the current names of these.
 
 ## Devops
 - Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
