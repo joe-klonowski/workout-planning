@@ -26,7 +26,6 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile
 
 ## Look/feel/CSS
-- Add workout planned duration to workout card so user can see what's a big one and what's a quick one at a glance.
 - Add summary of the week on the right with:
   - Number of hours
   - Duration for swim, bike, run, and strength training

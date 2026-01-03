@@ -143,6 +143,20 @@ function Calendar({ workouts = [], initialDate = (() => {
     });
   };
 
+  // Format duration to hours and minutes
+  const formatDuration = (hours) => {
+    if (hours === 0) return '';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (h > 0 && m > 0) {
+      return `${h}h ${m}m`;
+    } else if (h > 0) {
+      return `${h}h`;
+    } else {
+      return `${m}m`;
+    }
+  };
+
   return (
     <div className="calendar">
       <div className="calendar-header">
@@ -218,8 +232,46 @@ function Calendar({ workouts = [], initialDate = (() => {
                                 cursor: 'pointer',
                                 opacity: workout.isSelected ? 1 : 0.5,
                                 position: 'relative',
+                                display: 'flex',
+                                flexDirection: 'column',
                               }}
                             >
+                              <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '4px'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className="workout-icon">{style.icon}</span>
+                                  {workout.plannedDuration > 0 && (
+                                    <span className="workout-duration" style={{
+                                      fontSize: '11px',
+                                      fontWeight: '600',
+                                      color: '#666',
+                                      backgroundColor: '#f0f0f0',
+                                      padding: '2px 6px',
+                                      borderRadius: '8px',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {formatDuration(workout.plannedDuration)}
+                                    </span>
+                                  )}
+                                </div>
+                                {onWorkoutSelectionToggle && (
+                                  <button
+                                    className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onWorkoutSelectionToggle(workout.id, !workout.isSelected);
+                                    }}
+                                    aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                    title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  >
+                                    {workout.isSelected ? '✕' : '+'}
+                                  </button>
+                                )}
+                              </div>
                               <div
                                 onClick={() => {
                                   setSelectedWorkout(workout);
@@ -233,29 +285,9 @@ function Calendar({ workouts = [], initialDate = (() => {
                                 }}
                                 role="button"
                                 tabIndex={0}
-                                style={{ flex: 1 }}
                               >
-                                <span className="workout-icon">{style.icon}</span>
                                 <span className="workout-title">{workout.title}</span>
                               </div>
-                              {onWorkoutSelectionToggle && (
-                                <button
-                                  className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onWorkoutSelectionToggle(workout.id, !workout.isSelected);
-                                  }}
-                                  aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                  }}
-                                >
-                                  {workout.isSelected ? '✕' : '+'}
-                                </button>
-                              )}
                             </div>
                           );
                         })}
@@ -298,8 +330,46 @@ function Calendar({ workouts = [], initialDate = (() => {
                                 cursor: 'pointer',
                                 opacity: workout.isSelected ? 1 : 0.5,
                                 position: 'relative',
+                                display: 'flex',
+                                flexDirection: 'column',
                               }}
                             >
+                              <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '4px'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className="workout-icon">{style.icon}</span>
+                                  {workout.plannedDuration > 0 && (
+                                    <span className="workout-duration" style={{
+                                      fontSize: '11px',
+                                      fontWeight: '600',
+                                      color: '#666',
+                                      backgroundColor: '#f0f0f0',
+                                      padding: '2px 6px',
+                                      borderRadius: '8px',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {formatDuration(workout.plannedDuration)}
+                                    </span>
+                                  )}
+                                </div>
+                                {onWorkoutSelectionToggle && (
+                                  <button
+                                    className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onWorkoutSelectionToggle(workout.id, !workout.isSelected);
+                                    }}
+                                    aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                    title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
+                                  >
+                                    {workout.isSelected ? '✕' : '+'}
+                                  </button>
+                                )}
+                              </div>
                               <div
                                 onClick={() => {
                                   setSelectedWorkout(workout);
@@ -313,29 +383,9 @@ function Calendar({ workouts = [], initialDate = (() => {
                                 }}
                                 role="button"
                                 tabIndex={0}
-                                style={{ flex: 1 }}
                               >
-                                <span className="workout-icon">{style.icon}</span>
                                 <span className="workout-title">{workout.title}</span>
                               </div>
-                              {onWorkoutSelectionToggle && (
-                                <button
-                                  className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onWorkoutSelectionToggle(workout.id, !workout.isSelected);
-                                  }}
-                                  aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                  }}
-                                >
-                                  {workout.isSelected ? '✕' : '+'}
-                                </button>
-                              )}
                             </div>
                           );
                         })}

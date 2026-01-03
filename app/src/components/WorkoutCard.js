@@ -64,9 +64,16 @@ function WorkoutCard({ workout, onClick, onSelectionToggle, isSelected = true })
       onClick={onClick}
     >
       <div className="card-header">
-        <span className="workout-type-icon" title={workoutType}>
-          {workoutTypeEmoji}
-        </span>
+        <div className="card-header-left">
+          <span className="workout-type-icon" title={workoutType}>
+            {workoutTypeEmoji}
+          </span>
+          {plannedDuration > 0 && (
+            <span className="duration-badge" aria-label="Planned duration">
+              {formatDuration(plannedDuration)}
+            </span>
+          )}
+        </div>
         {onSelectionToggle && (
           <button
             className={`selection-button ${isSelected ? 'remove' : 'add'}`}
@@ -82,20 +89,14 @@ function WorkoutCard({ workout, onClick, onSelectionToggle, isSelected = true })
       <h3 className="workout-title">{title}</h3>
 
       <div className="card-content">
-        <div className="card-details">
-          {plannedDuration > 0 && (
-            <div className="detail-item">
-              <span className="detail-label">Duration:</span>
-              <span className="detail-value">{formatDuration(plannedDuration)}</span>
-            </div>
-          )}
-          {plannedDistance > 0 && (
+        {plannedDistance > 0 && (
+          <div className="card-details">
             <div className="detail-item">
               <span className="detail-label">Distance:</span>
               <span className="detail-value">{formatDistance(plannedDistance)}</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {description && (
           <details className="description-section">

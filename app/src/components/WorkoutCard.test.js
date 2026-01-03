@@ -29,20 +29,46 @@ describe('WorkoutCard Component', () => {
     expect(screen.getByTitle('Run').textContent).toBe('🏃');
   });
 
+  it('should display planned duration badge in header', () => {
+    render(<WorkoutCard workout={mockWorkout} />);
+    // Should have duration badge in header
+    const durationBadge = screen.getByLabelText('Planned duration');
+    expect(durationBadge).toBeInTheDocument();
+    expect(durationBadge.textContent).toBe('45m');
+    expect(durationBadge).toHaveClass('duration-badge');
+  });
+
+  it('should not display duration badge when duration is zero', () => {
+    const workout = { ...mockWorkout, plannedDuration: 0 };
+    render(<WorkoutCard workout={workout} />);
+    const durationBadge = screen.queryByLabelText('Planned duration');
+    expect(durationBadge).not.toBeInTheDocument();
+  });
+
+  it('should display duration badge with hours and minutes', () => {
+    const workout = { ...mockWorkout, plannedDuration: 2.5 };
+    render(<WorkoutCard workout={workout} />);
+    const durationBadge = screen.getByLabelText('Planned duration');
+    expect(durationBadge.textContent).toBe('2h 30m');
+  });
+
   it('should display planned duration in human-readable format', () => {
     render(<WorkoutCard workout={mockWorkout} />);
+    // Duration now only appears in header badge
     expect(screen.getByText('45m')).toBeInTheDocument();
   });
 
   it('should format duration with hours and minutes', () => {
     const workout = { ...mockWorkout, plannedDuration: 1.75 };
     render(<WorkoutCard workout={workout} />);
+    // Duration now only appears in header badge
     expect(screen.getByText('1h 45m')).toBeInTheDocument();
   });
 
   it('should format duration with only hours', () => {
     const workout = { ...mockWorkout, plannedDuration: 2 };
     render(<WorkoutCard workout={workout} />);
+    // Duration now only appears in header badge
     expect(screen.getByText('2h')).toBeInTheDocument();
   });
 
@@ -88,8 +114,9 @@ describe('WorkoutCard Component', () => {
   it('should handle zero duration gracefully', () => {
     const workout = { ...mockWorkout, plannedDuration: 0 };
     render(<WorkoutCard workout={workout} />);
-    const durationLabel = screen.queryByText(/Duration:/);
-    expect(durationLabel).not.toBeInTheDocument();
+    // Should not show duration badge in header when duration is zero
+    const durationBadge = screen.queryByLabelText('Planned duration');
+    expect(durationBadge).not.toBeInTheDocument();
   });
 
   it('should display description in expandable section', () => {
