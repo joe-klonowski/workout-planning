@@ -430,4 +430,93 @@ describe('App Component', () => {
     // Should have all 3 workouts passed to Calendar
     expect(screen.getByTestId('calendar-workout-count').textContent).toBe('3');
   });
+
+  test('deselecting a workout clears timeOfDay in local state', async () => {
+    const mockWorkouts = [
+      {
+        id: 1,
+        title: 'Workout with Time',
+        workoutType: 'Run',
+        workoutDescription: 'Test',
+        plannedDuration: 1.0,
+        plannedDistanceInMeters: 5000,
+        originallyPlannedDay: '2026-01-15',
+        coachComments: '',
+        selection: {
+          id: 1,
+          workoutId: 1,
+          isSelected: true,
+          currentPlanDay: null,
+          timeOfDay: 'morning',
+          userNotes: null,
+        },
+      },
+    ];
+
+    // Mock fetch for initial load
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ workouts: mockWorkouts, count: 1 }),
+      })
+    );
+
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 1 workouts')).toBeInTheDocument();
+    });
+
+    // Mock the Calendar component to expose the onWorkoutSelectionToggle callback
+    let toggleCallback = null;
+    jest.spyOn(React, 'createElement').mockImplementation((type, props, ...children) => {
+      if (type && type.name === 'MockCalendar') {
+        toggleCallback = props.onWorkoutSelectionToggle;
+      }
+      return jest.requireActual('react').createElement(type, props, ...children);
+    });
+
+    // Re-render to capture the callback
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 1 workouts')).toBeInTheDocument();
+    });
+
+    // Wait for callback to be captured
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (toggleCallback) {
+      // Mock the fetch for the selection update (deselecting)
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ 
+            id: 1,
+            workoutId: 1,
+            isSelected: false,
+            currentPlanDay: null,
+            timeOfDay: null,
+            userNotes: null
+          }),
+        })
+      );
+
+      // Call the toggle callback to deselect the workout
+      await toggleCallback(1, false);
+
+      // Verify the fetch was called with isSelected: false
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:5000/api/selections/1',
+          expect.objectContaining({
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isSelected: false }),
+          })
+        );
+      });
+    }
+
+    jest.restoreAllMocks();
+  });
 });

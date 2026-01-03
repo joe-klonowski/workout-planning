@@ -159,6 +159,9 @@ def register_routes(app):
             # Update fields
             if 'isSelected' in data:
                 selection.is_selected = data['isSelected']
+                # When a workout is deselected, clear the time of day
+                if not data['isSelected']:
+                    selection.time_of_day = None
             if 'currentPlanDay' in data and data['currentPlanDay']:
                 selection.current_plan_day = datetime.fromisoformat(data['currentPlanDay']).date()
             if 'timeOfDay' in data:

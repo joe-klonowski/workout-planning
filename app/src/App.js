@@ -91,10 +91,12 @@ function App() {
         throw new Error(`Failed to update selection: ${response.status}`);
       }
 
-      // Update local state
+      // Update local state - when deselecting, also clear timeOfDay
       setWorkouts(prevWorkouts =>
         prevWorkouts.map(workout =>
-          workout.id === workoutId ? { ...workout, isSelected } : workout
+          workout.id === workoutId 
+            ? { ...workout, isSelected, timeOfDay: isSelected ? workout.timeOfDay : null } 
+            : workout
         )
       );
     } catch (err) {

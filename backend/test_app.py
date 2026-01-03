@@ -259,6 +259,38 @@ def test_update_selection_partial(client, sample_workout):
     assert data['isSelected'] is False
 
 
+def test_deselecting_workout_clears_time_of_day(client, sample_workout):
+    """Test that deselecting a workout clears the time of day"""
+    # First, set the workout as selected with a time of day
+    selection_data = {
+        'isSelected': True,
+        'timeOfDay': 'morning'
+    }
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is True
+    assert data['timeOfDay'] == 'morning'
+    
+    # Now deselect the workout
+    selection_data = {
+        'isSelected': False
+    }
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is False
+    assert data['timeOfDay'] is None  # Time of day should be cleared
+
+
 def test_delete_selection(client, sample_workout):
     """Test deleting a workout selection"""
     # First create a selection
