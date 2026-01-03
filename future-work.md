@@ -10,6 +10,7 @@ Friel's advice is to:
 So some of the future feature work here is to enable that plan.
 
 ## Specific app features to add
+- Allow user to set order of workouts within a drop zone. If the user is dropping a workout into a zone that already has one or more workouts, they should be able to drop it into the top, bottom, or somewhere in between depending on where they release it.
 - Import more workouts from new TrainingPeaks CSVs and "merge" them with existing plan.
   - Will require some way to deduplicate workouts in the new CSV with workouts in the existing plan. This will be tricky for workouts where the athlete/user has changed the planned date of the workout.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
