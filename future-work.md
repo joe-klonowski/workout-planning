@@ -32,8 +32,8 @@ So some of the future feature work here is to enable that plan.
   - Duration for swim, bike, run, and strength training
   - Distance for swim and run
   - If/when the app has data on completed workouts, add bars that show completion percentage.
-- Get fonts exactly the right size in workout card.
 - Add first bit of description to workout card.
+- When date cell fills, don't limit the height of the date cell and force user to scroll to find workouts. Instead, just make the date cell longer to fit everything.
 
 
 ## Integrations with other apps/platforms
