@@ -23,6 +23,8 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
+- Add support for marking bike workouts as indoor or outdoor. By default they should be unmarked. The name of this field should be "workout location". The app should be designed so that other types of workouts (especially running) can have designated locations in the future as well. It should also be extensible so that in the future we can add support if we want for more specific location names like a building or a specific track. Both the workout card and the workout card modal should have UI elements to show location for bike workouts and to edit location.
+- Add support for exporting workout plan. Possibly PDF, possibly export to a .cal or similar file. Maybe even publish to a calendar that other people can subscribe to. The idea is to send this to my wife so that we can plan other things during the week like childcare.
 
 ## Look/feel/CSS
 - Add summary of the week on the right with:
