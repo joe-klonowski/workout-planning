@@ -34,7 +34,7 @@ The API will run at `http://localhost:5000`
 
 ### Run tests
 ```bash
-# Run all tests
+# Run all tests (excluding integration tests)
 pytest
 
 # Run with verbose output
@@ -51,6 +51,36 @@ pytest test_app.py::test_health_check
 ```
 
 View coverage report by opening `htmlcov/index.html` in a browser
+
+### Run integration tests
+
+Integration tests connect to a real Apple Calendar (via CalDAV) and are skipped by default. They require credentials stored locally.
+
+**Setup credentials:**
+1. Create credential file at `~/.config/workout-planner/caldav-credentials-apple.env`
+2. Generate an app-specific password at https://appleid.apple.com/
+3. Add credentials to the file:
+```bash
+CALDAV_URL=https://caldav.icloud.com/
+CALDAV_USERNAME=your-email@icloud.com
+CALDAV_PASSWORD=your-app-specific-password
+```
+4. Set restrictive permissions: `chmod 600 ~/.config/workout-planner/caldav-credentials-apple.env`
+
+**Run integration tests:**
+```bash
+# Run only integration tests
+pytest -m integration -v
+
+# Run all tests including integration tests (override default)
+pytest -m "" -v
+```
+
+**How integration tests work:**
+- Create a unique test calendar (e.g., "Workout Planner Test 20260103_143052")
+- Run all tests using this calendar
+- Delete the calendar when tests complete
+- Your other calendars are never modified
 
 ## API Endpoints
 

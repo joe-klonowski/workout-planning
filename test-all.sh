@@ -39,7 +39,7 @@ pip install -q -r requirements.txt
 
 # Run backend tests
 echo "Running pytest..."
-if pytest -v; then
+if pytest -v -m "not integration"; then
     BACKEND_PASSED=true
     echo "✅ Backend tests PASSED"
 else
