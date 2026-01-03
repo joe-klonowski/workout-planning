@@ -706,6 +706,188 @@ describe('Calendar Component', () => {
       modal = document.querySelector('.modal-content');
       expect(modal).toHaveTextContent('Swim workout');
     });
+
+    it('should update modal content when workout location changes', async () => {
+      // This test verifies the fix for a bug where the modal wouldn't update
+      // when the workout data changed (e.g., when location was updated)
+      const bikeWorkout = {
+        id: 1,
+        title: 'Bike Ride',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 1, 15),
+        plannedDuration: 2,
+        plannedDistanceInMeters: 40000,
+        workoutDescription: 'Long ride',
+        coachComments: '',
+        workoutLocation: null, // Initially no location set
+      };
+
+      const testDate = new DateOnly(2026, 1, 15);
+      const mockLocationChange = jest.fn();
+      
+      // Initial render with workout having no location
+      const { rerender } = render(
+        <Calendar 
+          workouts={[bikeWorkout]} 
+          initialDate={testDate}
+          onWorkoutLocationChange={mockLocationChange}
+        />
+      );
+
+      // Open modal
+      const workoutCard = screen.getByText('Bike Ride');
+      fireEvent.click(workoutCard);
+
+      // Modal should be visible with location section (it's a bike workout)
+      let modal = document.querySelector('.modal-content');
+      expect(modal).toBeInTheDocument();
+      expect(modal).toHaveTextContent('Workout Location');
+      
+      // The "Not Set" button should be active initially
+      let notSetButton = screen.getByTitle('Location not specified');
+      expect(notSetButton).toHaveClass('active');
+      
+      // Click indoor button
+      const indoorButton = screen.getByTitle('Indoor workout');
+      fireEvent.click(indoorButton);
+      
+      // Verify the callback was called
+      expect(mockLocationChange).toHaveBeenCalledWith(1, 'indoor');
+      
+      // Simulate what happens when the parent updates workouts array
+      // (This is what App.js does after the API call succeeds)
+      const updatedWorkout = { ...bikeWorkout, workoutLocation: 'indoor' };
+      
+      await act(async () => {
+        rerender(
+          <Calendar 
+            workouts={[updatedWorkout]} 
+            initialDate={testDate}
+            onWorkoutLocationChange={mockLocationChange}
+          />
+        );
+      });
+
+      // The modal should still be open and now show the updated location
+      // This is what the useEffect fix ensures
+      await waitFor(() => {
+        modal = document.querySelector('.modal-content');
+        expect(modal).toBeInTheDocument();
+        
+        // The indoor button should now be active
+        const updatedIndoorButton = screen.getByTitle('Indoor workout');
+        expect(updatedIndoorButton).toHaveClass('active');
+        
+        // The "Not Set" button should no longer be active
+        const updatedNotSetButton = screen.getByTitle('Location not specified');
+        expect(updatedNotSetButton).not.toHaveClass('active');
+      });
+    });
+
+    it('should display location badge on bike workout card when location is set', () => {
+      const bikeWithIndoorLocation = {
+        id: 1,
+        title: 'Indoor Bike',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 1, 15),
+        plannedDuration: 1.5,
+        plannedDistanceInMeters: 40000,
+        workoutDescription: 'Zwift workout',
+        coachComments: '',
+        workoutLocation: 'indoor',
+      };
+
+      const bikeWithOutdoorLocation = {
+        id: 2,
+        title: 'Outdoor Bike',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 1, 16),
+        plannedDuration: 2,
+        plannedDistanceInMeters: 50000,
+        workoutDescription: 'Road ride',
+        coachComments: '',
+        workoutLocation: 'outdoor',
+      };
+
+      const bikeWithoutLocation = {
+        id: 3,
+        title: 'Unspecified Bike',
+        workoutType: 'Bike',
+        workoutDate: new DateOnly(2026, 1, 17),
+        plannedDuration: 1,
+        plannedDistanceInMeters: 30000,
+        workoutDescription: 'Bike workout',
+        coachComments: '',
+        workoutLocation: null,
+      };
+
+      const testDate = new DateOnly(2026, 1, 15);
+      const { container } = render(
+        <Calendar 
+          workouts={[bikeWithIndoorLocation, bikeWithOutdoorLocation, bikeWithoutLocation]} 
+          initialDate={testDate}
+        />
+      );
+
+      // Check for indoor location badge
+      const workoutBadges = container.querySelectorAll('.workout-badge');
+      expect(workoutBadges.length).toBeGreaterThan(0);
+      
+      // Find the indoor bike workout badge
+      const indoorBadge = Array.from(workoutBadges).find(badge => 
+        badge.textContent.includes('Indoor Bike')
+      );
+      expect(indoorBadge).toBeTruthy();
+      expect(indoorBadge.textContent).toContain('Indoor');
+      expect(indoorBadge.textContent).toContain('🏠');
+      
+      // Find the outdoor bike workout badge
+      const outdoorBadge = Array.from(workoutBadges).find(badge => 
+        badge.textContent.includes('Outdoor Bike')
+      );
+      expect(outdoorBadge).toBeTruthy();
+      expect(outdoorBadge.textContent).toContain('Outdoor');
+      expect(outdoorBadge.textContent).toContain('🌤️');
+      
+      // Verify that bike without location doesn't show location badge
+      const unspecifiedBadge = Array.from(workoutBadges).find(badge => 
+        badge.textContent.includes('Unspecified Bike')
+      );
+      expect(unspecifiedBadge).toBeTruthy();
+      // Should not have the specific Indoor/Outdoor text (just the title)
+      const locationSpan = unspecifiedBadge.querySelector('.workout-location');
+      expect(locationSpan).toBeNull();
+    });
+
+    it('should not display location badge on non-bike workouts even if location is set', () => {
+      const runWithLocation = {
+        id: 1,
+        title: 'Morning Run',
+        workoutType: 'Run',
+        workoutDate: new DateOnly(2026, 1, 15),
+        plannedDuration: 1,
+        plannedDistanceInMeters: 10000,
+        workoutDescription: 'Easy run',
+        coachComments: '',
+        workoutLocation: 'outdoor', // Location set but should not display for runs
+      };
+
+      const testDate = new DateOnly(2026, 1, 15);
+      const { container } = render(
+        <Calendar 
+          workouts={[runWithLocation]} 
+          initialDate={testDate}
+        />
+      );
+
+      const workoutBadge = container.querySelector('.workout-badge');
+      expect(workoutBadge).toBeTruthy();
+      expect(workoutBadge.textContent).toContain('Morning Run');
+      
+      // Should not have location badge for non-bike workouts
+      const locationSpan = workoutBadge.querySelector('.workout-location');
+      expect(locationSpan).toBeNull();
+    });
   });
 
   describe('PropTypes validation', () => {

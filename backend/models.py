@@ -60,6 +60,7 @@ class WorkoutSelection(db.Model):
     - Whether they selected/skipped a workout
     - If they moved it to a different day
     - Custom time of day
+    - Workout location (e.g., indoor, outdoor)
     """
     __tablename__ = 'workout_selections'
     
@@ -70,6 +71,7 @@ class WorkoutSelection(db.Model):
     is_selected = db.Column(db.Boolean, default=True)  # True = planning to do it
     current_plan_day = db.Column(db.Date)  # If moved from original date
     time_of_day = db.Column(db.String(50))  # e.g., "morning", "7am", "Tuesday evening"
+    workout_location = db.Column(db.String(100))  # e.g., "indoor", "outdoor" (NULL if unmarked)
     
     # Notes
     user_notes = db.Column(db.Text)
@@ -85,6 +87,7 @@ class WorkoutSelection(db.Model):
             'isSelected': self.is_selected,
             'currentPlanDay': self.current_plan_day.isoformat() if self.current_plan_day else None,
             'timeOfDay': self.time_of_day,
+            'workoutLocation': self.workout_location,
             'userNotes': self.user_notes,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -105,6 +108,7 @@ class CustomWorkout(db.Model):
     planned_date = db.Column(db.Date, nullable=False)
     planned_duration = db.Column(db.Float)
     time_of_day = db.Column(db.String(50))
+    workout_location = db.Column(db.String(100))  # e.g., "indoor", "outdoor" (NULL if unmarked)
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -120,6 +124,7 @@ class CustomWorkout(db.Model):
             'plannedDate': self.planned_date.isoformat() if self.planned_date else None,
             'plannedDuration': self.planned_duration,
             'timeOfDay': self.time_of_day,
+            'workoutLocation': self.workout_location,
             'isCustom': True,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None

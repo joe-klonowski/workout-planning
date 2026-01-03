@@ -243,6 +243,31 @@
   color: #ff9800;
 }
 
+/* Location Badge */
+.location-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 12px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
+.location-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.location-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1976d2;
+  text-transform: capitalize;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .workout-card {

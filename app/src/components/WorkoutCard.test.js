@@ -313,4 +313,62 @@ describe('WorkoutCard Component', () => {
       expect(console.error).not.toHaveBeenCalled();
     });
   });
+
+  describe('Workout Location', () => {
+    const bikeWorkout = {
+      title: 'Bike Ride',
+      workoutType: 'Bike',
+      description: 'Indoor bike workout',
+      plannedDuration: 1.0,
+      plannedDistance: 40000,
+      workoutLocation: 'indoor',
+    };
+
+    it('should display location badge for indoor bike workout', () => {
+      render(<WorkoutCard workout={bikeWorkout} />);
+      expect(screen.getByText('Indoor')).toBeInTheDocument();
+      expect(screen.getByTitle('Indoor workout')).toBeInTheDocument();
+    });
+
+    it('should display location badge for outdoor bike workout', () => {
+      const outdoorBike = { ...bikeWorkout, workoutLocation: 'outdoor' };
+      render(<WorkoutCard workout={outdoorBike} />);
+      expect(screen.getByText('Outdoor')).toBeInTheDocument();
+      expect(screen.getByTitle('Outdoor workout')).toBeInTheDocument();
+    });
+
+    it('should not display location badge when location is not set', () => {
+      const bikeWithoutLocation = { ...bikeWorkout, workoutLocation: null };
+      render(<WorkoutCard workout={bikeWithoutLocation} />);
+      expect(screen.queryByText('Indoor')).not.toBeInTheDocument();
+      expect(screen.queryByText('Outdoor')).not.toBeInTheDocument();
+    });
+
+    it('should not display location badge for non-bike workouts', () => {
+      const runWorkout = {
+        title: 'Morning Run',
+        workoutType: 'Run',
+        description: 'Easy run',
+        plannedDuration: 0.75,
+        plannedDistance: 5000,
+        workoutLocation: 'outdoor',
+      };
+      render(<WorkoutCard workout={runWorkout} />);
+      // Location should not be shown for run workouts (only bike workouts for now)
+      expect(screen.queryByText('Outdoor')).not.toBeInTheDocument();
+    });
+
+    it('should display indoor location with house emoji', () => {
+      render(<WorkoutCard workout={bikeWorkout} />);
+      const locationIcon = screen.getByTitle('Indoor workout');
+      expect(locationIcon.textContent).toBe('🏠');
+    });
+
+    it('should display outdoor location with sun emoji', () => {
+      const outdoorBike = { ...bikeWorkout, workoutLocation: 'outdoor' };
+      render(<WorkoutCard workout={outdoorBike} />);
+      const locationIcon = screen.getByTitle('Outdoor workout');
+      expect(locationIcon.textContent).toBe('🌤️');
+    });
+  });
 });

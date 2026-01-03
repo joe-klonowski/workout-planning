@@ -123,8 +123,10 @@ def test_alembic_current_shows_version(temp_db):
         )
         
         assert result.returncode == 0
-        # Should show the revision ID (current head is the rename migration)
-        assert 'c8881614f87a' in result.stdout or 'rename workout_day' in result.stdout
+        # Should show that we're at some version (head)
+        # Just verify we have a migration ID and are at head, not a specific version
+        assert result.stdout.strip(), "No migration version found"
+        assert '(head)' in result.stdout, "Not at head revision"
         
     finally:
         # Restore original environment

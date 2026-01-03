@@ -17,6 +17,7 @@ function WorkoutCard({ workout, onClick, onSelectionToggle, isSelected = true })
     plannedDuration = 0,
     plannedDistance = 0,
     coachComments = '',
+    workoutLocation = null,
   } = workout || {};
 
   // Format duration to hours and minutes
@@ -58,6 +59,23 @@ function WorkoutCard({ workout, onClick, onSelectionToggle, isSelected = true })
     }
   };
 
+  // Helper to format location for display
+  const getLocationDisplay = () => {
+    if (!workoutLocation) return null;
+    
+    const locationEmojis = {
+      'indoor': '🏠',
+      'outdoor': '🌤️'
+    };
+    
+    const emoji = locationEmojis[workoutLocation.toLowerCase()] || '';
+    const label = workoutLocation.charAt(0).toUpperCase() + workoutLocation.slice(1);
+    
+    return { emoji, label };
+  };
+
+  const locationDisplay = getLocationDisplay();
+
   return (
     <div
       className={`workout-card ${!isSelected ? 'unselected' : ''}`}
@@ -89,6 +107,15 @@ function WorkoutCard({ workout, onClick, onSelectionToggle, isSelected = true })
       <h3 className="workout-title">{title}</h3>
 
       <div className="card-content">
+        {locationDisplay && workoutType === 'Bike' && (
+          <div className="location-badge">
+            <span className="location-icon" title={`${locationDisplay.label} workout`}>
+              {locationDisplay.emoji}
+            </span>
+            <span className="location-text">{locationDisplay.label}</span>
+          </div>
+        )}
+
         {plannedDistance > 0 && (
           <div className="card-details">
             <div className="detail-item">
@@ -140,6 +167,7 @@ WorkoutCard.propTypes = {
     plannedDuration: PropTypes.number,
     plannedDistance: PropTypes.number,
     coachComments: PropTypes.string,
+    workoutLocation: PropTypes.string,
   }),
   onClick: PropTypes.func,
   onSelectionToggle: PropTypes.func,

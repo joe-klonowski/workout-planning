@@ -141,6 +141,7 @@ def register_routes(app):
             "isSelected": true/false,
             "currentPlanDay": "2026-01-15" (optional),
             "timeOfDay": "morning" (optional),
+            "workoutLocation": "indoor" | "outdoor" | null (optional),
             "userNotes": "..." (optional)
         }
         """
@@ -166,6 +167,8 @@ def register_routes(app):
                 selection.current_plan_day = datetime.fromisoformat(data['currentPlanDay']).date()
             if 'timeOfDay' in data:
                 selection.time_of_day = data['timeOfDay']
+            if 'workoutLocation' in data:
+                selection.workout_location = data['workoutLocation']
             if 'userNotes' in data:
                 selection.user_notes = data['userNotes']
             
@@ -219,7 +222,8 @@ def register_routes(app):
             "description": "Weekly group ride",
             "plannedDate": "2026-01-15",
             "plannedDuration": 2.0,
-            "timeOfDay": "Saturday 8am"
+            "timeOfDay": "Saturday 8am",
+            "workoutLocation": "outdoor" (optional)
         }
         """
         try:
@@ -231,7 +235,8 @@ def register_routes(app):
                 description=data.get('description', ''),
                 planned_date=datetime.fromisoformat(data['plannedDate']).date(),
                 planned_duration=data.get('plannedDuration'),
-                time_of_day=data.get('timeOfDay')
+                time_of_day=data.get('timeOfDay'),
+                workout_location=data.get('workoutLocation')
             )
             
             db.session.add(workout)
@@ -265,6 +270,8 @@ def register_routes(app):
                 workout.planned_duration = data['plannedDuration']
             if 'timeOfDay' in data:
                 workout.time_of_day = data['timeOfDay']
+            if 'workoutLocation' in data:
+                workout.workout_location = data['workoutLocation']
             
             db.session.commit()
             

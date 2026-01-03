@@ -9,13 +9,20 @@ import '../styles/WorkoutDetailModal.css';
  * @param {Object} workout - Workout object with all details
  * @param {boolean} isOpen - Whether the modal is open
  * @param {function} onClose - Callback to close the modal
+ * @param {function} onWorkoutLocationChange - Callback for when location is changed
  */
-function WorkoutDetailModal({ workout, isOpen, onClose }) {
+function WorkoutDetailModal({ workout, isOpen, onClose, onWorkoutLocationChange }) {
   if (!isOpen || !workout) {
     return null;
   }
 
   const style = getWorkoutTypeStyle(workout.workoutType);
+
+  const handleLocationChange = (newLocation) => {
+    if (onWorkoutLocationChange) {
+      onWorkoutLocationChange(workout.id, newLocation);
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return 'N/A';
@@ -87,6 +94,35 @@ function WorkoutDetailModal({ workout, isOpen, onClose }) {
         </div>
 
         <div className="modal-body">
+          {workout.workoutType === 'Bike' && (
+            <div className="detail-section location-section">
+              <h3 className="detail-label">Workout Location</h3>
+              <div className="location-buttons">
+                <button
+                  className={`location-button ${workout.workoutLocation === 'indoor' ? 'active' : ''}`}
+                  onClick={() => handleLocationChange('indoor')}
+                  title="Indoor workout"
+                >
+                  🏠 Indoor
+                </button>
+                <button
+                  className={`location-button ${workout.workoutLocation === 'outdoor' ? 'active' : ''}`}
+                  onClick={() => handleLocationChange('outdoor')}
+                  title="Outdoor workout"
+                >
+                  🌤️ Outdoor
+                </button>
+                <button
+                  className={`location-button ${!workout.workoutLocation ? 'active' : ''}`}
+                  onClick={() => handleLocationChange(null)}
+                  title="Location not specified"
+                >
+                  ❓ Not Set
+                </button>
+              </div>
+            </div>
+          )}
+
           {workout.workoutDescription && (
             <div className="detail-section">
               <h3 className="detail-label">Description</h3>
@@ -202,13 +238,16 @@ WorkoutDetailModal.propTypes = {
     athleteComments: PropTypes.string,
     isSelected: PropTypes.bool,
     timeOfDay: PropTypes.string,
+    workoutLocation: PropTypes.string,
   }),
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  onWorkoutLocationChange: PropTypes.func,
 };
 
 WorkoutDetailModal.defaultProps = {
   workout: null,
+  onWorkoutLocationChange: null,
 };
 
 export default WorkoutDetailModal;

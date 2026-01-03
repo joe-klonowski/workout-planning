@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { groupWorkoutsByDate } from '../utils/csvParser';
 import { DateOnly } from '../utils/DateOnly';
@@ -14,11 +14,12 @@ import '../styles/Calendar.css';
  * @param {Function} onWorkoutSelectionToggle - Callback for when user toggles workout selection
  * @param {Function} onWorkoutDateChange - Callback for when user drags workout to a new date
  * @param {Function} onWorkoutTimeOfDayChange - Callback for when user drags workout to a time of day
+ * @param {Function} onWorkoutLocationChange - Callback for when user changes workout location
  */
 function Calendar({ workouts = [], initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
@@ -27,6 +28,16 @@ function Calendar({ workouts = [], initialDate = (() => {
   const [showTimeSlots, setShowTimeSlots] = useState(false); // Separate state to control time slot visibility
   const [dragOverDate, setDragOverDate] = useState(null);
   const [dragOverTimeSlot, setDragOverTimeSlot] = useState(null);
+
+  // Update selectedWorkout when workouts array changes (e.g., location update)
+  useEffect(() => {
+    if (selectedWorkout && selectedWorkout.id) {
+      const updatedWorkout = workouts.find(w => w.id === selectedWorkout.id);
+      if (updatedWorkout) {
+        setSelectedWorkout(updatedWorkout);
+      }
+    }
+  }, [workouts, selectedWorkout]);
 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
@@ -272,6 +283,23 @@ function Calendar({ workouts = [], initialDate = (() => {
   // Render a workout badge
   const renderWorkoutBadge = (workout, idx) => {
     const style = getWorkoutTypeStyle(workout.workoutType);
+    
+    // Helper to get location display info
+    const getLocationDisplay = () => {
+      if (!workout.workoutLocation) return null;
+      
+      const locationEmojis = {
+        'indoor': '🏠',
+        'outdoor': '🌤️'
+      };
+      
+      const emoji = locationEmojis[workout.workoutLocation.toLowerCase()] || '';
+      
+      return { emoji };
+    };
+    
+    const locationDisplay = getLocationDisplay();
+    
     return (
       <div
         key={idx}
@@ -308,6 +336,23 @@ function Calendar({ workouts = [], initialDate = (() => {
                 whiteSpace: 'nowrap'
               }}>
                 {formatDuration(workout.plannedDuration)}
+              </span>
+            )}
+            {locationDisplay && workout.workoutType === 'Bike' && (
+              <span className="workout-location" style={{
+                fontSize: '11px',
+                fontWeight: '600',
+                color: '#1976d2',
+                backgroundColor: '#e3f2fd',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}>
+                <span style={{ fontSize: '10px' }}>{locationDisplay.emoji}</span>
+                <span>{locationDisplay.label}</span>
               </span>
             )}
           </div>
@@ -529,6 +574,7 @@ function Calendar({ workouts = [], initialDate = (() => {
           setIsModalOpen(false);
           setSelectedWorkout(null);
         }}
+        onWorkoutLocationChange={onWorkoutLocationChange}
       />
     </div>
   );
@@ -548,12 +594,14 @@ Calendar.propTypes = {
       coachComments: PropTypes.string,
       isSelected: PropTypes.bool,
       timeOfDay: PropTypes.string,
+      workoutLocation: PropTypes.string,
     })
   ),
   initialDate: PropTypes.instanceOf(DateOnly),
   onWorkoutSelectionToggle: PropTypes.func,
   onWorkoutDateChange: PropTypes.func,
   onWorkoutTimeOfDayChange: PropTypes.func,
+  onWorkoutLocationChange: PropTypes.func,
 };
 
 Calendar.defaultProps = {

@@ -673,4 +673,148 @@ describe('WorkoutDetailModal Component', () => {
       expect(badge).toBeInTheDocument();
     });
   });
+
+  describe('Workout Location Feature', () => {
+    const bikeWorkout = {
+      id: 1,
+      title: 'Bike Ride',
+      workoutType: 'Bike',
+      workoutDate: new DateOnly(2026, 1, 15),
+      workoutDescription: 'Indoor bike workout',
+      plannedDuration: 1.0,
+      plannedDistanceInMeters: 40000,
+      workoutLocation: 'indoor',
+    };
+
+    it('should display location section for bike workouts', () => {
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(screen.getByText('Workout Location')).toBeInTheDocument();
+    });
+
+    it('should not display location section for non-bike workouts', () => {
+      const runWorkout = { ...mockWorkout, workoutType: 'Run' };
+      render(
+        <WorkoutDetailModal
+          workout={runWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(screen.queryByText('Workout Location')).not.toBeInTheDocument();
+    });
+
+    it('should display three location buttons: indoor, outdoor, and not set', () => {
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      expect(screen.getByTitle('Indoor workout')).toBeInTheDocument();
+      expect(screen.getByTitle('Outdoor workout')).toBeInTheDocument();
+      expect(screen.getByTitle('Location not specified')).toBeInTheDocument();
+    });
+
+    it('should mark indoor button as active when location is indoor', () => {
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      const indoorButton = screen.getByTitle('Indoor workout');
+      expect(indoorButton).toHaveClass('active');
+    });
+
+    it('should mark outdoor button as active when location is outdoor', () => {
+      const outdoorBike = { ...bikeWorkout, workoutLocation: 'outdoor' };
+      render(
+        <WorkoutDetailModal
+          workout={outdoorBike}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      const outdoorButton = screen.getByTitle('Outdoor workout');
+      expect(outdoorButton).toHaveClass('active');
+    });
+
+    it('should mark not set button as active when location is null', () => {
+      const bikeWithoutLocation = { ...bikeWorkout, workoutLocation: null };
+      render(
+        <WorkoutDetailModal
+          workout={bikeWithoutLocation}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      const notSetButton = screen.getByTitle('Location not specified');
+      expect(notSetButton).toHaveClass('active');
+    });
+
+    it('should call onWorkoutLocationChange when indoor button is clicked', () => {
+      const mockLocationChange = jest.fn();
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+          onWorkoutLocationChange={mockLocationChange}
+        />
+      );
+      const indoorButton = screen.getByTitle('Indoor workout');
+      fireEvent.click(indoorButton);
+      expect(mockLocationChange).toHaveBeenCalledWith(1, 'indoor');
+    });
+
+    it('should call onWorkoutLocationChange when outdoor button is clicked', () => {
+      const mockLocationChange = jest.fn();
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+          onWorkoutLocationChange={mockLocationChange}
+        />
+      );
+      const outdoorButton = screen.getByTitle('Outdoor workout');
+      fireEvent.click(outdoorButton);
+      expect(mockLocationChange).toHaveBeenCalledWith(1, 'outdoor');
+    });
+
+    it('should call onWorkoutLocationChange with null when not set button is clicked', () => {
+      const mockLocationChange = jest.fn();
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+          onWorkoutLocationChange={mockLocationChange}
+        />
+      );
+      const notSetButton = screen.getByTitle('Location not specified');
+      fireEvent.click(notSetButton);
+      expect(mockLocationChange).toHaveBeenCalledWith(1, null);
+    });
+
+    it('should not throw error if onWorkoutLocationChange is not provided', () => {
+      render(
+        <WorkoutDetailModal
+          workout={bikeWorkout}
+          isOpen={true}
+          onClose={jest.fn()}
+        />
+      );
+      const indoorButton = screen.getByTitle('Indoor workout');
+      expect(() => fireEvent.click(indoorButton)).not.toThrow();
+    });
+  });
 });

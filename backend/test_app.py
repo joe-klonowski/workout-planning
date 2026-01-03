@@ -308,6 +308,87 @@ def test_delete_selection(client, sample_workout):
     assert data['message'] == 'Selection deleted'
 
 
+def test_update_selection_with_workout_location(client, sample_workout):
+    """Test updating a workout selection with workout location"""
+    selection_data = {
+        'isSelected': True,
+        'workoutLocation': 'indoor'
+    }
+    
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['isSelected'] is True
+    assert data['workoutLocation'] == 'indoor'
+
+
+def test_update_selection_location_to_outdoor(client, sample_workout):
+    """Test changing workout location from indoor to outdoor"""
+    # First set as indoor
+    selection_data = {'workoutLocation': 'indoor'}
+    client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    
+    # Then change to outdoor
+    selection_data = {'workoutLocation': 'outdoor'}
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['workoutLocation'] == 'outdoor'
+
+
+def test_update_selection_clear_location(client, sample_workout):
+    """Test clearing workout location by setting it to null"""
+    # First set a location
+    selection_data = {'workoutLocation': 'indoor'}
+    client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    
+    # Then clear it by setting to null
+    selection_data = {'workoutLocation': None}
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps(selection_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['workoutLocation'] is None
+
+
+def test_workout_selection_model_with_location(app, sample_workout):
+    """Test WorkoutSelection model with workout_location field"""
+    with app.app_context():
+        selection = WorkoutSelection(
+            workout_id=sample_workout,
+            is_selected=True,
+            workout_location='indoor'
+        )
+        db.session.add(selection)
+        db.session.commit()
+        
+        assert selection.workout_location == 'indoor'
+        
+        # Test to_dict includes workoutLocation
+        selection_dict = selection.to_dict()
+        assert selection_dict['workoutLocation'] == 'indoor'
+
+
+
 def test_get_custom_workouts_empty(client):
     """Test getting custom workouts when none exist"""
     response = client.get('/api/custom-workouts')
@@ -340,6 +421,49 @@ def test_create_custom_workout(client):
     assert data['isCustom'] is True
 
 
+def test_create_custom_workout_with_location(client):
+    """Test creating a custom workout with workout location"""
+    workout_data = {
+        'title': 'Indoor Bike Ride',
+        'workoutType': 'Bike',
+        'description': 'Zwift workout',
+        'plannedDate': '2026-01-18',
+        'plannedDuration': 1.5,
+        'workoutLocation': 'indoor'
+    }
+    
+    response = client.post(
+        '/api/custom-workouts',
+        data=json.dumps(workout_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 201
+    data = json.loads(response.data)
+    assert data['title'] == 'Indoor Bike Ride'
+    assert data['workoutLocation'] == 'indoor'
+
+
+def test_custom_workout_model_with_location(app):
+    """Test CustomWorkout model with workout_location field"""
+    with app.app_context():
+        workout = CustomWorkout(
+            title="Outdoor Ride",
+            workout_type="Bike",
+            description="Group ride",
+            planned_date=date(2026, 1, 18),
+            workout_location='outdoor'
+        )
+        db.session.add(workout)
+        db.session.commit()
+        
+        assert workout.workout_location == 'outdoor'
+        
+        # Test to_dict includes workoutLocation
+        workout_dict = workout.to_dict()
+        assert workout_dict['workoutLocation'] == 'outdoor'
+
+
+
 def test_update_custom_workout(client, app):
     """Test updating a custom workout"""
     # Create a custom workout first
@@ -369,6 +493,34 @@ def test_update_custom_workout(client, app):
     data = json.loads(response.data)
     assert data['title'] == 'Updated Title'
     assert data['plannedDuration'] == 1.5
+
+
+def test_update_custom_workout_with_location(client, app):
+    """Test updating a custom workout's location"""
+    # Create a custom workout first
+    with app.app_context():
+        custom = CustomWorkout(
+            title="Bike Ride",
+            workout_type="Bike",
+            description="Test ride",
+            planned_date=date(2026, 1, 15)
+        )
+        db.session.add(custom)
+        db.session.commit()
+        workout_id = custom.id
+    
+    # Update location to indoor
+    update_data = {'workoutLocation': 'indoor'}
+    
+    response = client.put(
+        f'/api/custom-workouts/{workout_id}',
+        data=json.dumps(update_data),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['workoutLocation'] == 'indoor'
+
 
 
 def test_delete_custom_workout(client, app):
