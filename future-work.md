@@ -23,14 +23,21 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
-- Add support for exporting workout plan. Send the plan to Apple Calendar using CalDAV and python's caldav library. This is so that my wife can see the workout plan. She said that this Apple Calendar was her preferred way to see it. For now here's the format for sending the plan to an external calendar:
-  - For each day that has one or more workouts, create an all day event.
-  - The event name should be "Joe workout schedule"
-  - The "notes" field in the calendar event should list workouts for that day. In the description of each workout, include:
-    - Workout type (e.g. swim, bike, run).
-    - Workout location, if any
-    - Workout time of day (e.g. morning, afternoon, evening)
-    - Workout duration (e.g. 1 hour 30 minutes)
+- Add support for exporting workout plan. Send the plan to Apple Calendar using CalDAV and python's caldav library. This is so that my wife can see the workout plan. She said that this Apple Calendar was her preferred way to see it.
+  - There should be a button on the calendar to export to Apple calendar.
+    - This button should be in the summary column at the end of the week.
+    - This button should pop open a modal.
+      - The modal should have confirm and cancel buttons that do what you'd expect.
+      - The modal should have a date range picker that selects the date range to export.
+      - By default the date range picker should select the one week that corresponds to the week that the user selected when they clicked the button in the calendar.
+  - Format for sending data to calendar:
+    - For each day that has one or more workouts, create an all day event.
+    - The event name should be "Joe workout schedule"
+    - The "notes" field in the calendar event should list workouts for that day. In the description of each workout, include:
+      - Workout type (e.g. swim, bike, run).
+      - Workout location, if any
+      - Workout time of day (e.g. morning, afternoon, evening)
+      - Workout duration (e.g. 1 hour 30 minutes)
 
 ## Look/feel/CSS
 - Add summary of the week on the right with:
