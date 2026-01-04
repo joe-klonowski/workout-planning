@@ -16,11 +16,12 @@ import '../styles/Calendar.css';
  * @param {Function} onWorkoutDateChange - Callback for when user drags workout to a new date
  * @param {Function} onWorkoutTimeOfDayChange - Callback for when user drags workout to a time of day
  * @param {Function} onWorkoutLocationChange - Callback for when user changes workout location
+ * @param {Function} onExportToCalendar - Callback for exporting workouts to calendar
  */
 function Calendar({ workouts = [], initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
@@ -257,6 +258,21 @@ function Calendar({ workouts = [], initialDate = (() => {
     }
     
     return weekWorkouts;
+  };
+
+  // Get the start and end dates of the current week
+  const getWeekDateRange = () => {
+    const dayOfWeek = (currentDate.getDay() + 6) % 7; // 0 = Monday
+    const weekStart = new Date(currentDate);
+    weekStart.setDate(weekStart.getDate() - dayOfWeek);
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    
+    return {
+      start: new DateOnly(weekStart.getFullYear(), weekStart.getMonth() + 1, weekStart.getDate()),
+      end: new DateOnly(weekEnd.getFullYear(), weekEnd.getMonth() + 1, weekEnd.getDate())
+    };
   };
 
   // Group workouts by time of day
@@ -605,7 +621,12 @@ function Calendar({ workouts = [], initialDate = (() => {
     </div>
 
     {viewMode === 'week' && (
-      <WeeklySummary workouts={getWorkoutsForCurrentWeek()} />
+      <WeeklySummary 
+        workouts={getWorkoutsForCurrentWeek()} 
+        weekStartDate={getWeekDateRange().start}
+        weekEndDate={getWeekDateRange().end}
+        onExportToCalendar={onExportToCalendar}
+      />
     )}
   </div>
   );
@@ -633,6 +654,7 @@ Calendar.propTypes = {
   onWorkoutDateChange: PropTypes.func,
   onWorkoutTimeOfDayChange: PropTypes.func,
   onWorkoutLocationChange: PropTypes.func,
+  onExportToCalendar: PropTypes.func,
 };
 
 Calendar.defaultProps = {

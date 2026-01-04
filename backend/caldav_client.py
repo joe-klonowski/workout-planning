@@ -160,6 +160,11 @@ class CalDAVClient:
         
         notes = "\n".join(notes_lines)
         
+        # Escape the notes for iCalendar format
+        # In iCalendar, newlines in DESCRIPTION must be encoded as literal \n
+        # Also escape backslashes and commas if needed
+        notes_escaped = notes.replace("\\", "\\\\").replace("\n", "\\n")
+        
         # Create iCalendar event
         # All-day events use DATE format (no time component)
         event_start = event_date.strftime("%Y%m%d")
@@ -173,7 +178,7 @@ UID:{datetime.now().strftime('%Y%m%d%H%M%S')}-{event_date.strftime('%Y%m%d')}@wo
 DTSTART;VALUE=DATE:{event_start}
 DTEND;VALUE=DATE:{event_end}
 SUMMARY:Joe workout schedule
-DESCRIPTION:{notes}
+DESCRIPTION:{notes_escaped}
 END:VEVENT
 END:VCALENDAR"""
         
@@ -212,6 +217,46 @@ END:VCALENDAR"""
                 continue
         
         logger.info(f"Deleted {deleted_count} workout events")
+        return deleted_count
+    
+    def delete_workout_events_in_range(self, start_date: date, end_date: date):
+        """
+        Delete workout events within a specific date range
+        
+        This is useful for re-exporting a specific week or month without affecting
+        other workout events in the calendar.
+        
+        Args:
+            start_date: Start date of range (inclusive)
+            end_date: End date of range (inclusive)
+            
+        Returns:
+            Number of events deleted
+        """
+        if not self._calendar:
+            raise RuntimeError("No calendar selected. Call select_calendar() first.")
+        
+        deleted_count = 0
+        
+        # Search for events in the date range
+        # CalDAV search expects datetime objects
+        start_datetime = datetime.combine(start_date, datetime.min.time())
+        end_datetime = datetime.combine(end_date, datetime.max.time())
+        
+        events = self._calendar.search(start=start_datetime, end=end_datetime, expand=True)
+        
+        for event in events:
+            try:
+                ical_data = event.data
+                # Check if this is a workout schedule event
+                if "SUMMARY:Joe workout schedule" in ical_data:
+                    event.delete()
+                    deleted_count += 1
+            except Exception as e:
+                logger.warning(f"Error processing event: {e}")
+                continue
+        
+        logger.info(f"Deleted {deleted_count} workout events in range {start_date} to {end_date}")
         return deleted_count
     
     def export_workout_plan(self, workouts_by_date: Dict[date, List[Dict]]):

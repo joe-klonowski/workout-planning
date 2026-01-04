@@ -281,3 +281,150 @@ class TestCalDAVIntegration:
         # Try deleting again - should delete 0 events
         deleted_count_2 = client.delete_all_workout_events()
         assert deleted_count_2 == 0, "Should not find any workout events after deletion"
+    
+    def test_delete_workout_events_in_range(self, client):
+        """Test that delete_workout_events_in_range only deletes events within the specified date range"""
+        today = date.today()
+        
+        # Create events across 3 different weeks
+        week1_date1 = today + timedelta(days=37)
+        week1_date2 = today + timedelta(days=38)
+        week2_date1 = today + timedelta(days=44)  # 7 days later
+        week2_date2 = today + timedelta(days=45)
+        week3_date1 = today + timedelta(days=51)  # 7 days later
+        
+        workouts = [
+            {'workoutType': 'Test Run', 'timeOfDay': 'morning', 'plannedDuration': 1.0}
+        ]
+        
+        # Create events in all 3 weeks
+        client.create_workout_event(week1_date1, workouts)
+        client.create_workout_event(week1_date2, workouts)
+        client.create_workout_event(week2_date1, workouts)
+        client.create_workout_event(week2_date2, workouts)
+        client.create_workout_event(week3_date1, workouts)
+        
+        print(f"\nCreated 5 workout events across 3 different weeks")
+        
+        # Delete only week 2 events (should delete 2 events)
+        deleted_count = client.delete_workout_events_in_range(
+            today + timedelta(days=42),  # Start of week 2 range
+            today + timedelta(days=48)   # End of week 2 range
+        )
+        
+        assert deleted_count == 2, f"Expected to delete 2 events in week 2, but deleted {deleted_count}"
+        print(f"Deleted {deleted_count} events in week 2 date range")
+        
+        # Verify week 1 and week 3 events still exist
+        remaining_count = client.delete_all_workout_events()
+        assert remaining_count == 3, f"Expected 3 remaining events (week 1 and week 3), but found {remaining_count}"
+        print(f"Verified {remaining_count} events remain outside the deleted range")
+    
+    def test_delete_workout_events_in_range_preserves_non_workout_events(self, client):
+        """Test that delete_workout_events_in_range doesn't delete non-workout events"""
+        today = date.today()
+        test_date = today + timedelta(days=52)
+        
+        # Create a workout event
+        workouts = [
+            {'workoutType': 'Test Run', 'timeOfDay': 'morning', 'plannedDuration': 1.0}
+        ]
+        client.create_workout_event(test_date, workouts)
+        
+        # Create a non-workout event manually
+        non_workout_ical = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Workout Planner Integration Test//EN
+BEGIN:VEVENT
+UID:test-non-workout-{test_date.isoformat()}@workoutplanner.test
+DTSTART;VALUE=DATE:{test_date.strftime('%Y%m%d')}
+DTEND;VALUE=DATE:{(test_date + timedelta(days=1)).strftime('%Y%m%d')}
+SUMMARY:Doctor Appointment
+DESCRIPTION:Annual checkup
+END:VEVENT
+END:VCALENDAR"""
+        
+        client._calendar.save_event(non_workout_ical)
+        print(f"\nCreated 1 workout event and 1 non-workout event on {test_date}")
+        
+        # Delete workout events in range
+        deleted_count = client.delete_workout_events_in_range(
+            test_date - timedelta(days=1),
+            test_date + timedelta(days=1)
+        )
+        
+        assert deleted_count == 1, f"Expected to delete only 1 workout event, but deleted {deleted_count}"
+        print(f"Deleted {deleted_count} workout event")
+        
+        # Verify non-workout event still exists
+        all_events = list(client._calendar.events())
+        non_workout_events = [e for e in all_events if "Doctor Appointment" in e.data]
+        
+        assert len(non_workout_events) == 1, "Non-workout event should still exist"
+        print(f"Verified non-workout event was preserved")
+        
+        # Clean up the non-workout event manually
+        non_workout_events[0].delete()
+    
+    def test_re_export_same_date_range(self, client):
+        """Test that re-exporting the same date range replaces old events with new ones"""
+        today = date.today()
+        start_date = today + timedelta(days=53)
+        end_date = today + timedelta(days=56)
+        
+        # First export: Create workouts for 3 days
+        workouts_v1 = {
+            start_date: [
+                {'workoutType': 'Run V1', 'timeOfDay': 'morning', 'plannedDuration': 1.0}
+            ],
+            start_date + timedelta(days=1): [
+                {'workoutType': 'Swim V1', 'timeOfDay': 'morning', 'plannedDuration': 1.5}
+            ],
+            start_date + timedelta(days=2): [
+                {'workoutType': 'Bike V1', 'timeOfDay': 'afternoon', 'plannedDuration': 2.0}
+            ]
+        }
+        
+        created_count_v1 = client.export_workout_plan(workouts_v1)
+        assert created_count_v1 == 3
+        print(f"\nFirst export: Created {created_count_v1} events")
+        
+        # Delete events in range and re-export with different workouts
+        deleted_count = client.delete_workout_events_in_range(start_date, end_date)
+        assert deleted_count == 3
+        print(f"Deleted {deleted_count} events before re-export")
+        
+        # Second export: Different workouts for the same dates
+        workouts_v2 = {
+            start_date: [
+                {'workoutType': 'Strength V2', 'timeOfDay': 'evening', 'plannedDuration': 0.75}
+            ],
+            start_date + timedelta(days=1): [
+                {'workoutType': 'Yoga V2', 'timeOfDay': 'morning', 'plannedDuration': 1.0}
+            ],
+            start_date + timedelta(days=2): [
+                {'workoutType': 'Rest Day V2', 'timeOfDay': 'Not specified', 'plannedDuration': None}
+            ]
+        }
+        
+        created_count_v2 = client.export_workout_plan(workouts_v2)
+        assert created_count_v2 == 3
+        print(f"Second export: Created {created_count_v2} new events")
+        
+        # Verify only V2 events exist
+        events = list(client._calendar.events())
+        workout_events = [e for e in events if "SUMMARY:Joe workout schedule" in e.data]
+        
+        # Should have exactly 3 events (the V2 ones)
+        assert len(workout_events) == 3
+        
+        # Verify they're V2 events by checking for V2 workout types
+        all_event_data = "".join([e.data for e in workout_events])
+        assert "Strength V2" in all_event_data
+        assert "Yoga V2" in all_event_data
+        
+        # Verify V1 workouts are gone
+        assert "Run V1" not in all_event_data
+        assert "Swim V1" not in all_event_data
+        
+        print(f"Verified that re-export replaced old events with new ones")

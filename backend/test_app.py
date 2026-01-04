@@ -4,6 +4,7 @@ Tests for workout planner backend
 import pytest
 import json
 from datetime import date, datetime
+from unittest.mock import patch, MagicMock
 from app import create_app
 from models import db, Workout, WorkoutSelection, CustomWorkout
 import io
@@ -662,3 +663,572 @@ def test_workout_date_change_preserves_original(client, sample_workout):
     moved_workout = next(w for w in workouts if w['id'] == sample_workout)
     assert moved_workout['originallyPlannedDay'] == original_date
     assert moved_workout['selection']['currentPlanDay'] == new_date
+
+
+# ============= CALDAV EXPORT TESTS =============
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_success(mock_get_credentials, mock_caldav_client, client, app):
+    """Test successful export to calendar"""
+    # Setup mock credentials
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Test Calendar'
+    }
+    
+    # Setup mock CalDAV client
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 3
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create some test workouts
+    with app.app_context():
+        workout1 = Workout(
+            title="Morning Swim",
+            workout_type="Swim",
+            workout_description="Easy swim",
+            planned_duration=1.0,
+            planned_distance_meters=2000.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Long Run",
+            workout_type="Run",
+            workout_description="Base run",
+            planned_duration=1.5,
+            planned_distance_meters=15000.0,
+            originally_planned_day=date(2026, 1, 11)
+        )
+        db.session.add_all([workout1, workout2])
+        db.session.commit()
+        
+        # Add selection with time of day
+        selection1 = WorkoutSelection(
+            workout_id=workout1.id,
+            is_selected=True,
+            time_of_day="morning",
+            workout_location="indoor"
+        )
+        selection2 = WorkoutSelection(
+            workout_id=workout2.id,
+            is_selected=True,
+            time_of_day="evening"
+        )
+        db.session.add_all([selection1, selection2])
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar', 
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert 'eventsCreated' in data
+    assert data['eventsCreated'] == 3
+    assert data['dateRange']['start'] == '2026-01-08'
+    assert data['dateRange']['end'] == '2026-01-14'
+    
+    # Verify CalDAV client was called correctly
+    mock_caldav_client.assert_called_once_with(
+        url='https://caldav.test.com/',
+        username='test@example.com',
+        password='test-password'
+    )
+    mock_client_instance.connect.assert_called_once()
+    mock_client_instance.select_calendar.assert_called_once_with('Test Calendar')
+    mock_client_instance.export_workout_plan.assert_called_once()
+    mock_client_instance.disconnect.assert_called_once()
+
+
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_missing_credentials(mock_get_credentials, client):
+    """Test export fails with missing credentials"""
+    mock_get_credentials.return_value = {
+        'url': None,
+        'username': None,
+        'password': None,
+        'calendar_name': None
+    }
+    
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 500
+    data = json.loads(response.data)
+    assert 'error' in data
+    assert 'credentials not configured' in data['error'].lower()
+
+
+def test_export_to_calendar_missing_dates(client):
+    """Test export fails with missing date parameters"""
+    # Missing endDate
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'error' in data
+    
+    # Missing startDate
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'error' in data
+
+
+def test_export_to_calendar_invalid_date_range(client):
+    """Test export fails when start date is after end date"""
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-20',
+                              'endDate': '2026-01-10'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'error' in data
+    assert 'before or equal' in data['error'].lower()
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_only_selected_workouts(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that only selected workouts are exported"""
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Test Calendar'
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 1
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create test workouts - one selected, one not
+    with app.app_context():
+        workout1 = Workout(
+            title="Selected Workout",
+            workout_type="Swim",
+            workout_description="This should be exported",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Unselected Workout",
+            workout_type="Run",
+            workout_description="This should NOT be exported",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 11)
+        )
+        db.session.add_all([workout1, workout2])
+        db.session.commit()
+        
+        # Mark first as selected, second as not selected
+        selection1 = WorkoutSelection(
+            workout_id=workout1.id,
+            is_selected=True
+        )
+        selection2 = WorkoutSelection(
+            workout_id=workout2.id,
+            is_selected=False
+        )
+        db.session.add_all([selection1, selection2])
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # Verify only one workout was exported (the selected one)
+    call_args = mock_client_instance.export_workout_plan.call_args[0][0]
+    assert len(call_args) == 1  # Only one date with workouts
+    assert date(2026, 1, 10) in call_args
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_with_moved_workout(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that workouts that have been moved to new dates are exported correctly"""
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Test Calendar'
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 1
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create a workout and move it to a different date
+    with app.app_context():
+        workout = Workout(
+            title="Moved Workout",
+            workout_type="Bike",
+            workout_description="This was moved",
+            planned_duration=2.0,
+            originally_planned_day=date(2026, 1, 10)  # Original date
+        )
+        db.session.add(workout)
+        db.session.commit()
+        
+        # Move workout to a different date
+        selection = WorkoutSelection(
+            workout_id=workout.id,
+            is_selected=True,
+            current_plan_day=date(2026, 1, 12)  # Moved to this date
+        )
+        db.session.add(selection)
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # Verify workout was exported on the new date (not original date)
+    call_args = mock_client_instance.export_workout_plan.call_args[0][0]
+    assert date(2026, 1, 12) in call_args  # New date
+    assert date(2026, 1, 10) not in call_args  # Original date should not be there
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_multiple_workouts_same_day(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that multiple workouts on the same day are all included in the export"""
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Test Calendar'
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 1
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create multiple workouts on the same day
+    with app.app_context():
+        workout1 = Workout(
+            title="Morning Swim",
+            workout_type="Swim",
+            workout_description="Easy swim",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Afternoon Run",
+            workout_type="Run",
+            workout_description="Base run",
+            planned_duration=0.5,
+            originally_planned_day=date(2026, 1, 10)  # Same day
+        )
+        workout3 = Workout(
+            title="Evening Strength",
+            workout_type="Strength",
+            workout_description="Core work",
+            planned_duration=0.75,
+            originally_planned_day=date(2026, 1, 10)  # Same day
+        )
+        db.session.add_all([workout1, workout2, workout3])
+        db.session.commit()
+        
+        # Mark all as selected with different times of day
+        selection1 = WorkoutSelection(
+            workout_id=workout1.id,
+            is_selected=True,
+            time_of_day="morning",
+            workout_location="indoor"
+        )
+        selection2 = WorkoutSelection(
+            workout_id=workout2.id,
+            is_selected=True,
+            time_of_day="afternoon",
+            workout_location="outdoor"
+        )
+        selection3 = WorkoutSelection(
+            workout_id=workout3.id,
+            is_selected=True,
+            time_of_day="evening"
+        )
+        db.session.add_all([selection1, selection2, selection3])
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # Verify that export_workout_plan was called with all three workouts grouped by the same date
+    call_args = mock_client_instance.export_workout_plan.call_args[0][0]
+    assert date(2026, 1, 10) in call_args
+    
+    # The key part: verify that all 3 workouts are in the list for that date
+    workouts_for_jan_10 = call_args[date(2026, 1, 10)]
+    assert len(workouts_for_jan_10) == 3, f"Expected 3 workouts for Jan 10, but got {len(workouts_for_jan_10)}"
+    
+    # Verify all workout types are present
+    workout_types = [w['workoutType'] for w in workouts_for_jan_10]
+    assert 'Swim' in workout_types
+    assert 'Run' in workout_types
+    assert 'Strength' in workout_types
+    
+    # Verify all times of day are present
+    times_of_day = [w['timeOfDay'] for w in workouts_for_jan_10]
+    assert 'morning' in times_of_day
+    assert 'afternoon' in times_of_day
+    assert 'evening' in times_of_day
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_uses_specific_calendar_name(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that export uses the specific calendar name from credentials"""
+    # Setup credentials with a specific calendar name
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'My Workout Calendar'  # Specific calendar name
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 1
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create a test workout
+    with app.app_context():
+        workout = Workout(
+            title="Test Workout",
+            workout_type="Run",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        db.session.add(workout)
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # Verify that select_calendar was called with the specific calendar name
+    mock_client_instance.select_calendar.assert_called_once_with('My Workout Calendar')
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_with_null_calendar_name(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that export fails when no specific calendar name is provided"""
+    # Setup credentials without a specific calendar name
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': None  # No specific calendar - should error
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = 1
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create a test workout
+    with app.app_context():
+        workout = Workout(
+            title="Test Workout",
+            workout_type="Run",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        db.session.add(workout)
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    # Should fail with 500 error
+    assert response.status_code == 500
+    data = json.loads(response.data)
+    assert 'error' in data
+    assert 'calendar name not configured' in data['error'].lower()
+    
+    # Verify that CalDAV client methods were NOT called
+    mock_client_instance.connect.assert_not_called()
+    mock_client_instance.select_calendar.assert_not_called()
+    mock_client_instance.export_workout_plan.assert_not_called()
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_deletes_existing_events_in_date_range(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that export deletes existing workout events in the date range before creating new ones"""
+    # Setup credentials
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Workouts'
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.delete_workout_events_in_range.return_value = 3  # Simulate deleting 3 existing events
+    mock_client_instance.export_workout_plan.return_value = 2
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create test workouts
+    with app.app_context():
+        workout1 = Workout(
+            title="Test Workout 1",
+            workout_type="Run",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Test Workout 2",
+            workout_type="Swim",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 11)
+        )
+        db.session.add_all([workout1, workout2])
+        db.session.commit()
+    
+    # Make export request
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # Verify the call sequence
+    mock_client_instance.connect.assert_called_once()
+    mock_client_instance.select_calendar.assert_called_once_with('Workouts')
+    
+    # THE KEY ASSERTION: delete_workout_events_in_range should be called with the date range
+    mock_client_instance.delete_workout_events_in_range.assert_called_once_with(
+        date(2026, 1, 8),
+        date(2026, 1, 14)
+    )
+    mock_client_instance.export_workout_plan.assert_called_once()
+    
+    # Verify delete was called before export by checking call order
+    call_order = [call[0] for call in mock_client_instance.method_calls]
+    delete_index = call_order.index('delete_workout_events_in_range')
+    export_index = call_order.index('export_workout_plan')
+    assert delete_index < export_index, "delete_workout_events_in_range should be called before export_workout_plan"
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_only_deletes_events_in_date_range(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that export only deletes workout events within the specified date range, not all events"""
+    # Setup credentials
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Workouts'
+    }
+    
+    mock_client_instance = MagicMock()
+    mock_client_instance.delete_workout_events_in_range.return_value = 2  # Only 2 events in the range
+    mock_client_instance.export_workout_plan.return_value = 2
+    mock_caldav_client.return_value = mock_client_instance
+    
+    # Create test workouts
+    with app.app_context():
+        workout1 = Workout(
+            title="Test Workout 1",
+            workout_type="Run",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Test Workout 2",
+            workout_type="Swim",
+            workout_description="Test",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 11)
+        )
+        db.session.add_all([workout1, workout2])
+        db.session.commit()
+    
+    # Make export request for a specific date range (Jan 8-14)
+    response = client.post('/api/export/calendar',
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+    
+    assert response.status_code == 200
+    
+    # THE KEY ASSERTION: Should call delete_workout_events_in_range with the specific date range
+    # NOT delete_all_workout_events (which would delete everything)
+    mock_client_instance.delete_workout_events_in_range.assert_called_once_with(
+        date(2026, 1, 8),
+        date(2026, 1, 14)
+    )
+    
+    # Should NOT call delete_all_workout_events
+    mock_client_instance.delete_all_workout_events.assert_not_called()
+    
+    # Verify delete was called before export
+    call_order = [call[0] for call in mock_client_instance.method_calls]
+    delete_index = call_order.index('delete_workout_events_in_range')
+    export_index = call_order.index('export_workout_plan')
+    assert delete_index < export_index, "delete_workout_events_in_range should be called before export_workout_plan"

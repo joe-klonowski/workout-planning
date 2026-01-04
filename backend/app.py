@@ -3,12 +3,16 @@ Flask API for workout planner
 """
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from config import config
+from config import config, Config
 from models import db, Workout, WorkoutSelection, CustomWorkout
+from caldav_client import CalDAVClient
 from datetime import datetime, date, timezone
 import csv
 import io
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(config_name='development'):
@@ -322,6 +326,105 @@ def register_routes(app):
                 'customWorkouts': custom_workouts
             }), 200
         except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+# ============= CALDAV EXPORT ENDPOINTS =============
+
+    @app.route('/api/export/calendar', methods=['POST'])
+    def export_to_calendar():
+        """
+        Export workouts to Apple Calendar via CalDAV
+        Body: {
+            "startDate": "2026-01-06",
+            "endDate": "2026-01-12"
+        }
+        """
+        try:
+            data = request.get_json()
+            
+            if not data or 'startDate' not in data or 'endDate' not in data:
+                return jsonify({'error': 'startDate and endDate are required'}), 400
+            
+            # Parse dates
+            start_date = datetime.fromisoformat(data['startDate']).date()
+            end_date = datetime.fromisoformat(data['endDate']).date()
+            
+            if start_date > end_date:
+                return jsonify({'error': 'startDate must be before or equal to endDate'}), 400
+            
+            # Get CalDAV credentials
+            credentials = Config.get_caldav_credentials()
+            if not credentials['url'] or not credentials['username'] or not credentials['password']:
+                return jsonify({
+                    'error': 'CalDAV credentials not configured. Please set up credentials in ~/.config/workout-planner/caldav-credentials-apple.env'
+                }), 500
+            
+            if not credentials['calendar_name']:
+                return jsonify({
+                    'error': 'CalDAV calendar name not configured. Please set CALDAV_CALENDAR_NAME in ~/.config/workout-planner/caldav-credentials-apple.env'
+                }), 500
+            
+            # Get workouts in the date range
+            workouts = Workout.query.filter(
+                Workout.originally_planned_day >= start_date,
+                Workout.originally_planned_day <= end_date
+            ).all()
+            
+            # Group workouts by date (using currentPlanDay if moved, otherwise originallyPlannedDay)
+            workouts_by_date = {}
+            for workout in workouts:
+                # Skip unselected workouts
+                if workout.selection and not workout.selection.is_selected:
+                    continue
+                
+                # Determine the display date
+                display_date = workout.selection.current_plan_day if (workout.selection and workout.selection.current_plan_day) else workout.originally_planned_day
+                
+                # Skip if the workout was moved outside the date range
+                if display_date < start_date or display_date > end_date:
+                    continue
+                
+                if display_date not in workouts_by_date:
+                    workouts_by_date[display_date] = []
+                
+                workout_data = {
+                    'workoutType': workout.workout_type,
+                    'workoutLocation': workout.selection.workout_location if workout.selection else None,
+                    'timeOfDay': workout.selection.time_of_day if workout.selection else 'Not specified',
+                    'plannedDuration': workout.planned_duration
+                }
+                workouts_by_date[display_date].append(workout_data)
+            
+            # Connect to CalDAV and export
+            caldav_client = CalDAVClient(
+                url=credentials['url'],
+                username=credentials['username'],
+                password=credentials['password']
+            )
+            
+            caldav_client.connect()
+            caldav_client.select_calendar(credentials.get('calendar_name'))
+            
+            # Delete existing workout events in the date range to prevent duplicates
+            deleted_count = caldav_client.delete_workout_events_in_range(start_date, end_date)
+            logger.info(f"Deleted {deleted_count} existing workout events in range {start_date} to {end_date}")
+            
+            events_created = caldav_client.export_workout_plan(workouts_by_date)
+            
+            caldav_client.disconnect()
+            
+            return jsonify({
+                'message': f'Successfully exported workouts to calendar',
+                'eventsCreated': events_created,
+                'dateRange': {
+                    'start': start_date.isoformat(),
+                    'end': end_date.isoformat()
+                }
+            }), 200
+            
+        except Exception as e:
+            logger.error(f"Error exporting to calendar: {e}", exc_info=True)
             return jsonify({'error': str(e)}), 500
 
 

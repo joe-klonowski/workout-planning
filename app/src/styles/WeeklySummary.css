@@ -16,6 +16,9 @@
 .summary-header {
   border-bottom: 2px solid #007bff;
   padding-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .summary-header h3 {
@@ -23,6 +26,28 @@
   font-size: 20px;
   color: #333;
   font-weight: 600;
+}
+
+.summary-header .export-button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.summary-header .export-button:hover {
+  background-color: #0056b3;
+}
+
+.summary-header .export-button:active {
+  transform: translateY(1px);
 }
 
 .summary-section {

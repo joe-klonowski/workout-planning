@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   CUSTOM_WORKOUT_BY_ID: (id) => `${API_BASE_URL}/api/custom-workouts/${id}`,
   HEALTH: `${API_BASE_URL}/api/health`,
   STATS: `${API_BASE_URL}/api/stats`,
+  EXPORT_TO_CALENDAR: `${API_BASE_URL}/api/export/calendar`,
 };
 
 export default API_BASE_URL;

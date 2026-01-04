@@ -387,3 +387,159 @@ class TestCalDAVClient:
         assert "DTEND;VALUE=DATE:" in ical_data
         assert "SUMMARY:" in ical_data
         assert "DESCRIPTION:" in ical_data
+    
+    def test_create_workout_event_with_multiple_workouts_same_day(self, client):
+        """Test creating an event with multiple workouts on the same day - bug reproduction"""
+        mock_calendar = Mock()
+        mock_event = Mock()
+        mock_event.id = "event-id"
+        mock_calendar.save_event.return_value = mock_event
+        client._calendar = mock_calendar
+        
+        # Multiple workouts on the same day
+        workouts = [
+            {
+                'workoutType': 'Swim',
+                'workoutLocation': 'indoor',
+                'timeOfDay': 'morning',
+                'plannedDuration': 1.0
+            },
+            {
+                'workoutType': 'Run',
+                'workoutLocation': 'outdoor',
+                'timeOfDay': 'afternoon',
+                'plannedDuration': 0.5
+            },
+            {
+                'workoutType': 'Strength',
+                'workoutLocation': None,
+                'timeOfDay': 'evening',
+                'plannedDuration': 0.75
+            }
+        ]
+        
+        client.create_workout_event(date(2026, 1, 15), workouts)
+        
+        ical_data = mock_calendar.save_event.call_args[0][0]
+        
+        # Verify ALL three workouts appear in the description
+        assert "Type: Swim" in ical_data, "Swim workout should be in description"
+        assert "Type: Run" in ical_data, "Run workout should be in description"
+        assert "Type: Strength" in ical_data, "Strength workout should be in description"
+        
+        # Verify all time of day values appear
+        assert "Time: morning" in ical_data
+        assert "Time: afternoon" in ical_data
+        assert "Time: evening" in ical_data
+        
+        # Verify locations appear
+        assert "Location: indoor" in ical_data
+        assert "Location: outdoor" in ical_data
+        
+        # Verify durations appear
+        assert "1 hour" in ical_data
+        assert "30 minutes" in ical_data
+        assert "45 minutes" in ical_data
+        
+        # Verify that newlines in DESCRIPTION are properly escaped as \n
+        # In iCalendar format, literal newlines break the format
+        # The DESCRIPTION line should contain escaped newlines like "\\n"
+        description_line_start = ical_data.find("DESCRIPTION:")
+        description_line_end = ical_data.find("\n", description_line_start + len("DESCRIPTION:"))
+        description_content = ical_data[description_line_start:description_line_end]
+        
+        # The description should use literal \n not actual newlines
+        assert "\\n" in description_content or description_content.count("-") == 3, \
+            "Description should have escaped newlines (\\n) or be on one line with multiple workouts"
+    
+    def test_delete_workout_events_in_range(self):
+        """Test deleting workout events within a specific date range"""
+        client = CalDAVClient('https://test.com', 'user', 'pass')
+        mock_calendar = MagicMock()
+        client._calendar = mock_calendar
+        
+        # Create mock events - 3 in range, 2 outside range
+        event1 = MagicMock()
+        event1.data = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260108
+DTEND;VALUE=DATE:20260109
+SUMMARY:Joe workout schedule
+END:VEVENT
+END:VCALENDAR"""
+        
+        event2 = MagicMock()
+        event2.data = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260110
+DTEND;VALUE=DATE:20260111
+SUMMARY:Joe workout schedule
+END:VEVENT
+END:VCALENDAR"""
+        
+        event3 = MagicMock()
+        event3.data = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260114
+DTEND;VALUE=DATE:20260115
+SUMMARY:Joe workout schedule
+END:VEVENT
+END:VCALENDAR"""
+        
+        # CalDAV search should return only events in the range (Jan 8-14)
+        mock_calendar.search.return_value = [event1, event2, event3]
+        
+        # Delete events in range
+        deleted_count = client.delete_workout_events_in_range(
+            date(2026, 1, 8),
+            date(2026, 1, 14)
+        )
+        
+        # Verify search was called with correct datetime range
+        call_args = mock_calendar.search.call_args
+        assert call_args[1]['start'] == datetime(2026, 1, 8, 0, 0, 0)
+        assert call_args[1]['end'] == datetime(2026, 1, 14, 23, 59, 59, 999999)
+        
+        # All 3 events returned by search should be deleted
+        assert deleted_count == 3
+        event1.delete.assert_called_once()
+        event2.delete.assert_called_once()
+        event3.delete.assert_called_once()
+    
+    def test_delete_workout_events_in_range_ignores_non_workout_events(self):
+        """Test that date range deletion only deletes workout events, not other events"""
+        client = CalDAVClient('https://test.com', 'user', 'pass')
+        mock_calendar = MagicMock()
+        client._calendar = mock_calendar
+        
+        # Create mock events - one workout event, one personal event
+        workout_event = MagicMock()
+        workout_event.data = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260110
+DTEND;VALUE=DATE:20260111
+SUMMARY:Joe workout schedule
+END:VEVENT
+END:VCALENDAR"""
+        
+        personal_event = MagicMock()
+        personal_event.data = """BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260110
+DTEND;VALUE=DATE:20260111
+SUMMARY:Doctor Appointment
+END:VEVENT
+END:VCALENDAR"""
+        
+        mock_calendar.search.return_value = [workout_event, personal_event]
+        
+        # Delete events in range
+        deleted_count = client.delete_workout_events_in_range(
+            date(2026, 1, 8),
+            date(2026, 1, 14)
+        )
+        
+        # Only the workout event should be deleted
+        assert deleted_count == 1
+        workout_event.delete.assert_called_once()
+        personal_event.delete.assert_not_called()

@@ -209,6 +209,30 @@ function App() {
     }
   };
 
+  // Handle export to calendar
+  const handleExportToCalendar = async (dateRange) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.EXPORT_TO_CALENDAR, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dateRange),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to export: ${response.status}`);
+      }
+
+      const result = await response.json();
+      alert(`Successfully exported ${result.eventsCreated} workout events to Apple Calendar!`);
+    } catch (err) {
+      console.error('Error exporting to calendar:', err);
+      throw err; // Re-throw so the modal can display the error
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -230,6 +254,7 @@ function App() {
               onWorkoutDateChange={handleWorkoutDateChange}
               onWorkoutTimeOfDayChange={handleWorkoutTimeOfDayChange}
               onWorkoutLocationChange={handleWorkoutLocationChange}
+              onExportToCalendar={handleExportToCalendar}
             />
           </>
         )}

@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { DateOnly } from '../utils/DateOnly';
+import ExportModal from './ExportModal';
 import '../styles/WeeklySummary.css';
 
 /**
  * WeeklySummary component displays a summary of workouts for a given week
  * Shows total hours and breakdown by workout type
  * @param {Array} workouts - Array of workout objects for the week
+ * @param {DateOnly} weekStartDate - Start date of the week
+ * @param {DateOnly} weekEndDate - End date of the week
+ * @param {Function} onExportToCalendar - Callback for exporting to calendar
  */
-function WeeklySummary({ workouts = [] }) {
+function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCalendar }) {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   // Filter for selected workouts only
   const selectedWorkouts = workouts.filter(w => w.isSelected);
 
@@ -81,10 +86,23 @@ function WeeklySummary({ workouts = [] }) {
   const orderedTypes = ['Swim', 'Bike', 'Run', 'Strength', 'Other'];
   const displayTypes = orderedTypes.filter(type => workoutTypeStats[type]);
 
+  const handleExport = async (dateRange) => {
+    if (onExportToCalendar) {
+      await onExportToCalendar(dateRange);
+    }
+  };
+
   return (
     <div className="weekly-summary">
       <div className="summary-header">
         <h3>Week Summary</h3>
+        <button 
+          className="export-button"
+          onClick={() => setIsExportModalOpen(true)}
+          title="Export to Apple Calendar"
+        >
+          📅 Export
+        </button>
       </div>
 
       <div className="summary-section total-hours">
@@ -136,6 +154,14 @@ function WeeklySummary({ workouts = [] }) {
           <div className="empty-text">No workouts planned</div>
         </div>
       )}
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExport}
+        defaultStartDate={weekStartDate}
+        defaultEndDate={weekEndDate}
+      />
     </div>
   );
 }
@@ -152,6 +178,9 @@ WeeklySummary.propTypes = {
       isSelected: PropTypes.bool,
     })
   ),
+  weekStartDate: PropTypes.instanceOf(DateOnly),
+  weekEndDate: PropTypes.instanceOf(DateOnly),
+  onExportToCalendar: PropTypes.func,
 };
 
 WeeklySummary.defaultProps = {
