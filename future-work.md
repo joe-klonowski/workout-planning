@@ -60,5 +60,8 @@ So some of the future feature work here is to enable that plan.
 - Add end-to-end tests using something like selenium that can run in the browser or a headless browser.
   - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
 
+## Tech debt
+- Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
+
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
