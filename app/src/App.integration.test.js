@@ -527,4 +527,239 @@ describe('App Component', () => {
 
     jest.restoreAllMocks();
   });
+
+  test('handles custom workout date change correctly', async () => {
+    const mockCustomWorkouts = [
+      {
+        id: 1,
+        title: 'Group Ride',
+        workoutType: 'Bike',
+        description: 'Weekly group ride',
+        plannedDate: '2026-01-20',
+        plannedDuration: 2.0,
+        plannedDistanceInMeters: 50000,
+        tss: 120,
+        timeOfDay: 'morning',
+      },
+    ];
+
+    // Mock fetch for initial load
+    global.fetch = createFetchMock([], mockCustomWorkouts);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Loaded 1 workouts/)).toBeInTheDocument();
+    });
+
+    // Mock the Calendar component to expose the onWorkoutDateChange callback
+    let dateChangeCallback = null;
+    jest.spyOn(React, 'createElement').mockImplementation((type, props, ...children) => {
+      if (type && type.name === 'MockCalendar') {
+        dateChangeCallback = props.onWorkoutDateChange;
+      }
+      return jest.requireActual('react').createElement(type, props, ...children);
+    });
+
+    // Re-render to capture the callback
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/Loaded 1 workouts/)).toBeInTheDocument();
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (dateChangeCallback) {
+      // Mock the fetch for the custom workout update
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 1,
+            title: 'Group Ride',
+            workoutType: 'Bike',
+            description: 'Weekly group ride',
+            plannedDate: '2026-01-21',
+            plannedDuration: 2.0,
+            plannedDistanceInMeters: 50000,
+            tss: 120,
+            timeOfDay: 'morning',
+          }),
+        })
+      );
+
+      // Call the date change callback
+      const newDate = new Date(2026, 0, 21); // January 21, 2026
+      await dateChangeCallback('custom-1', newDate);
+
+      // Verify the fetch was called with the correct endpoint and data
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:5000/api/custom-workouts/1',
+          expect.objectContaining({
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plannedDate: '2026-01-21' }),
+          })
+        );
+      });
+    }
+
+    jest.restoreAllMocks();
+  });
+
+  test('handles custom workout time of day change correctly', async () => {
+    const mockCustomWorkouts = [
+      {
+        id: 1,
+        title: 'Group Ride',
+        workoutType: 'Bike',
+        description: 'Weekly group ride',
+        plannedDate: '2026-01-20',
+        plannedDuration: 2.0,
+        plannedDistanceInMeters: 50000,
+        tss: 120,
+        timeOfDay: null,
+      },
+    ];
+
+    // Mock fetch for initial load
+    global.fetch = createFetchMock([], mockCustomWorkouts);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Loaded 1 workouts/)).toBeInTheDocument();
+    });
+
+    // Mock the Calendar component to expose the onWorkoutTimeOfDayChange callback
+    let timeChangeCallback = null;
+    jest.spyOn(React, 'createElement').mockImplementation((type, props, ...children) => {
+      if (type && type.name === 'MockCalendar') {
+        timeChangeCallback = props.onWorkoutTimeOfDayChange;
+      }
+      return jest.requireActual('react').createElement(type, props, ...children);
+    });
+
+    // Re-render to capture the callback
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/Loaded 1 workouts/)).toBeInTheDocument();
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (timeChangeCallback) {
+      // Mock the fetch for the custom workout update
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 1,
+            title: 'Group Ride',
+            workoutType: 'Bike',
+            description: 'Weekly group ride',
+            plannedDate: '2026-01-20',
+            plannedDuration: 2.0,
+            plannedDistanceInMeters: 50000,
+            tss: 120,
+            timeOfDay: 'evening',
+          }),
+        })
+      );
+
+      // Call the time change callback
+      await timeChangeCallback('custom-1', 'evening');
+
+      // Verify the fetch was called with the correct endpoint and data
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:5000/api/custom-workouts/1',
+          expect.objectContaining({
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ timeOfDay: 'evening' }),
+          })
+        );
+      });
+    }
+
+    jest.restoreAllMocks();
+  });
+
+  test('handles regular workout date change using selections endpoint', async () => {
+    const mockWorkouts = [
+      {
+        id: 1,
+        title: 'Morning Run',
+        workoutType: 'Run',
+        workoutDescription: 'Easy 5k',
+        plannedDuration: 0.5,
+        plannedDistanceInMeters: 5000,
+        originallyPlannedDay: '2026-01-15',
+        coachComments: '',
+      },
+    ];
+
+    // Mock fetch for initial load
+    global.fetch = createFetchMock(mockWorkouts);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 1 workouts')).toBeInTheDocument();
+    });
+
+    // Mock the Calendar component to expose the onWorkoutDateChange callback
+    let dateChangeCallback = null;
+    jest.spyOn(React, 'createElement').mockImplementation((type, props, ...children) => {
+      if (type && type.name === 'MockCalendar') {
+        dateChangeCallback = props.onWorkoutDateChange;
+      }
+      return jest.requireActual('react').createElement(type, props, ...children);
+    });
+
+    // Re-render to capture the callback
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 1 workouts')).toBeInTheDocument();
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (dateChangeCallback) {
+      // Mock the fetch for the selection update
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 1,
+            workoutId: 1,
+            isSelected: true,
+            currentPlanDay: '2026-01-16',
+            timeOfDay: null,
+            userNotes: null,
+          }),
+        })
+      );
+
+      // Call the date change callback for a regular workout
+      const newDate = new Date(2026, 0, 16); // January 16, 2026
+      await dateChangeCallback(1, newDate);
+
+      // Verify the fetch was called with the selections endpoint
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:5000/api/selections/1',
+          expect.objectContaining({
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPlanDay: '2026-01-16' }),
+          })
+        );
+      });
+    }
+
+    jest.restoreAllMocks();
+  });
 });

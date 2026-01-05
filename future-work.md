@@ -48,6 +48,7 @@ So some of the future feature work here is to enable that plan.
 ## Tech debt
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
 - Calendar.js class is getting pretty God-like. Refactor it into smaller parts. Likely the best first cut is to create a separate component/UI element to represent a single day.
+- Some workouts use different endpoints for different operations depending on whether they're created custom or not. This seems bad. For example see handleWorkoutDateChange function in App.js.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
