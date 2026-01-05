@@ -23,7 +23,6 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
-- Add weekly summary to calendar month view (not just week view).
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
