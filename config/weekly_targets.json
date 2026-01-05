@@ -1,0 +1,28 @@
+{
+  "week_start_date": "2026-01-05",
+  "weekly_targets": {
+    "tss": 460,
+    "total_time": {
+      "hours": 11,
+      "minutes": 33
+    },
+    "by_discipline": {
+      "swim": {
+        "hours": 1,
+        "minutes": 48
+      },
+      "bike": {
+        "hours": 4,
+        "minutes": 30
+      },
+      "run": {
+        "hours": 3,
+        "minutes": 15
+      },
+      "strength": {
+        "hours": 2,
+        "minutes": 0
+      }
+    }
+  }
+}
