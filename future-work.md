@@ -24,6 +24,8 @@ So some of the future feature work here is to enable that plan.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
 - Add tri club schedule to the UI so that I can see the schedule while making decisions about where to schedule workouts.
+  - Tri club events should appear at the top of the appropriate time slot (e.g. Monday morning) in the UI.
+  - The event should have time and type of activity in small text.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.

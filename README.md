@@ -194,6 +194,8 @@ Some datetime fields in the app are time zone independent, that is, they don't h
 
 Most of the time, I'm going to be in the US Central Time Zone (Chicago), and I'm the only user for now. So that should be used as the time zone for anything that needs one unless explicitly specified otherwise.
 
+User-facing time of day values should be formatted like "7am", "7:30pm", etc.
+
 **Important**: Workout dates represent calendar days without timezone information. A workout scheduled for "January 15" should be completed on January 15 in the athlete's local timezone, regardless of where the athlete and coach are located.
 
 **Implementation**: Workout dates use the `DateOnly` class (`src/utils/DateOnly.js`) which stores year, month, and day as separate integers with no timezone attachment.
@@ -201,7 +203,7 @@ Most of the time, I'm going to be in the US Central Time Zone (Chicago), and I'm
 **Why DateOnly?**
 - JavaScript's `Date` object always includes timezone information, which can cause dates to shift when parsed or displayed across different timezones
 - DateOnly represents the coaching intent literally: "Do this workout on January 15" means January 15, regardless of what time zone the athlete is in.
-- No timezone conversions, no ambiguity, no DST issues
+- No timezone conversions, no ambiguity, no DST issue
 
 ## Technology Stack
 
