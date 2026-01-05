@@ -23,6 +23,8 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
+- Add weekly targets to weekly summary on right side of UI.
+- Add my own workouts from the UI (for example 60 min tri club swim on Thursday morning).
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
