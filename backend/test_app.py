@@ -549,6 +549,93 @@ def test_delete_custom_workout(client, app):
     assert data['count'] == 0
 
 
+def test_custom_workout_with_tss_and_distance(app):
+    """Test CustomWorkout model with TSS and distance fields"""
+    with app.app_context():
+        custom = CustomWorkout(
+            title="Masters Swim",
+            workout_type="Swim",
+            description="Swim workout with 3000m",
+            planned_date=date(2026, 1, 20),
+            planned_duration=1.5,
+            planned_distance_meters=3000.0,
+            tss=85.0,
+            time_of_day="morning"
+        )
+        db.session.add(custom)
+        db.session.commit()
+        
+        assert custom.planned_distance_meters == 3000.0
+        assert custom.tss == 85.0
+        
+        # Test to_dict includes new fields
+        custom_dict = custom.to_dict()
+        assert custom_dict['plannedDistanceInMeters'] == 3000.0
+        assert custom_dict['tss'] == 85.0
+
+
+def test_create_custom_workout_with_tss_and_distance(client):
+    """Test creating custom workout via API with TSS and distance"""
+    workout_data = {
+        'title': 'Group Ride',
+        'workoutType': 'Bike',
+        'description': 'Weekly group ride',
+        'plannedDate': '2026-01-18',
+        'plannedDuration': 2.5,
+        'plannedDistanceInMeters': 80000.0,
+        'tss': 150.0,
+        'timeOfDay': 'morning',
+        'workoutLocation': 'outdoor'
+    }
+    
+    response = client.post(
+        '/api/custom-workouts',
+        data=json.dumps(workout_data),
+        content_type='application/json'
+    )
+    
+    assert response.status_code == 201
+    data = json.loads(response.data)
+    assert data['title'] == 'Group Ride'
+    assert data['plannedDistanceInMeters'] == 80000.0
+    assert data['tss'] == 150.0
+    assert data['isCustom'] is True
+
+
+def test_update_custom_workout_tss_and_distance(client, app):
+    """Test updating TSS and distance fields in custom workout"""
+    # Create a custom workout first
+    with app.app_context():
+        custom = CustomWorkout(
+            title="Swim Workout",
+            workout_type="Swim",
+            description="Pool swim",
+            planned_date=date(2026, 1, 15),
+            planned_distance_meters=2000.0,
+            tss=60.0
+        )
+        db.session.add(custom)
+        db.session.commit()
+        workout_id = custom.id
+    
+    # Update TSS and distance
+    update_data = {
+        'plannedDistanceInMeters': 2500.0,
+        'tss': 75.0
+    }
+    
+    response = client.put(
+        f'/api/custom-workouts/{workout_id}',
+        data=json.dumps(update_data),
+        content_type='application/json'
+    )
+    
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['plannedDistanceInMeters'] == 2500.0
+    assert data['tss'] == 75.0
+
+
 def test_get_stats(client, sample_workout, app):
     """Test getting workout statistics"""
     # Add a selection and custom workout

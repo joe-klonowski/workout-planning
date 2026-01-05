@@ -22,6 +22,29 @@ jest.mock('./components/Calendar', () => {
   };
 });
 
+// Helper function to create a comprehensive fetch mock that handles all endpoints
+const createFetchMock = (workouts = [], customWorkouts = [], triClubSchedule = null) => {
+  return jest.fn((url) => {
+    if (url.includes('/api/workouts')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ workouts, count: workouts.length }),
+      });
+    } else if (url.includes('/api/custom-workouts')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ customWorkouts, count: customWorkouts.length }),
+      });
+    } else if (url.includes('/api/tri-club-schedule')) {
+      return Promise.resolve({
+        ok: triClubSchedule !== null,
+        json: () => Promise.resolve(triClubSchedule),
+      });
+    }
+    return Promise.reject(new Error('Unknown endpoint'));
+  });
+};
+
 describe('App Component', () => {
   beforeEach(() => {
     // Clear all mocks before each test
@@ -33,12 +56,7 @@ describe('App Component', () => {
   });
 
   test('renders app header', () => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ workouts: [], count: 0 }),
-      })
-    );
+    global.fetch = createFetchMock();
 
     render(<App />);
     expect(screen.getByText('Workout Planner')).toBeInTheDocument();
@@ -66,12 +84,7 @@ describe('App Component', () => {
       },
     ];
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ workouts: mockWorkouts, count: 1 }),
-      })
-    );
+    global.fetch = createFetchMock(mockWorkouts);
 
     render(<App />);
 
@@ -94,12 +107,7 @@ describe('App Component', () => {
       },
     ];
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ workouts: mockWorkouts, count: 1 }),
-      })
-    );
+    global.fetch = createFetchMock(mockWorkouts);
 
     render(<App />);
 

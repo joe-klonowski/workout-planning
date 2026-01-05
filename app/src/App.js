@@ -6,6 +6,7 @@ import './App.css';
 
 function App() {
   const [workouts, setWorkouts] = useState([]);
+  const [customWorkouts, setCustomWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [triClubSchedule, setTriClubSchedule] = useState(null);
@@ -98,6 +99,51 @@ function App() {
     };
 
     loadTriClubSchedule();
+  }, []);
+
+  // Load custom workouts
+  useEffect(() => {
+    const loadCustomWorkouts = async () => {
+      try {
+        console.log('Fetching custom workouts from:', API_ENDPOINTS.CUSTOM_WORKOUTS);
+        const response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUTS);
+        if (!response.ok) {
+          // TODO fix this: actually throw an error to the console here, don't just warn.
+          console.error('Failed to load custom workouts:', response.status);
+          return; // Silently fail - custom workouts are optional
+        }
+        const data = await response.json();
+        console.log('Received custom workouts:', data);
+        
+        // Transform custom workouts to match workout format
+        const transformedCustomWorkouts = data.customWorkouts.map(workout => {
+          const [year, month, day] = workout.plannedDate.split('-').map(Number);
+          
+          return {
+            id: `custom-${workout.id}`, // Prefix with 'custom-' to distinguish from regular workouts
+            customId: workout.id, // Store the actual DB id
+            title: workout.title,
+            workoutType: workout.workoutType,
+            workoutDescription: workout.description,
+            plannedDuration: workout.plannedDuration,
+            plannedDistanceInMeters: workout.plannedDistanceInMeters,
+            tss: workout.tss,
+            workoutDate: new DateOnly(year, month, day),
+            isSelected: true, // Custom workouts are always selected
+            timeOfDay: workout.timeOfDay,
+            workoutLocation: workout.workoutLocation,
+            isCustom: true
+          };
+        });
+        
+        setCustomWorkouts(transformedCustomWorkouts);
+      } catch (err) {
+        console.error('Error loading custom workouts:', err);
+        // Silently fail - custom workouts are optional
+      }
+    };
+
+    loadCustomWorkouts();
   }, []);
 
   // Handle workout selection toggle
@@ -256,6 +302,51 @@ function App() {
     }
   };
 
+  // Handle adding custom workout
+  const handleAddCustomWorkout = async (workoutData) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUTS, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(workoutData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create custom workout: ${response.status}`);
+      }
+
+      const newWorkout = await response.json();
+      
+      // Transform and add to local state
+      const [year, month, day] = newWorkout.plannedDate.split('-').map(Number);
+      const transformedWorkout = {
+        id: `custom-${newWorkout.id}`,
+        customId: newWorkout.id,
+        title: newWorkout.title,
+        workoutType: newWorkout.workoutType,
+        workoutDescription: newWorkout.description,
+        plannedDuration: newWorkout.plannedDuration,
+        plannedDistanceInMeters: newWorkout.plannedDistanceInMeters,
+        tss: newWorkout.tss,
+        workoutDate: new DateOnly(year, month, day),
+        isSelected: true,
+        timeOfDay: newWorkout.timeOfDay,
+        workoutLocation: newWorkout.workoutLocation,
+        isCustom: true
+      };
+
+      setCustomWorkouts(prev => [...prev, transformedWorkout]);
+    } catch (err) {
+      console.error('Error creating custom workout:', err);
+      alert('Failed to create custom workout. Please try again.');
+    }
+  };
+
+  // Merge regular workouts with custom workouts
+  const allWorkouts = [...workouts, ...customWorkouts];
+
   return (
     <div className="App">
       <header className="App-header">
@@ -269,16 +360,18 @@ function App() {
         {!loading && !error && (
           <>
             <p className="workout-count">
-              Loaded {workouts.length} workouts
+              Loaded {allWorkouts.length} workouts
+              {customWorkouts.length > 0 && ` (including ${customWorkouts.length} custom)`}
             </p>
             <Calendar 
-              workouts={workouts} 
+              workouts={allWorkouts} 
               triClubSchedule={triClubSchedule}
               onWorkoutSelectionToggle={handleWorkoutSelection}
               onWorkoutDateChange={handleWorkoutDateChange}
               onWorkoutTimeOfDayChange={handleWorkoutTimeOfDayChange}
               onWorkoutLocationChange={handleWorkoutLocationChange}
               onExportToCalendar={handleExportToCalendar}
+              onAddCustomWorkout={handleAddCustomWorkout}
             />
           </>
         )}

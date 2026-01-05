@@ -84,6 +84,23 @@
   background-color: #1e7e34;
 }
 
+/* Add Workout Button */
+.add-workout-button {
+  padding: 10px 16px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-workout-button:hover {
+  background-color: #138496;
+}
+
 /* View Toggle */
 .view-toggle {
   display: flex;

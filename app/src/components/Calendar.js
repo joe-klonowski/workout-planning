@@ -5,6 +5,7 @@ import { DateOnly } from '../utils/DateOnly';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
 import WorkoutDetailModal from './WorkoutDetailModal';
+import AddWorkoutModal from './AddWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import '../styles/Calendar.css';
 
@@ -18,15 +19,18 @@ import '../styles/Calendar.css';
  * @param {Function} onWorkoutTimeOfDayChange - Callback for when user drags workout to a time of day
  * @param {Function} onWorkoutLocationChange - Callback for when user changes workout location
  * @param {Function} onExportToCalendar - Callback for exporting workouts to calendar
+ * @param {Function} onAddCustomWorkout - Callback for adding a custom workout
  */
 function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
+  const [addWorkoutInitialDate, setAddWorkoutInitialDate] = useState(null);
   const [draggedWorkout, setDraggedWorkout] = useState(null);
   const [showTimeSlots, setShowTimeSlots] = useState(false); // Separate state to control time slot visibility
   const [dragOverDate, setDragOverDate] = useState(null);
@@ -539,6 +543,15 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
             </button>
           </div>
           <div className="header-right">
+            <button 
+              onClick={() => {
+                setAddWorkoutInitialDate(null);
+                setIsAddWorkoutModalOpen(true);
+              }} 
+              className="add-workout-button"
+            >
+              + Add Workout
+            </button>
             <div className="view-toggle">
               <button
                 onClick={() => setViewMode('week')}
@@ -712,6 +725,13 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
         }}
         onWorkoutLocationChange={onWorkoutLocationChange}
       />
+      
+      <AddWorkoutModal 
+        isOpen={isAddWorkoutModalOpen}
+        onClose={() => setIsAddWorkoutModalOpen(false)}
+        onSave={onAddCustomWorkout}
+        initialDate={addWorkoutInitialDate}
+      />
     </div>
 
     {viewMode === 'week' && (
@@ -760,6 +780,7 @@ Calendar.propTypes = {
   onWorkoutTimeOfDayChange: PropTypes.func,
   onWorkoutLocationChange: PropTypes.func,
   onExportToCalendar: PropTypes.func,
+  onAddCustomWorkout: PropTypes.func,
 };
 
 Calendar.defaultProps = {

@@ -107,6 +107,8 @@ class CustomWorkout(db.Model):
     description = db.Column(db.Text)
     planned_date = db.Column(db.Date, nullable=False)
     planned_duration = db.Column(db.Float)
+    planned_distance_meters = db.Column(db.Float)  # Planned distance in meters (for swimming, etc.)
+    tss = db.Column(db.Float)  # Training Stress Score
     time_of_day = db.Column(db.String(50))
     workout_location = db.Column(db.String(100))  # e.g., "indoor", "outdoor" (NULL if unmarked)
     
@@ -123,6 +125,8 @@ class CustomWorkout(db.Model):
             'description': self.description,
             'plannedDate': self.planned_date.isoformat() if self.planned_date else None,
             'plannedDuration': self.planned_duration,
+            'plannedDistanceInMeters': self.planned_distance_meters,
+            'tss': self.tss,
             'timeOfDay': self.time_of_day,
             'workoutLocation': self.workout_location,
             'isCustom': True,

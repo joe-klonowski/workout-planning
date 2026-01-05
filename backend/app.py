@@ -226,6 +226,8 @@ def register_routes(app):
             "description": "Weekly group ride",
             "plannedDate": "2026-01-15",
             "plannedDuration": 2.0,
+            "plannedDistanceInMeters": 50000.0,
+            "tss": 120.0,
             "timeOfDay": "Saturday 8am",
             "workoutLocation": "outdoor" (optional)
         }
@@ -239,6 +241,8 @@ def register_routes(app):
                 description=data.get('description', ''),
                 planned_date=datetime.fromisoformat(data['plannedDate']).date(),
                 planned_duration=data.get('plannedDuration'),
+                planned_distance_meters=data.get('plannedDistanceInMeters'),
+                tss=data.get('tss'),
                 time_of_day=data.get('timeOfDay'),
                 workout_location=data.get('workoutLocation')
             )
@@ -272,6 +276,10 @@ def register_routes(app):
                 workout.planned_date = datetime.fromisoformat(data['plannedDate']).date()
             if 'plannedDuration' in data:
                 workout.planned_duration = data['plannedDuration']
+            if 'plannedDistanceInMeters' in data:
+                workout.planned_distance_meters = data['plannedDistanceInMeters']
+            if 'tss' in data:
+                workout.tss = data['tss']
             if 'timeOfDay' in data:
                 workout.time_of_day = data['timeOfDay']
             if 'workoutLocation' in data:
