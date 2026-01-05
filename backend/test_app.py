@@ -6,7 +6,7 @@ import json
 from datetime import date, datetime
 from unittest.mock import patch, MagicMock
 from app import create_app
-from models import db, Workout, WorkoutSelection, CustomWorkout
+from models import db, Workout, WorkoutSelection
 import io
 
 
@@ -107,21 +107,31 @@ def test_workout_selection_model(app, sample_workout):
 
 
 def test_custom_workout_model(app):
-    """Test CustomWorkout model"""
+    """Test Workout model with is_custom=True"""
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="Group Ride",
             workout_type="Bike",
-            description="Weekly group ride",
-            planned_date=date(2026, 1, 18),
+            workout_description="Weekly group ride",
+            originally_planned_day=date(2026, 1, 18),
             planned_duration=2.0,
-            time_of_day="Saturday 8am"
+            is_custom=True
         )
         db.session.add(custom)
+        db.session.flush()
+        
+        # Add selection with time_of_day
+        selection = WorkoutSelection(
+            workout_id=custom.id,
+            is_selected=True,
+            time_of_day="Saturday 8am"
+        )
+        db.session.add(selection)
         db.session.commit()
         
         assert custom.id is not None
         assert custom.title == "Group Ride"
+        assert custom.is_custom is True
         
         custom_dict = custom.to_dict()
         assert custom_dict['isCustom'] is True
@@ -391,27 +401,29 @@ def test_workout_selection_model_with_location(app, sample_workout):
 
 
 def test_get_custom_workouts_empty(client):
-    """Test getting custom workouts when none exist"""
-    response = client.get('/api/custom-workouts')
+    """Test getting custom workouts (via unified API) when none exist"""
+    response = client.get('/api/workouts')
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['count'] == 0
-    assert data['customWorkouts'] == []
+    # Filter for custom workouts
+    custom_workouts = [w for w in data['workouts'] if w.get('isCustom')]
+    assert len(custom_workouts) == 0
 
 
 def test_create_custom_workout(client):
-    """Test creating a custom workout"""
+    """Test creating a custom workout via unified API"""
     workout_data = {
         'title': 'Group Ride',
         'workoutType': 'Bike',
-        'description': 'Weekly group ride',
-        'plannedDate': '2026-01-18',
+        'workoutDescription': 'Weekly group ride',
+        'originallyPlannedDay': '2026-01-18',
         'plannedDuration': 2.0,
-        'timeOfDay': 'Saturday 8am'
+        'timeOfDay': 'Saturday 8am',
+        'isCustom': True
     }
     
     response = client.post(
-        '/api/custom-workouts',
+        '/api/workouts',
         data=json.dumps(workout_data),
         content_type='application/json'
     )
@@ -423,57 +435,70 @@ def test_create_custom_workout(client):
 
 
 def test_create_custom_workout_with_location(client):
-    """Test creating a custom workout with workout location"""
+    """Test creating a custom workout with workout location via unified API"""
     workout_data = {
         'title': 'Indoor Bike Ride',
         'workoutType': 'Bike',
-        'description': 'Zwift workout',
-        'plannedDate': '2026-01-18',
+        'workoutDescription': 'Zwift workout',
+        'originallyPlannedDay': '2026-01-18',
         'plannedDuration': 1.5,
-        'workoutLocation': 'indoor'
+        'workoutLocation': 'indoor',
+        'isCustom': True
     }
     
     response = client.post(
-        '/api/custom-workouts',
+        '/api/workouts',
         data=json.dumps(workout_data),
         content_type='application/json'
     )
     assert response.status_code == 201
     data = json.loads(response.data)
     assert data['title'] == 'Indoor Bike Ride'
-    assert data['workoutLocation'] == 'indoor'
+    assert data['selection']['workoutLocation'] == 'indoor'
 
 
 def test_custom_workout_model_with_location(app):
-    """Test CustomWorkout model with workout_location field"""
+    """Test Workout model with is_custom=True and workout_location in selection"""
     with app.app_context():
-        workout = CustomWorkout(
+        workout = Workout(
             title="Outdoor Ride",
             workout_type="Bike",
-            description="Group ride",
-            planned_date=date(2026, 1, 18),
-            workout_location='outdoor'
+            workout_description="Group ride",
+            originally_planned_day=date(2026, 1, 18),
+            is_custom=True
         )
         db.session.add(workout)
+        db.session.flush()
+        
+        # Add selection with workout_location
+        selection = WorkoutSelection(
+            workout_id=workout.id,
+            is_selected=True,
+            workout_location='outdoor'
+        )
+        db.session.add(selection)
         db.session.commit()
         
-        assert workout.workout_location == 'outdoor'
+        assert workout.is_custom is True
+        assert workout.selection.workout_location == 'outdoor'
         
-        # Test to_dict includes workoutLocation
+        # Test to_dict includes custom workout data
         workout_dict = workout.to_dict()
-        assert workout_dict['workoutLocation'] == 'outdoor'
+        assert workout_dict['isCustom'] is True
+        assert workout_dict['selection']['workoutLocation'] == 'outdoor'
 
 
 
 def test_update_custom_workout(client, app):
-    """Test updating a custom workout"""
+    """Test updating a custom workout via unified API"""
     # Create a custom workout first
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="Original Title",
             workout_type="Run",
-            description="Original description",
-            planned_date=date(2026, 1, 15)
+            workout_description="Original description",
+            originally_planned_day=date(2026, 1, 15),
+            is_custom=True
         )
         db.session.add(custom)
         db.session.commit()
@@ -486,7 +511,7 @@ def test_update_custom_workout(client, app):
     }
     
     response = client.put(
-        f'/api/custom-workouts/{workout_id}',
+        f'/api/workouts/{workout_id}',
         data=json.dumps(update_data),
         content_type='application/json'
     )
@@ -497,14 +522,15 @@ def test_update_custom_workout(client, app):
 
 
 def test_update_custom_workout_with_location(client, app):
-    """Test updating a custom workout's location"""
+    """Test updating a custom workout's location via unified API"""
     # Create a custom workout first
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="Bike Ride",
             workout_type="Bike",
-            description="Test ride",
-            planned_date=date(2026, 1, 15)
+            workout_description="Test ride",
+            originally_planned_day=date(2026, 1, 15),
+            is_custom=True
         )
         db.session.add(custom)
         db.session.commit()
@@ -514,82 +540,96 @@ def test_update_custom_workout_with_location(client, app):
     update_data = {'workoutLocation': 'indoor'}
     
     response = client.put(
-        f'/api/custom-workouts/{workout_id}',
+        f'/api/workouts/{workout_id}',
         data=json.dumps(update_data),
         content_type='application/json'
     )
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['workoutLocation'] == 'indoor'
+    assert data['selection']['workoutLocation'] == 'indoor'
 
 
 
 def test_delete_custom_workout(client, app):
-    """Test deleting a custom workout"""
+    """Test deleting a custom workout via unified API"""
     # Create a custom workout first
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="To Delete",
             workout_type="Run",
-            planned_date=date(2026, 1, 15)
+            originally_planned_day=date(2026, 1, 15),
+            is_custom=True
         )
         db.session.add(custom)
         db.session.commit()
         workout_id = custom.id
     
     # Delete it
-    response = client.delete(f'/api/custom-workouts/{workout_id}')
+    response = client.delete(f'/api/workouts/{workout_id}')
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['message'] == 'Custom workout deleted'
+    assert data['message'] == 'Workout deleted'
     
     # Verify it's gone
-    response = client.get('/api/custom-workouts')
+    response = client.get('/api/workouts')
     data = json.loads(response.data)
-    assert data['count'] == 0
+    custom_workouts = [w for w in data['workouts'] if w.get('isCustom')]
+    assert len(custom_workouts) == 0
 
 
 def test_custom_workout_with_tss_and_distance(app):
-    """Test CustomWorkout model with TSS and distance fields"""
+    """Test Workout model with is_custom=True including TSS and distance fields"""
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="Masters Swim",
             workout_type="Swim",
-            description="Swim workout with 3000m",
-            planned_date=date(2026, 1, 20),
+            workout_description="Swim workout with 3000m",
+            originally_planned_day=date(2026, 1, 20),
             planned_duration=1.5,
             planned_distance_meters=3000.0,
             tss=85.0,
-            time_of_day="morning"
+            is_custom=True
         )
         db.session.add(custom)
+        db.session.flush()
+        
+        # Add selection with time_of_day
+        selection = WorkoutSelection(
+            workout_id=custom.id,
+            is_selected=True,
+            time_of_day="morning"
+        )
+        db.session.add(selection)
         db.session.commit()
         
         assert custom.planned_distance_meters == 3000.0
         assert custom.tss == 85.0
+        assert custom.is_custom is True
         
         # Test to_dict includes new fields
         custom_dict = custom.to_dict()
         assert custom_dict['plannedDistanceInMeters'] == 3000.0
         assert custom_dict['tss'] == 85.0
+        assert custom_dict['isCustom'] is True
 
 
 def test_create_custom_workout_with_tss_and_distance(client):
-    """Test creating custom workout via API with TSS and distance"""
+    """Test creating custom workout via unified API with TSS and distance"""
     workout_data = {
         'title': 'Group Ride',
         'workoutType': 'Bike',
-        'description': 'Weekly group ride',
-        'plannedDate': '2026-01-18',
+        'workoutDescription': 'Weekly group ride',
+        'originallyPlannedDay': '2026-01-18',
         'plannedDuration': 2.5,
         'plannedDistanceInMeters': 80000.0,
         'tss': 150.0,
         'timeOfDay': 'morning',
-        'workoutLocation': 'outdoor'
+        'workoutLocation': 'outdoor',
+        'isCustom': True
     }
     
     response = client.post(
-        '/api/custom-workouts',
+        '/api/workouts',
         data=json.dumps(workout_data),
         content_type='application/json'
     )
@@ -603,16 +643,17 @@ def test_create_custom_workout_with_tss_and_distance(client):
 
 
 def test_update_custom_workout_tss_and_distance(client, app):
-    """Test updating TSS and distance fields in custom workout"""
+    """Test updating TSS and distance fields in custom workout via unified API"""
     # Create a custom workout first
     with app.app_context():
-        custom = CustomWorkout(
+        custom = Workout(
             title="Swim Workout",
             workout_type="Swim",
-            description="Pool swim",
-            planned_date=date(2026, 1, 15),
+            workout_description="Pool swim",
+            originally_planned_day=date(2026, 1, 15),
             planned_distance_meters=2000.0,
-            tss=60.0
+            tss=60.0,
+            is_custom=True
         )
         db.session.add(custom)
         db.session.commit()
@@ -625,7 +666,7 @@ def test_update_custom_workout_tss_and_distance(client, app):
     }
     
     response = client.put(
-        f'/api/custom-workouts/{workout_id}',
+        f'/api/workouts/{workout_id}',
         data=json.dumps(update_data),
         content_type='application/json'
     )
@@ -641,10 +682,11 @@ def test_get_stats(client, sample_workout, app):
     # Add a selection and custom workout
     with app.app_context():
         selection = WorkoutSelection(workout_id=sample_workout, is_selected=True)
-        custom = CustomWorkout(
+        custom = Workout(
             title="Custom",
             workout_type="Run",
-            planned_date=date(2026, 1, 15)
+            originally_planned_day=date(2026, 1, 15),
+            is_custom=True
         )
         db.session.add(selection)
         db.session.add(custom)
@@ -653,7 +695,7 @@ def test_get_stats(client, sample_workout, app):
     response = client.get('/api/stats')
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['totalWorkouts'] == 1
+    assert data['totalWorkouts'] == 2  # sample_workout + custom workout
     assert data['selectedWorkouts'] == 1
     assert data['customWorkouts'] == 1
 

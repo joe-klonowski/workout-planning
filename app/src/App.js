@@ -6,12 +6,11 @@ import './App.css';
 
 function App() {
   const [workouts, setWorkouts] = useState([]);
-  const [customWorkouts, setCustomWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [triClubSchedule, setTriClubSchedule] = useState(null);
 
-  // Load workouts from backend API
+  // Load workouts from backend API (including custom workouts)
   useEffect(() => {
     const loadWorkouts = async () => {
       try {
@@ -38,6 +37,7 @@ function App() {
             workoutDescription: workout.workoutDescription,
             plannedDuration: workout.plannedDuration,
             plannedDistanceInMeters: workout.plannedDistanceInMeters,
+            tss: workout.tss,
             originallyPlannedDay: workout.originallyPlannedDay, // Original planned day from coach
             currentPlanDay: workout.selection?.currentPlanDay, // User's chosen day (if moved)
             workoutDate: new DateOnly(year, month, day), // Display date for calendar
@@ -46,6 +46,7 @@ function App() {
             isSelected: workout.selection ? workout.selection.isSelected : true,
             timeOfDay: workout.selection?.timeOfDay, // Time of day (morning, afternoon, evening, or null)
             workoutLocation: workout.selection?.workoutLocation, // Workout location (indoor, outdoor, or null)
+            isCustom: workout.isCustom || false // Flag to indicate custom workout
           };
         });
         
@@ -101,51 +102,6 @@ function App() {
     loadTriClubSchedule();
   }, []);
 
-  // Load custom workouts
-  useEffect(() => {
-    const loadCustomWorkouts = async () => {
-      try {
-        console.log('Fetching custom workouts from:', API_ENDPOINTS.CUSTOM_WORKOUTS);
-        const response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUTS);
-        if (!response.ok) {
-          // TODO fix this: actually throw an error to the console here, don't just warn.
-          console.error('Failed to load custom workouts:', response.status);
-          return; // Silently fail - custom workouts are optional
-        }
-        const data = await response.json();
-        console.log('Received custom workouts:', data);
-        
-        // Transform custom workouts to match workout format
-        const transformedCustomWorkouts = data.customWorkouts.map(workout => {
-          const [year, month, day] = workout.plannedDate.split('-').map(Number);
-          
-          return {
-            id: `custom-${workout.id}`, // Prefix with 'custom-' to distinguish from regular workouts
-            customId: workout.id, // Store the actual DB id
-            title: workout.title,
-            workoutType: workout.workoutType,
-            workoutDescription: workout.description,
-            plannedDuration: workout.plannedDuration,
-            plannedDistanceInMeters: workout.plannedDistanceInMeters,
-            tss: workout.tss,
-            workoutDate: new DateOnly(year, month, day),
-            isSelected: true, // Custom workouts are always selected
-            timeOfDay: workout.timeOfDay,
-            workoutLocation: workout.workoutLocation,
-            isCustom: true
-          };
-        });
-        
-        setCustomWorkouts(transformedCustomWorkouts);
-      } catch (err) {
-        console.error('Error loading custom workouts:', err);
-        // Silently fail - custom workouts are optional
-      }
-    };
-
-    loadCustomWorkouts();
-  }, []);
-
   // Handle workout selection toggle
   const handleWorkoutSelection = async (workoutId, isSelected) => {
     try {
@@ -181,65 +137,32 @@ function App() {
       // newDate is a Date object, convert to YYYY-MM-DD format
       const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
       
-      // Check if this is a custom workout
-      const isCustomWorkout = String(workoutId).startsWith('custom-');
-      
-      let response;
-      if (isCustomWorkout) {
-        // For custom workouts, use the custom workout endpoint and update plannedDate
-        const numericId = String(workoutId).replace('custom-', '');
-        response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUT_BY_ID(numericId), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ plannedDate: dateStr }),
-        });
-      } else {
-        // For regular workouts, use the selections endpoint
-        response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ currentPlanDay: dateStr }),
-        });
-      }
+      // Use selections endpoint for all workouts
+      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ currentPlanDay: dateStr }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to update workout date: ${response.status}`);
       }
 
       // Update local state
-      if (isCustomWorkout) {
-        // Update custom workouts state
-        setCustomWorkouts(prevCustomWorkouts =>
-          prevCustomWorkouts.map(workout => {
-            if (workout.id === workoutId) {
-              return {
-                ...workout,
-                currentPlanDay: dateStr,
-                workoutDate: new DateOnly(newDate.getFullYear(), newDate.getMonth() + 1, newDate.getDate())
-              };
-            }
-            return workout;
-          })
-        );
-      } else {
-        // Update regular workouts state
-        setWorkouts(prevWorkouts =>
-          prevWorkouts.map(workout => {
-            if (workout.id === workoutId) {
-              return {
-                ...workout,
-                currentPlanDay: dateStr,
-                workoutDate: new DateOnly(newDate.getFullYear(), newDate.getMonth() + 1, newDate.getDate())
-              };
-            }
-            return workout;
-          })
-        );
-      }
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout => {
+          if (workout.id === workoutId) {
+            return {
+              ...workout,
+              currentPlanDay: dateStr,
+              workoutDate: new DateOnly(newDate.getFullYear(), newDate.getMonth() + 1, newDate.getDate())
+            };
+          }
+          return workout;
+        })
+      );
     } catch (err) {
       console.error('Error updating workout date:', err);
       alert('Failed to move workout. Please try again.');
@@ -249,63 +172,31 @@ function App() {
   // Handle workout time of day change (drag and drop to time slot)
   const handleWorkoutTimeOfDayChange = async (workoutId, timeOfDay) => {
     try {
-      // Check if this is a custom workout
-      const isCustomWorkout = String(workoutId).startsWith('custom-');
-      
-      let response;
-      if (isCustomWorkout) {
-        // For custom workouts, use the custom workout endpoint
-        const numericId = String(workoutId).replace('custom-', '');
-        response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUT_BY_ID(numericId), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay }),
-        });
-      } else {
-        // For regular workouts, use the selections endpoint
-        response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay }),
-        });
-      }
+      // Use selections endpoint for all workouts
+      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to update workout time: ${response.status}`);
       }
 
       // Update local state
-      if (isCustomWorkout) {
-        // Update custom workouts state
-        setCustomWorkouts(prevCustomWorkouts =>
-          prevCustomWorkouts.map(workout => {
-            if (workout.id === workoutId) {
-              return {
-                ...workout,
-                timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay
-              };
-            }
-            return workout;
-          })
-        );
-      } else {
-        // Update regular workouts state
-        setWorkouts(prevWorkouts =>
-          prevWorkouts.map(workout => {
-            if (workout.id === workoutId) {
-              return {
-                ...workout,
-                timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay
-              };
-            }
-            return workout;
-          })
-        );
-      }
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout => {
+          if (workout.id === workoutId) {
+            return {
+              ...workout,
+              timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay
+            };
+          }
+          return workout;
+        })
+      );
     } catch (err) {
       console.error('Error updating workout time:', err);
       alert('Failed to update workout time. Please try again.');
@@ -372,12 +263,26 @@ function App() {
   // Handle adding custom workout
   const handleAddCustomWorkout = async (workoutData) => {
     try {
-      const response = await fetch(API_ENDPOINTS.CUSTOM_WORKOUTS, {
+      // Transform workoutData to match unified API format
+      const apiData = {
+        title: workoutData.title,
+        workoutType: workoutData.workoutType,
+        workoutDescription: workoutData.description,
+        originallyPlannedDay: workoutData.plannedDate,
+        plannedDuration: workoutData.plannedDuration,
+        plannedDistanceInMeters: workoutData.plannedDistanceInMeters,
+        tss: workoutData.tss,
+        timeOfDay: workoutData.timeOfDay,
+        workoutLocation: workoutData.workoutLocation,
+        isCustom: true
+      };
+      
+      const response = await fetch(API_ENDPOINTS.WORKOUTS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(workoutData),
+        body: JSON.stringify(apiData),
       });
 
       if (!response.ok) {
@@ -387,32 +292,34 @@ function App() {
       const newWorkout = await response.json();
       
       // Transform and add to local state
-      const [year, month, day] = newWorkout.plannedDate.split('-').map(Number);
+      const displayDate = newWorkout.selection?.currentPlanDay || newWorkout.originallyPlannedDay;
+      const [year, month, day] = displayDate.split('-').map(Number);
       const transformedWorkout = {
-        id: `custom-${newWorkout.id}`,
-        customId: newWorkout.id,
+        id: newWorkout.id,
         title: newWorkout.title,
         workoutType: newWorkout.workoutType,
-        workoutDescription: newWorkout.description,
+        workoutDescription: newWorkout.workoutDescription,
         plannedDuration: newWorkout.plannedDuration,
         plannedDistanceInMeters: newWorkout.plannedDistanceInMeters,
         tss: newWorkout.tss,
+        originallyPlannedDay: newWorkout.originallyPlannedDay,
+        currentPlanDay: newWorkout.selection?.currentPlanDay,
         workoutDate: new DateOnly(year, month, day),
         isSelected: true,
-        timeOfDay: newWorkout.timeOfDay,
-        workoutLocation: newWorkout.workoutLocation,
+        timeOfDay: newWorkout.selection?.timeOfDay,
+        workoutLocation: newWorkout.selection?.workoutLocation,
         isCustom: true
       };
 
-      setCustomWorkouts(prev => [...prev, transformedWorkout]);
+      setWorkouts(prev => [...prev, transformedWorkout]);
     } catch (err) {
       console.error('Error creating custom workout:', err);
       alert('Failed to create custom workout. Please try again.');
     }
   };
 
-  // Merge regular workouts with custom workouts
-  const allWorkouts = [...workouts, ...customWorkouts];
+  // Count custom workouts
+  const customWorkoutsCount = workouts.filter(w => w.isCustom).length;
 
   return (
     <div className="App">
@@ -427,11 +334,11 @@ function App() {
         {!loading && !error && (
           <>
             <p className="workout-count">
-              Loaded {allWorkouts.length} workouts
-              {customWorkouts.length > 0 && ` (including ${customWorkouts.length} custom)`}
+              Loaded {workouts.length} workouts
+              {customWorkoutsCount > 0 && ` (including ${customWorkoutsCount} custom)`}
             </p>
             <Calendar 
-              workouts={allWorkouts} 
+              workouts={workouts} 
               triClubSchedule={triClubSchedule}
               onWorkoutSelectionToggle={handleWorkoutSelection}
               onWorkoutDateChange={handleWorkoutDateChange}

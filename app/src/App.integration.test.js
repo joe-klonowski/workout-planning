@@ -23,17 +23,12 @@ jest.mock('./components/Calendar', () => {
 });
 
 // Helper function to create a comprehensive fetch mock that handles all endpoints
-const createFetchMock = (workouts = [], customWorkouts = [], triClubSchedule = null) => {
+const createFetchMock = (workouts = [], triClubSchedule = null) => {
   return jest.fn((url) => {
     if (url.includes('/api/workouts')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ workouts, count: workouts.length }),
-      });
-    } else if (url.includes('/api/custom-workouts')) {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ customWorkouts, count: customWorkouts.length }),
       });
     } else if (url.includes('/api/tri-club-schedule')) {
       return Promise.resolve({
@@ -529,22 +524,27 @@ describe('App Component', () => {
   });
 
   test('handles custom workout date change correctly', async () => {
-    const mockCustomWorkouts = [
+    const mockWorkouts = [
       {
         id: 1,
         title: 'Group Ride',
         workoutType: 'Bike',
-        description: 'Weekly group ride',
-        plannedDate: '2026-01-20',
+        workoutDescription: 'Weekly group ride',
+        originallyPlannedDay: '2026-01-20',
         plannedDuration: 2.0,
         plannedDistanceInMeters: 50000,
         tss: 120,
-        timeOfDay: 'morning',
+        isCustom: true,
+        selection: {
+          isSelected: true,
+          timeOfDay: 'morning',
+          workoutLocation: null,
+        },
       },
     ];
 
     // Mock fetch for initial load
-    global.fetch = createFetchMock([], mockCustomWorkouts);
+    global.fetch = createFetchMock(mockWorkouts);
 
     render(<App />);
 
@@ -570,7 +570,7 @@ describe('App Component', () => {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     if (dateChangeCallback) {
-      // Mock the fetch for the custom workout update
+      // Mock the fetch for the workout update (using selections endpoint)
       global.fetch = jest.fn(() =>
         Promise.resolve({
           ok: true,
@@ -590,16 +590,16 @@ describe('App Component', () => {
 
       // Call the date change callback
       const newDate = new Date(2026, 0, 21); // January 21, 2026
-      await dateChangeCallback('custom-1', newDate);
+      await dateChangeCallback(1, newDate);
 
-      // Verify the fetch was called with the correct endpoint and data
+      // Verify the fetch was called with the correct endpoint (selections) and data
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:5000/api/custom-workouts/1',
+          'http://localhost:5000/api/selections/1',
           expect.objectContaining({
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plannedDate: '2026-01-21' }),
+            body: JSON.stringify({ currentPlanDay: '2026-01-21' }),
           })
         );
       });
@@ -609,22 +609,27 @@ describe('App Component', () => {
   });
 
   test('handles custom workout time of day change correctly', async () => {
-    const mockCustomWorkouts = [
+    const mockWorkouts = [
       {
         id: 1,
         title: 'Group Ride',
         workoutType: 'Bike',
-        description: 'Weekly group ride',
-        plannedDate: '2026-01-20',
+        workoutDescription: 'Weekly group ride',
+        originallyPlannedDay: '2026-01-20',
         plannedDuration: 2.0,
         plannedDistanceInMeters: 50000,
         tss: 120,
-        timeOfDay: null,
+        isCustom: true,
+        selection: {
+          isSelected: true,
+          timeOfDay: null,
+          workoutLocation: null,
+        },
       },
     ];
 
     // Mock fetch for initial load
-    global.fetch = createFetchMock([], mockCustomWorkouts);
+    global.fetch = createFetchMock(mockWorkouts);
 
     render(<App />);
 
@@ -650,31 +655,27 @@ describe('App Component', () => {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     if (timeChangeCallback) {
-      // Mock the fetch for the custom workout update
+      // Mock the fetch for the workout update (using selections endpoint)
       global.fetch = jest.fn(() =>
         Promise.resolve({
           ok: true,
           json: () => Promise.resolve({
             id: 1,
-            title: 'Group Ride',
-            workoutType: 'Bike',
-            description: 'Weekly group ride',
-            plannedDate: '2026-01-20',
-            plannedDuration: 2.0,
-            plannedDistanceInMeters: 50000,
-            tss: 120,
+            workoutId: 1,
+            isSelected: true,
             timeOfDay: 'evening',
+            workoutLocation: null,
           }),
         })
       );
 
       // Call the time change callback
-      await timeChangeCallback('custom-1', 'evening');
+      await timeChangeCallback(1, 'evening');
 
-      // Verify the fetch was called with the correct endpoint and data
+      // Verify the fetch was called with the correct endpoint (selections) and data
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:5000/api/custom-workouts/1',
+          'http://localhost:5000/api/selections/1',
           expect.objectContaining({
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

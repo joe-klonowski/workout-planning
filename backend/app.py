@@ -4,7 +4,7 @@ Flask API for workout planner
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import config, Config
-from models import db, Workout, WorkoutSelection, CustomWorkout
+from models import db, Workout, WorkoutSelection
 from caldav_client import CalDAVClient
 from datetime import datetime, date, timezone
 import csv
@@ -63,6 +63,126 @@ def register_routes(app):
             return jsonify(workout.to_dict()), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 404
+
+
+    @app.route('/api/workouts', methods=['POST'])
+    def create_workout():
+        """
+        Create a new workout (including custom workouts)
+        Body: {
+            "title": "Group Ride",
+            "workoutType": "Bike",
+            "workoutDescription": "Weekly group ride",
+            "originallyPlannedDay": "2026-01-15",
+            "plannedDuration": 2.0,
+            "plannedDistanceInMeters": 50000.0,
+            "tss": 120.0,
+            "isCustom": true,
+            "timeOfDay": "Saturday 8am" (optional),
+            "workoutLocation": "outdoor" (optional)
+        }
+        """
+        try:
+            data = request.get_json()
+            
+            workout = Workout(
+                title=data.get('title', ''),
+                workout_type=data.get('workoutType', 'Other'),
+                workout_description=data.get('workoutDescription', ''),
+                originally_planned_day=datetime.fromisoformat(data['originallyPlannedDay']).date(),
+                planned_duration=data.get('plannedDuration'),
+                planned_distance_meters=data.get('plannedDistanceInMeters'),
+                coach_comments=data.get('coachComments'),
+                tss=data.get('tss'),
+                intensity_factor=data.get('intensityFactor'),
+                is_custom=data.get('isCustom', False)
+            )
+            
+            db.session.add(workout)
+            db.session.flush()  # Flush to get the workout ID
+            
+            # Create selection if time_of_day or workout_location are provided
+            if data.get('timeOfDay') or data.get('workoutLocation'):
+                selection = WorkoutSelection(
+                    workout_id=workout.id,
+                    is_selected=True,
+                    time_of_day=data.get('timeOfDay'),
+                    workout_location=data.get('workoutLocation')
+                )
+                db.session.add(selection)
+            
+            db.session.commit()
+            
+            return jsonify(workout.to_dict()), 201
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+
+    @app.route('/api/workouts/<int:workout_id>', methods=['PUT'])
+    def update_workout(workout_id):
+        """Update a workout (for custom workouts or modifying planned workouts)"""
+        try:
+            workout = db.session.get(Workout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Workout not found'}), 404
+            data = request.get_json()
+            
+            # Update workout fields
+            if 'title' in data:
+                workout.title = data['title']
+            if 'workoutType' in data:
+                workout.workout_type = data['workoutType']
+            if 'workoutDescription' in data:
+                workout.workout_description = data['workoutDescription']
+            if 'originallyPlannedDay' in data:
+                workout.originally_planned_day = datetime.fromisoformat(data['originallyPlannedDay']).date()
+            if 'plannedDuration' in data:
+                workout.planned_duration = data['plannedDuration']
+            if 'plannedDistanceInMeters' in data:
+                workout.planned_distance_meters = data['plannedDistanceInMeters']
+            if 'tss' in data:
+                workout.tss = data['tss']
+            if 'coachComments' in data:
+                workout.coach_comments = data['coachComments']
+            if 'intensityFactor' in data:
+                workout.intensity_factor = data['intensityFactor']
+            
+            # Update or create selection for time_of_day and workout_location
+            if 'timeOfDay' in data or 'workoutLocation' in data:
+                selection = workout.selection
+                if not selection:
+                    selection = WorkoutSelection(workout_id=workout.id, is_selected=True)
+                    db.session.add(selection)
+                
+                if 'timeOfDay' in data:
+                    selection.time_of_day = data['timeOfDay']
+                if 'workoutLocation' in data:
+                    selection.workout_location = data['workoutLocation']
+            
+            db.session.commit()
+            
+            return jsonify(workout.to_dict()), 200
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+
+    @app.route('/api/workouts/<int:workout_id>', methods=['DELETE'])
+    def delete_workout(workout_id):
+        """Delete a workout (typically for custom workouts)"""
+        try:
+            workout = db.session.get(Workout, workout_id)
+            if not workout:
+                return jsonify({'error': 'Workout not found'}), 404
+            db.session.delete(workout)
+            db.session.commit()
+            return jsonify({'message': 'Workout deleted'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
 
 
     @app.route('/api/workouts/import', methods=['POST'])
@@ -201,114 +321,6 @@ def register_routes(app):
             return jsonify({'error': str(e)}), 500
 
 
-# ============= CUSTOM WORKOUT ENDPOINTS =============
-
-    @app.route('/api/custom-workouts', methods=['GET'])
-    def get_custom_workouts():
-        """Get all custom workouts"""
-        try:
-            workouts = CustomWorkout.query.order_by(CustomWorkout.planned_date).all()
-            return jsonify({
-                'customWorkouts': [w.to_dict() for w in workouts],
-                'count': len(workouts)
-            }), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-
-    @app.route('/api/custom-workouts', methods=['POST'])
-    def create_custom_workout():
-        """
-        Create a new custom workout
-        Body: {
-            "title": "Group Ride",
-            "workoutType": "Bike",
-            "description": "Weekly group ride",
-            "plannedDate": "2026-01-15",
-            "plannedDuration": 2.0,
-            "plannedDistanceInMeters": 50000.0,
-            "tss": 120.0,
-            "timeOfDay": "Saturday 8am",
-            "workoutLocation": "outdoor" (optional)
-        }
-        """
-        try:
-            data = request.get_json()
-            
-            workout = CustomWorkout(
-                title=data.get('title', ''),
-                workout_type=data.get('workoutType', 'Other'),
-                description=data.get('description', ''),
-                planned_date=datetime.fromisoformat(data['plannedDate']).date(),
-                planned_duration=data.get('plannedDuration'),
-                planned_distance_meters=data.get('plannedDistanceInMeters'),
-                tss=data.get('tss'),
-                time_of_day=data.get('timeOfDay'),
-                workout_location=data.get('workoutLocation')
-            )
-            
-            db.session.add(workout)
-            db.session.commit()
-            
-            return jsonify(workout.to_dict()), 201
-            
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-
-    @app.route('/api/custom-workouts/<int:workout_id>', methods=['PUT'])
-    def update_custom_workout(workout_id):
-        """Update a custom workout"""
-        try:
-            workout = db.session.get(CustomWorkout, workout_id)
-            if not workout:
-                return jsonify({'error': 'Custom workout not found'}), 404
-            data = request.get_json()
-            
-            if 'title' in data:
-                workout.title = data['title']
-            if 'workoutType' in data:
-                workout.workout_type = data['workoutType']
-            if 'description' in data:
-                workout.description = data['description']
-            if 'plannedDate' in data:
-                workout.planned_date = datetime.fromisoformat(data['plannedDate']).date()
-            if 'plannedDuration' in data:
-                workout.planned_duration = data['plannedDuration']
-            if 'plannedDistanceInMeters' in data:
-                workout.planned_distance_meters = data['plannedDistanceInMeters']
-            if 'tss' in data:
-                workout.tss = data['tss']
-            if 'timeOfDay' in data:
-                workout.time_of_day = data['timeOfDay']
-            if 'workoutLocation' in data:
-                workout.workout_location = data['workoutLocation']
-            
-            db.session.commit()
-            
-            return jsonify(workout.to_dict()), 200
-            
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-
-    @app.route('/api/custom-workouts/<int:workout_id>', methods=['DELETE'])
-    def delete_custom_workout(workout_id):
-        """Delete a custom workout"""
-        try:
-            workout = db.session.get(CustomWorkout, workout_id)
-            if not workout:
-                return jsonify({'error': 'Custom workout not found'}), 404
-            db.session.delete(workout)
-            db.session.commit()
-            return jsonify({'message': 'Custom workout deleted'}), 200
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': str(e)}), 500
-
-
 # ============= UTILITY ENDPOINTS =============
 
     @app.route('/api/health', methods=['GET'])
@@ -326,7 +338,7 @@ def register_routes(app):
         try:
             total_workouts = Workout.query.count()
             selected_workouts = WorkoutSelection.query.filter_by(is_selected=True).count()
-            custom_workouts = CustomWorkout.query.count()
+            custom_workouts = Workout.query.filter_by(is_custom=True).count()
             
             return jsonify({
                 'totalWorkouts': total_workouts,

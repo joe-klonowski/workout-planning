@@ -9,8 +9,8 @@ db = SQLAlchemy()
 
 class Workout(db.Model):
     """
-    Workout represents the original workout from TrainingPeaks CSV
-    Immutable once imported
+    Workout represents workouts from TrainingPeaks CSV or custom user-created workouts
+    Immutable once imported (for coach workouts)
     """
     __tablename__ = 'workouts'
     
@@ -28,6 +28,9 @@ class Workout(db.Model):
     # Optional metadata
     tss = db.Column(db.Float)
     intensity_factor = db.Column(db.Float)
+    
+    # Custom workout flag
+    is_custom = db.Column(db.Boolean, default=False, nullable=False)
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -49,6 +52,7 @@ class Workout(db.Model):
             'coachComments': self.coach_comments,
             'tss': self.tss,
             'intensityFactor': self.intensity_factor,
+            'isCustom': self.is_custom,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'selection': self.selection.to_dict() if self.selection else None
         }
@@ -92,44 +96,3 @@ class WorkoutSelection(db.Model):
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None
         }
 
-
-class CustomWorkout(db.Model):
-    """
-    CustomWorkout represents user-created workouts not from TrainingPeaks
-    e.g., recurring group rides
-    """
-    __tablename__ = 'custom_workouts'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    
-    title = db.Column(db.String(500), nullable=False)
-    workout_type = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    planned_date = db.Column(db.Date, nullable=False)
-    planned_duration = db.Column(db.Float)
-    planned_distance_meters = db.Column(db.Float)  # Planned distance in meters (for swimming, etc.)
-    tss = db.Column(db.Float)  # Training Stress Score
-    time_of_day = db.Column(db.String(50))
-    workout_location = db.Column(db.String(100))  # e.g., "indoor", "outdoor" (NULL if unmarked)
-    
-    # Timestamps
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
-    def to_dict(self):
-        """Convert custom workout to dictionary"""
-        return {
-            'id': self.id,
-            'title': self.title,
-            'workoutType': self.workout_type,
-            'description': self.description,
-            'plannedDate': self.planned_date.isoformat() if self.planned_date else None,
-            'plannedDuration': self.planned_duration,
-            'plannedDistanceInMeters': self.planned_distance_meters,
-            'tss': self.tss,
-            'timeOfDay': self.time_of_day,
-            'workoutLocation': self.workout_location,
-            'isCustom': True,
-            'createdAt': self.created_at.isoformat() if self.created_at else None,
-            'updatedAt': self.updated_at.isoformat() if self.updated_at else None
-        }
