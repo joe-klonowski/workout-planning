@@ -23,7 +23,14 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show weather forecast in calendar.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
-- Add my own workouts from the UI (for example 60 min tri club swim on Thursday morning).
+- Add my own workouts from the UI.
+  - Should be able to specify:
+    - Type (swim/bike/run/strength)
+    - Duration
+    - Time group (e.g. morning)
+    - Date
+    - Planned TSS
+    - Planned distance (swimming only)
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
@@ -46,6 +53,7 @@ So some of the future feature work here is to enable that plan.
 ## Tech debt
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
 - Calendar.js class is getting pretty God-like. Refactor it into smaller parts. Likely the best first cut is to create a separate component/UI element to represent a single day.
+- There seems to be some test creating a test workout on Jan 15 2026 over and over. Make that test clean up after itself so that the calendar isn't filled with duplicate unwanted workouts.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
