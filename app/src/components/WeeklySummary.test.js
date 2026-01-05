@@ -158,7 +158,7 @@ describe('WeeklySummary', () => {
       
       expect(screen.getByText('By Type')).toBeInTheDocument();
       expect(screen.getByText('Run')).toBeInTheDocument();
-      expect(screen.getByText('Duration:')).toBeInTheDocument();
+      expect(screen.getByText('Planned duration:')).toBeInTheDocument();
       expect(screen.getByText('Count:')).toBeInTheDocument();
     });
 
@@ -464,13 +464,13 @@ describe('WeeklySummary', () => {
 
       await waitFor(() => {
         const swimSection = screen.getByText('Swim').closest('.breakdown-item');
-        expect(swimSection).toHaveTextContent('Target:');
+        expect(swimSection).toHaveTextContent('Friel target duration:');
         expect(swimSection).toHaveTextContent('1h 48m');
       });
 
       await waitFor(() => {
         const bikeSection = screen.getByText('Bike').closest('.breakdown-item');
-        expect(bikeSection).toHaveTextContent('Target:');
+        expect(bikeSection).toHaveTextContent('Friel target duration:');
         expect(bikeSection).toHaveTextContent('4h 30m');
       });
     });
