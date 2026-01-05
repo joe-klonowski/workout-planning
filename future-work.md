@@ -22,6 +22,8 @@ So some of the future feature work here is to enable that plan.
 - Summarize how much the user is planning to do each week.
 - Add support for mobile.
 - Show weather forecast in calendar.
+  - I'm in Chicago and I'm the only one who's going to use this. So we should use weather in Chicago. Specifically at or near this lat/long location: 41.795604164195446, -87.57838836383468
+  - Each time group slot in the calendar (e.g. Monday morning) should display a small icon for weather (e.g. rain icon, sun icon, wind icon, storm icon), and temperature in Fahrenheit, probability of rain or snow, and a wind speed and direction. Keep all this nice and small.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
 
 ## Look/feel/CSS
