@@ -128,22 +128,17 @@ class CalDAVClient:
         # Format workout notes
         notes_lines = []
         for workout in workouts:
-            workout_info = []
+            # Time of day
+            time_of_day = workout.get('timeOfDay', 'Not specified')
             
             # Workout type
             workout_type = workout.get('workoutType', 'Unknown')
-            workout_info.append(f"Type: {workout_type}")
             
             # Location (if specified)
             location = workout.get('workoutLocation')
-            if location:
-                workout_info.append(f"Location: {location}")
-            
-            # Time of day
-            time_of_day = workout.get('timeOfDay', 'Not specified')
-            workout_info.append(f"Time: {time_of_day}")
             
             # Duration
+            duration_str = None
             duration_hours = workout.get('plannedDuration')
             if duration_hours:
                 hours = int(duration_hours)
@@ -154,9 +149,15 @@ class CalDAVClient:
                     duration_str = f"{hours} hour{'s' if hours != 1 else ''}"
                 else:
                     duration_str = f"{minutes} minutes"
-                workout_info.append(f"Duration: {duration_str}")
             
-            notes_lines.append("- " + ", ".join(workout_info))
+            # Build the line: "Morning run, 45 minutes" or "Morning run (outdoor), 45 minutes"
+            line_parts = [f"{time_of_day.capitalize()} {workout_type.lower()}"]
+            if location:
+                line_parts[0] += f" ({location})"
+            if duration_str:
+                line_parts.append(duration_str)
+            
+            notes_lines.append("- " + ", ".join(line_parts))
         
         notes = "\n".join(notes_lines)
         

@@ -251,11 +251,9 @@ class TestCalDAVIntegration:
         for event in events:
             if "SUMMARY:Joe workout schedule" in event.data:
                 found = True
-                # Verify the event data contains expected information
-                assert "Type: Run" in event.data
-                assert "Location: outdoor" in event.data
-                assert "Time: morning" in event.data
-                assert "Duration:" in event.data
+                # Verify the event data contains expected information in new format
+                assert "Morning run (outdoor)" in event.data
+                assert "1 hour 30 minutes" in event.data
                 print(f"\nVerified event format is correct")
                 break
         
@@ -418,13 +416,13 @@ END:VCALENDAR"""
         # Should have exactly 3 events (the V2 ones)
         assert len(workout_events) == 3
         
-        # Verify they're V2 events by checking for V2 workout types
-        all_event_data = "".join([e.data for e in workout_events])
-        assert "Strength V2" in all_event_data
-        assert "Yoga V2" in all_event_data
+        # Verify they're V2 events by checking for V2 workout types (case-insensitive since format lowercases workout types)
+        all_event_data = "".join([e.data for e in workout_events]).lower()
+        assert "strength v2" in all_event_data, "Should contain 'strength v2' workout"
+        assert "yoga v2" in all_event_data, "Should contain 'yoga v2' workout"
         
         # Verify V1 workouts are gone
-        assert "Run V1" not in all_event_data
-        assert "Swim V1" not in all_event_data
+        assert "run v1" not in all_event_data, "Old 'run v1' workout should be deleted"
+        assert "swim v1" not in all_event_data, "Old 'swim v1' workout should be deleted"
         
         print(f"Verified that re-export replaced old events with new ones")

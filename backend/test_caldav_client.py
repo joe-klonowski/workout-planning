@@ -177,10 +177,7 @@ class TestCalDAVClient:
         assert "SUMMARY:Joe workout schedule" in ical_data
         assert "DTSTART;VALUE=DATE:20260115" in ical_data
         assert "DTEND;VALUE=DATE:20260116" in ical_data
-        assert "Type: Run" in ical_data
-        assert "Location: outdoor" in ical_data
-        assert "Time: morning" in ical_data
-        assert "Duration: 1 hour 30 minutes" in ical_data
+        assert "Morning run (outdoor), 1 hour 30 minutes" in ical_data
     
     def test_create_workout_event_multiple_workouts(self, client):
         """Test creating event with multiple workouts"""
@@ -211,12 +208,8 @@ class TestCalDAVClient:
         
         # Verify the iCalendar event data
         ical_data = mock_calendar.save_event.call_args[0][0]
-        assert "Type: Swim" in ical_data
-        assert "Location: indoor" in ical_data
-        assert "Duration: 1 hour" in ical_data
-        assert "Type: Bike" in ical_data
-        assert "Location: " not in ical_data or "Location: None" not in ical_data  # Location should not appear for Bike
-        assert "Duration: 2 hours 30 minutes" in ical_data
+        assert "Morning swim (indoor), 1 hour" in ical_data
+        assert "Afternoon bike, 2 hours 30 minutes" in ical_data
     
     def test_create_workout_event_duration_formatting(self, client):
         """Test various duration formats"""
@@ -230,19 +223,21 @@ class TestCalDAVClient:
         workouts = [{'workoutType': 'Run', 'timeOfDay': 'morning', 'plannedDuration': 2.0}]
         client.create_workout_event(date(2026, 1, 17), workouts)
         ical_data = mock_calendar.save_event.call_args[0][0]
-        assert "Duration: 2 hours" in ical_data
+        assert "Morning run, 2 hours" in ical_data
         
         # Test case 2: Only minutes
         workouts = [{'workoutType': 'Run', 'timeOfDay': 'morning', 'plannedDuration': 0.5}]
         client.create_workout_event(date(2026, 1, 18), workouts)
         ical_data = mock_calendar.save_event.call_args[0][0]
-        assert "Duration: 30 minutes" in ical_data
+        assert "Morning run, 30 minutes" in ical_data
         
         # Test case 3: No duration
         workouts = [{'workoutType': 'Run', 'timeOfDay': 'morning'}]
         client.create_workout_event(date(2026, 1, 19), workouts)
         ical_data = mock_calendar.save_event.call_args[0][0]
-        assert "Duration:" not in ical_data
+        assert "Morning run" in ical_data
+        # Should not have duration if not provided
+        assert ical_data.count(',') < ical_data.count('Morning run')  # No comma after workout if no duration
     
     def test_delete_all_workout_events_no_calendar(self, client):
         """Test delete_all_workout_events when no calendar selected"""
@@ -422,24 +417,10 @@ class TestCalDAVClient:
         
         ical_data = mock_calendar.save_event.call_args[0][0]
         
-        # Verify ALL three workouts appear in the description
-        assert "Type: Swim" in ical_data, "Swim workout should be in description"
-        assert "Type: Run" in ical_data, "Run workout should be in description"
-        assert "Type: Strength" in ical_data, "Strength workout should be in description"
-        
-        # Verify all time of day values appear
-        assert "Time: morning" in ical_data
-        assert "Time: afternoon" in ical_data
-        assert "Time: evening" in ical_data
-        
-        # Verify locations appear
-        assert "Location: indoor" in ical_data
-        assert "Location: outdoor" in ical_data
-        
-        # Verify durations appear
-        assert "1 hour" in ical_data
-        assert "30 minutes" in ical_data
-        assert "45 minutes" in ical_data
+        # Verify ALL three workouts appear in the description with new format
+        assert "Morning swim (indoor), 1 hour" in ical_data, "Swim workout should be in description"
+        assert "Afternoon run (outdoor), 30 minutes" in ical_data, "Run workout should be in description"
+        assert "Evening strength, 45 minutes" in ical_data, "Strength workout should be in description"
         
         # Verify that newlines in DESCRIPTION are properly escaped as \n
         # In iCalendar format, literal newlines break the format
