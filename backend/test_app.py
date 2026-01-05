@@ -1232,3 +1232,37 @@ def test_export_to_calendar_only_deletes_events_in_date_range(mock_get_credentia
     delete_index = call_order.index('delete_workout_events_in_range')
     export_index = call_order.index('export_workout_plan')
     assert delete_index < export_index, "delete_workout_events_in_range should be called before export_workout_plan"
+
+
+# ============= TRI CLUB SCHEDULE TESTS =============
+
+def test_get_tri_club_schedule(client):
+    """Test getting tri club schedule"""
+    response = client.get('/api/tri-club-schedule')
+    assert response.status_code == 200
+    
+    data = response.get_json()
+    assert 'schedule' in data
+    assert 'effective_date' in data
+    assert isinstance(data['schedule'], dict)
+    
+    # Verify structure of schedule
+    for day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
+        if day in data['schedule']:
+            assert isinstance(data['schedule'][day], list)
+            for event in data['schedule'][day]:
+                assert 'time' in event
+                assert 'activity' in event
+
+
+def test_get_tri_club_schedule_has_expected_days(client):
+    """Test that tri club schedule includes expected days"""
+    response = client.get('/api/tri-club-schedule')
+    assert response.status_code == 200
+    
+    data = response.get_json()
+    schedule = data['schedule']
+    
+    # Verify at least some common days are present
+    assert 'monday' in schedule
+    assert 'saturday' in schedule

@@ -329,6 +329,40 @@ def register_routes(app):
             return jsonify({'error': str(e)}), 500
 
 
+# ============= TRI CLUB SCHEDULE ENDPOINTS =============
+
+    @app.route('/api/tri-club-schedule', methods=['GET'])
+    def get_tri_club_schedule():
+        """
+        Get the tri club schedule from the config file
+        Returns: {
+            "effective_date": "2026-01-01",
+            "schedule": {
+                "monday": [{"time": "07:00", "activity": "Ride"}, ...],
+                ...
+            }
+        }
+        """
+        try:
+            import json
+            from pathlib import Path
+            
+            # Path to the tri club schedule config file
+            config_path = Path(__file__).parent.parent / 'config' / 'tri_club_schedule.json'
+            
+            if not config_path.exists():
+                return jsonify({'error': 'Tri club schedule file not found'}), 404
+            
+            with open(config_path, 'r') as f:
+                schedule_data = json.load(f)
+            
+            return jsonify(schedule_data), 200
+            
+        except Exception as e:
+            logger.error(f"Error loading tri club schedule: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+
 # ============= CALDAV EXPORT ENDPOINTS =============
 
     @app.route('/api/export/calendar', methods=['POST'])

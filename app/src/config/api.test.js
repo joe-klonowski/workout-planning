@@ -13,6 +13,7 @@ describe('API Configuration', () => {
     expect(API_ENDPOINTS).toHaveProperty('CUSTOM_WORKOUT_BY_ID');
     expect(API_ENDPOINTS).toHaveProperty('HEALTH');
     expect(API_ENDPOINTS).toHaveProperty('STATS');
+    expect(API_ENDPOINTS).toHaveProperty('TRI_CLUB_SCHEDULE');
   });
 
   test('WORKOUTS endpoint points to correct URL', () => {
@@ -37,6 +38,10 @@ describe('API Configuration', () => {
 
   test('STATS endpoint points to correct URL', () => {
     expect(API_ENDPOINTS.STATS).toBe('http://localhost:5000/api/stats');
+  });
+
+  test('TRI_CLUB_SCHEDULE endpoint points to correct URL', () => {
+    expect(API_ENDPOINTS.TRI_CLUB_SCHEDULE).toBe('http://localhost:5000/api/tri-club-schedule');
   });
 
   test('API base URL can be overridden with environment variable', () => {

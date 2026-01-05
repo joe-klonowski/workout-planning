@@ -11,6 +11,7 @@ import '../styles/Calendar.css';
 /**
  * Calendar component displays workouts in a weekly or monthly calendar view
  * @param {Array} workouts - Array of workout objects
+ * @param {Object} triClubSchedule - Tri club schedule with weekly events
  * @param {DateOnly} initialDate - Starting date (defaults to today)
  * @param {Function} onWorkoutSelectionToggle - Callback for when user toggles workout selection
  * @param {Function} onWorkoutDateChange - Callback for when user drags workout to a new date
@@ -18,7 +19,7 @@ import '../styles/Calendar.css';
  * @param {Function} onWorkoutLocationChange - Callback for when user changes workout location
  * @param {Function} onExportToCalendar - Callback for exporting workouts to calendar
  */
-function Calendar({ workouts = [], initialDate = (() => {
+function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
 })(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar }) {
@@ -307,6 +308,53 @@ function Calendar({ workouts = [], initialDate = (() => {
     return labels[timeSlot] || timeSlot;
   };
 
+  // Convert 24-hour time to 12-hour format with am/pm
+  const formatTime12Hour = (time24) => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'pm' : 'am';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}${period}`;
+  };
+
+  // Categorize time into time slot (morning, afternoon, evening)
+  const getTimeSlot = (time24) => {
+    const hour = parseInt(time24.split(':')[0]);
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 22) return 'evening';
+    return 'unscheduled';
+  };
+
+  // Get tri club events for a specific day, grouped by time slot
+  const getTriClubEventsByTimeSlot = (dayDate) => {
+    if (!triClubSchedule || !triClubSchedule.schedule) return {
+      morning: [],
+      afternoon: [],
+      evening: [],
+      unscheduled: []
+    };
+    
+    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][dayDate.getDay()];
+    const events = triClubSchedule.schedule[dayOfWeek] || [];
+    
+    const grouped = {
+      morning: [],
+      afternoon: [],
+      evening: [],
+      unscheduled: []
+    };
+    
+    events.forEach(event => {
+      const timeSlot = getTimeSlot(event.time);
+      grouped[timeSlot].push({
+        ...event,
+        formattedTime: formatTime12Hour(event.time)
+      });
+    });
+    
+    return grouped;
+  };
+
   // Format duration to hours and minutes
   const formatDuration = (hours) => {
     if (hours === 0) return '';
@@ -437,6 +485,11 @@ function Calendar({ workouts = [], initialDate = (() => {
       dragOverDate === dayObj.date.toISOString() && 
       dragOverTimeSlot === timeSlot;
     
+    // Get tri club events for this time slot
+    const triClubEventsBySlot = getTriClubEventsByTimeSlot(dayObj.date);
+    const triClubEvents = triClubEventsBySlot[timeSlot] || [];
+    const hasContent = workouts.length > 0 || triClubEvents.length > 0;
+    
     return (
       <div
         key={timeSlot}
@@ -445,13 +498,22 @@ function Calendar({ workouts = [], initialDate = (() => {
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, dayObj, timeSlot)}
       >
-        {workouts.length > 0 && (
+        {hasContent && (
           <div className="time-slot-header">{getTimeOfDayLabel(timeSlot)}</div>
+        )}
+        {triClubEvents.length > 0 && (
+          <div className="tri-club-events">
+            {triClubEvents.map((event, idx) => (
+              <div key={idx} className="tri-club-event">
+                {event.formattedTime} tri club {event.activity.toLowerCase()}
+              </div>
+            ))}
+          </div>
         )}
         <div className="time-slot-workouts">
           {workouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
         </div>
-        {draggedWorkout && workouts.length === 0 && (
+        {draggedWorkout && !hasContent && (
           <div className="time-slot-placeholder">
             {getTimeOfDayLabel(timeSlot)}
           </div>
@@ -535,6 +597,11 @@ function Calendar({ workouts = [], initialDate = (() => {
               const hasTimedWorkouts = workoutGroups.morning.length > 0 || 
                                       workoutGroups.afternoon.length > 0 || 
                                       workoutGroups.evening.length > 0;
+              const triClubEventsBySlot = getTriClubEventsByTimeSlot(dayObj.date);
+              const hasTriClubEvents = triClubEventsBySlot.morning.length > 0 ||
+                                      triClubEventsBySlot.afternoon.length > 0 ||
+                                      triClubEventsBySlot.evening.length > 0;
+              const hasAnyContent = dayWorkouts.length > 0 || hasTriClubEvents;
               
               return (
                 <div
@@ -543,24 +610,51 @@ function Calendar({ workouts = [], initialDate = (() => {
                 >
                   <div className="day-number">{dayObj.day}</div>
                   <div className="workouts-container">
-                    {dayWorkouts.length > 0 ? (
-                      hasTimedWorkouts ? (
+                    {hasAnyContent ? (
+                      (hasTimedWorkouts || hasTriClubEvents) ? (
                         <div className="time-grouped-workouts">
-                          {workoutGroups.morning.length > 0 && (
+                          {(workoutGroups.morning.length > 0 || triClubEventsBySlot.morning.length > 0) && (
                             <div className="time-group">
                               <div className="time-group-header">🌅 Morning</div>
+                              {triClubEventsBySlot.morning.length > 0 && (
+                                <div className="tri-club-events">
+                                  {triClubEventsBySlot.morning.map((event, idx) => (
+                                    <div key={idx} className="tri-club-event">
+                                      {event.formattedTime} tri club {event.activity.toLowerCase()}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               {workoutGroups.morning.map((workout, idx) => renderWorkoutBadge(workout, `morning-${idx}`))}
                             </div>
                           )}
-                          {workoutGroups.afternoon.length > 0 && (
+                          {(workoutGroups.afternoon.length > 0 || triClubEventsBySlot.afternoon.length > 0) && (
                             <div className="time-group">
                               <div className="time-group-header">☀️ Afternoon</div>
+                              {triClubEventsBySlot.afternoon.length > 0 && (
+                                <div className="tri-club-events">
+                                  {triClubEventsBySlot.afternoon.map((event, idx) => (
+                                    <div key={idx} className="tri-club-event">
+                                      {event.formattedTime} tri club {event.activity.toLowerCase()}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               {workoutGroups.afternoon.map((workout, idx) => renderWorkoutBadge(workout, `afternoon-${idx}`))}
                             </div>
                           )}
-                          {workoutGroups.evening.length > 0 && (
+                          {(workoutGroups.evening.length > 0 || triClubEventsBySlot.evening.length > 0) && (
                             <div className="time-group">
                               <div className="time-group-header">🌙 Evening</div>
+                              {triClubEventsBySlot.evening.length > 0 && (
+                                <div className="tri-club-events">
+                                  {triClubEventsBySlot.evening.map((event, idx) => (
+                                    <div key={idx} className="tri-club-event">
+                                      {event.formattedTime} tri club {event.activity.toLowerCase()}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               {workoutGroups.evening.map((workout, idx) => renderWorkoutBadge(workout, `evening-${idx}`))}
                             </div>
                           )}
@@ -649,6 +743,17 @@ Calendar.propTypes = {
       workoutLocation: PropTypes.string,
     })
   ),
+  triClubSchedule: PropTypes.shape({
+    effective_date: PropTypes.string,
+    schedule: PropTypes.objectOf(
+      PropTypes.arrayOf(
+        PropTypes.shape({
+          time: PropTypes.string.isRequired,
+          activity: PropTypes.string.isRequired,
+        })
+      )
+    ),
+  }),
   initialDate: PropTypes.instanceOf(DateOnly),
   onWorkoutSelectionToggle: PropTypes.func,
   onWorkoutDateChange: PropTypes.func,
@@ -659,6 +764,7 @@ Calendar.propTypes = {
 
 Calendar.defaultProps = {
   workouts: [],
+  triClubSchedule: null,
   initialDate: (() => {
     const today = new Date();
     return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());

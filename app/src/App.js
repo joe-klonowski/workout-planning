@@ -8,6 +8,7 @@ function App() {
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [triClubSchedule, setTriClubSchedule] = useState(null);
 
   // Load workouts from backend API
   useEffect(() => {
@@ -75,6 +76,28 @@ function App() {
     };
 
     loadWorkouts();
+  }, []);
+
+  // Load tri club schedule
+  useEffect(() => {
+    const loadTriClubSchedule = async () => {
+      try {
+        console.log('Fetching tri club schedule from:', API_ENDPOINTS.TRI_CLUB_SCHEDULE);
+        const response = await fetch(API_ENDPOINTS.TRI_CLUB_SCHEDULE);
+        if (!response.ok) {
+          console.warn('Failed to load tri club schedule:', response.status);
+          return; // Silently fail - schedule is optional
+        }
+        const data = await response.json();
+        console.log('Received tri club schedule:', data);
+        setTriClubSchedule(data);
+      } catch (err) {
+        console.warn('Error loading tri club schedule:', err);
+        // Silently fail - schedule is optional
+      }
+    };
+
+    loadTriClubSchedule();
   }, []);
 
   // Handle workout selection toggle
@@ -250,6 +273,7 @@ function App() {
             </p>
             <Calendar 
               workouts={workouts} 
+              triClubSchedule={triClubSchedule}
               onWorkoutSelectionToggle={handleWorkoutSelection}
               onWorkoutDateChange={handleWorkoutDateChange}
               onWorkoutTimeOfDayChange={handleWorkoutTimeOfDayChange}

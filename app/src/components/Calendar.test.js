@@ -1637,4 +1637,225 @@ describe('Calendar Component', () => {
       expect(isInTimeGroup).toBeNull();
     });
   });
+
+  describe('Tri Club Schedule', () => {
+    const mockTriClubSchedule = {
+      effective_date: '2026-01-01',
+      schedule: {
+        monday: [
+          { time: '07:00', activity: 'Ride' },
+          { time: '19:00', activity: 'Swim' }
+        ],
+        tuesday: [
+          { time: '07:00', activity: 'S&C' }
+        ],
+        wednesday: [
+          { time: '08:00', activity: 'Run Indoor' }
+        ],
+        thursday: [],
+        friday: [
+          { time: '07:30', activity: 'Ride' }
+        ],
+        saturday: [
+          { time: '09:00', activity: 'Swim' }
+        ],
+        sunday: [
+          { time: '09:00', activity: 'Long/Brick Event' }
+        ]
+      }
+    };
+
+    it('should render tri club events in calendar', () => {
+      // Test date is a Monday (Jan 13, 2026)
+      const testDate = new DateOnly(2026, 1, 13);
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Check for Monday events with 12-hour format and 'tri club' prefix
+      const rideEvents = screen.getAllByText('7am tri club ride');
+      expect(rideEvents.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('7pm tri club swim')).toBeInTheDocument();
+    });
+
+    it('should render tri club events with 12-hour time format', () => {
+      const testDate = new DateOnly(2026, 1, 13);
+      render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Verify 12-hour format is used (not 24-hour)
+      const rideEvents = screen.getAllByText('7am tri club ride');
+      expect(rideEvents.length).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByText('07:00 Ride')).not.toBeInTheDocument();
+      expect(screen.getByText('7pm tri club swim')).toBeInTheDocument();
+      expect(screen.queryByText('19:00 Swim')).not.toBeInTheDocument();
+    });
+
+    it('should render tri club events inside appropriate time slot boxes', () => {
+      const testDate = new DateOnly(2026, 1, 13); // Monday
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Find time groups
+      const timeGroups = container.querySelectorAll('.time-group');
+      expect(timeGroups.length).toBeGreaterThan(0);
+      
+      // Morning events should be in a time-group with Morning header
+      const morningGroup = Array.from(timeGroups).find(group => 
+        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      );
+      expect(morningGroup).toBeTruthy();
+      
+      // Check that tri club event is inside the morning group
+      const morningRide = morningGroup.querySelector('.tri-club-event');
+      expect(morningRide).toBeTruthy();
+      expect(morningRide.textContent).toContain('7am tri club ride');
+      
+      // Evening events should be in a time-group with Evening header
+      const eveningGroup = Array.from(timeGroups).find(group => 
+        group.querySelector('.time-group-header')?.textContent.includes('Evening')
+      );
+      expect(eveningGroup).toBeTruthy();
+      
+      const eveningSwim = eveningGroup.querySelector('.tri-club-event');
+      expect(eveningSwim).toBeTruthy();
+      expect(eveningSwim.textContent).toContain('7pm tri club swim');
+    });
+
+    it('should show time slot box even when only tri club event exists (no workouts)', () => {
+      const testDate = new DateOnly(2026, 1, 13); // Monday
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Time groups should be visible even with only tri club events
+      const timeGroups = container.querySelectorAll('.time-group');
+      expect(timeGroups.length).toBeGreaterThan(0);
+      
+      // Morning group should exist because Monday has a 7am tri club event
+      const morningGroup = Array.from(timeGroups).find(group => 
+        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      );
+      expect(morningGroup).toBeTruthy();
+    });
+
+    it('should render tri club events with small unobtrusive styling', () => {
+      const testDate = new DateOnly(2026, 1, 13);
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      const triClubEvents = container.querySelectorAll('.tri-club-event');
+      expect(triClubEvents.length).toBeGreaterThan(0);
+      
+      // Verify events are in the tri-club-events container
+      const triClubContainer = container.querySelector('.tri-club-events');
+      expect(triClubContainer).toBeInTheDocument();
+    });
+
+    it('should handle missing tri club schedule gracefully', () => {
+      const testDate = new DateOnly(2026, 1, 13);
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={null}
+          initialDate={testDate}
+        />
+      );
+      
+      // Should not crash and should not show any tri club events
+      const triClubEvents = container.querySelectorAll('.tri-club-event');
+      expect(triClubEvents.length).toBe(0);
+    });
+
+    it('should render tri club events for different days of the week', () => {
+      // Test a full week
+      const testDate = new DateOnly(2026, 1, 13); // Monday
+      const { container } = render(
+        <Calendar 
+          workouts={[]} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Monday: 2 events (morning and evening)
+      const rideEvents = screen.getAllByText('7am tri club ride');
+      expect(rideEvents.length).toBeGreaterThanOrEqual(1); // At least Monday has it
+      expect(screen.getByText('7pm tri club swim')).toBeInTheDocument();
+      
+      // Tuesday: 1 event (morning)
+      expect(screen.getByText('7am tri club s&c')).toBeInTheDocument();
+    });
+
+    it('should render tri club events alongside workouts', () => {
+      const testDate = new DateOnly(2026, 1, 13); // Monday
+      const workoutsOnMonday = [
+        {
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 13),
+          plannedDuration: 0.75,
+          plannedDistanceInMeters: 5000,
+          workoutDescription: 'Easy 5k run',
+          coachComments: 'Keep it easy',
+          isSelected: true,
+          timeOfDay: 'morning'
+        }
+      ];
+      
+      const { container } = render(
+        <Calendar 
+          workouts={workoutsOnMonday} 
+          triClubSchedule={mockTriClubSchedule}
+          initialDate={testDate}
+        />
+      );
+      
+      // Should show both tri club events and workouts in the same time slot
+      const rideEvents = screen.getAllByText('7am tri club ride');
+      expect(rideEvents.length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+      
+      // Both should be in the morning time group
+      const timeGroups = container.querySelectorAll('.time-group');
+      const morningGroups = Array.from(timeGroups).filter(group => 
+        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      );
+      expect(morningGroups.length).toBeGreaterThan(0);
+      
+      // Find the morning group that contains the workout (Tuesday - day 13)
+      const morningGroupWithWorkout = morningGroups.find(group => 
+        group.textContent.includes('Morning Run')
+      );
+      expect(morningGroupWithWorkout).toBeTruthy();
+      
+      // Verify both tri club event and workout are in the same morning group
+      expect(morningGroupWithWorkout.textContent).toContain('tri club');
+      expect(morningGroupWithWorkout.textContent).toContain('s&c'); // Tuesday's tri club event
+      expect(morningGroupWithWorkout.textContent).toContain('Morning Run');
+    });
+  });
 });
