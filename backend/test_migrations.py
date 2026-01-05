@@ -232,18 +232,32 @@ def test_app_works_with_migrated_database(temp_db):
         # Now unset ALEMBIC_RUNNING so app can use the database
         os.environ.pop('ALEMBIC_RUNNING', None)
         
-        # Create app with test database
-        app = create_app('development')
-        app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+        # Create app and configure it to use the temp database
+        # We can't use 'testing' config because its SQLALCHEMY_DATABASE_URI is evaluated at import time
+        # Instead, use 'development' config and override the database URI
+        from flask import Flask
+        from flask_cors import CORS
+        
+        app = Flask(__name__)
         app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        
+        # Initialize extensions
+        db.init_app(app)
+        CORS(app)
         
         with app.app_context():
             from models import Workout
             from datetime import date
             
+            # Verify the database connection is to the temp database
+            engine_url = str(db.engine.url)
+            assert db_path in engine_url, f"Expected {db_path} in {engine_url}"
+            
             # Try to create a workout
             workout = Workout(
-                title='Test Workout',
+                title='Test Workout - Migration Test',
                 workout_type='Bike',
                 originally_planned_day=date(2026, 1, 15)
             )
@@ -251,10 +265,14 @@ def test_app_works_with_migrated_database(temp_db):
             db.session.commit()
             
             # Verify it was created
-            found = Workout.query.filter_by(title='Test Workout').first()
+            found = Workout.query.filter_by(title='Test Workout - Migration Test').first()
             assert found is not None
-            assert found.title == 'Test Workout'
+            assert found.title == 'Test Workout - Migration Test'
             assert found.workout_type == 'Bike'
+            
+            # Clean up - delete the test workout
+            db.session.delete(found)
+            db.session.commit()
         
     finally:
         # Restore original environment
