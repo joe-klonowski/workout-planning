@@ -1,9 +1,42 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import WeeklySummary from './WeeklySummary';
 import { DateOnly } from '../utils/DateOnly';
 
+// Mock fetch
+global.fetch = jest.fn();
+
 describe('WeeklySummary', () => {
+  const mockWeeklyTargets = {
+    weekly_targets: {
+      tss: 460,
+      total_time: {
+        hours: 11,
+        minutes: 33
+      },
+      by_discipline: {
+        swim: { hours: 1, minutes: 48 },
+        bike: { hours: 4, minutes: 30 },
+        run: { hours: 3, minutes: 15 },
+        strength: { hours: 2, minutes: 0 }
+      }
+    }
+  };
+
+  beforeEach(() => {
+    // Reset mock before each test
+    fetch.mockClear();
+    // Default mock: successful fetch of weekly targets
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockWeeklyTargets,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   const createMockWorkout = (overrides = {}) => ({
     id: 1,
     title: 'Test Workout',
@@ -372,6 +405,160 @@ describe('WeeklySummary', () => {
       const { container } = render(<WeeklySummary workouts={workouts} />);
       
       expect(container.querySelector('.breakdown')).toBeInTheDocument();
+    });
+  });
+
+  describe('Weekly targets', () => {
+    test('fetches and displays weekly targets', async () => {
+      const workouts = [
+        createMockWorkout({ plannedDuration: 1.0 }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      // Wait for the fetch to complete
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/weekly-targets'));
+      });
+
+      // Check that the target is displayed
+      await waitFor(() => {
+        expect(screen.getByText(/Target: 11h 33m/)).toBeInTheDocument();
+      });
+    });
+
+    test('displays TSS target when available', async () => {
+      const workouts = [
+        createMockWorkout({ 
+          plannedDuration: 1.0,
+          tss: 50
+        }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/TSS \(Training Stress Score\)/)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Target: 460/)).toBeInTheDocument();
+      });
+    });
+
+    test('displays discipline-specific targets', async () => {
+      const workouts = [
+        createMockWorkout({ 
+          id: 1,
+          workoutType: 'Swim',
+          plannedDuration: 1.0 
+        }),
+        createMockWorkout({ 
+          id: 2,
+          workoutType: 'Bike',
+          plannedDuration: 2.0 
+        }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      await waitFor(() => {
+        const swimSection = screen.getByText('Swim').closest('.breakdown-item');
+        expect(swimSection).toHaveTextContent('Target:');
+        expect(swimSection).toHaveTextContent('1h 48m');
+      });
+
+      await waitFor(() => {
+        const bikeSection = screen.getByText('Bike').closest('.breakdown-item');
+        expect(bikeSection).toHaveTextContent('Target:');
+        expect(bikeSection).toHaveTextContent('4h 30m');
+      });
+    });
+
+    test('handles fetch error gracefully', async () => {
+      // Mock fetch to return an error
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const workouts = [
+        createMockWorkout({ plannedDuration: 1.0 }),
+      ];
+
+      // Should not throw an error
+      render(<WeeklySummary workouts={workouts} />);
+
+      // Component should still render without targets
+      expect(screen.getByText('Week Summary')).toBeInTheDocument();
+      const totalSection = screen.getByText('Total Hours').parentElement;
+      expect(totalSection).toHaveTextContent('1h');
+      
+      // Wait a bit to ensure fetch was called
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalled();
+      });
+    });
+
+    test('handles API response error gracefully', async () => {
+      // Mock fetch to return a failed response
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      });
+
+      const workouts = [
+        createMockWorkout({ plannedDuration: 1.0 }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      // Component should still render without targets
+      expect(screen.getByText('Week Summary')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalled();
+      });
+    });
+
+    test('does not display targets when API returns null', async () => {
+      // Mock fetch to return null targets
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ weekly_targets: null }),
+      });
+
+      const workouts = [
+        createMockWorkout({ plannedDuration: 1.0 }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalled();
+      });
+
+      // Should not display target line
+      expect(screen.queryByText(/Target:/)).not.toBeInTheDocument();
+    });
+
+    test('displays actual TSS calculation', async () => {
+      const workouts = [
+        createMockWorkout({ 
+          id: 1,
+          plannedDuration: 1.0,
+          tss: 50
+        }),
+        createMockWorkout({ 
+          id: 2,
+          plannedDuration: 2.0,
+          tss: 75
+        }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} />);
+
+      await waitFor(() => {
+        // Actual TSS should be sum of all selected workouts
+        expect(screen.getByText('125')).toBeInTheDocument();
+      });
     });
   });
 });

@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
   STATS: `${API_BASE_URL}/api/stats`,
   EXPORT_TO_CALENDAR: `${API_BASE_URL}/api/export/calendar`,
   TRI_CLUB_SCHEDULE: `${API_BASE_URL}/api/tri-club-schedule`,
+  WEEKLY_TARGETS: `${API_BASE_URL}/api/weekly-targets`,
 };
 
 export default API_BASE_URL;

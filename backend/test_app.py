@@ -1266,3 +1266,61 @@ def test_get_tri_club_schedule_has_expected_days(client):
     # Verify at least some common days are present
     assert 'monday' in schedule
     assert 'saturday' in schedule
+
+
+# ============= WEEKLY TARGETS TESTS =============
+
+def test_get_weekly_targets(client):
+    """Test getting weekly targets"""
+    response = client.get('/api/weekly-targets')
+    assert response.status_code == 200
+    
+    data = response.get_json()
+    assert 'weekly_targets' in data
+    assert 'week_start_date' in data
+    
+    targets = data['weekly_targets']
+    assert 'tss' in targets
+    assert 'total_time' in targets
+    assert 'by_discipline' in targets
+    
+    # Verify structure of total_time
+    total_time = targets['total_time']
+    assert 'hours' in total_time
+    assert 'minutes' in total_time
+    assert isinstance(total_time['hours'], (int, float))
+    assert isinstance(total_time['minutes'], (int, float))
+    
+    # Verify structure of by_discipline
+    by_discipline = targets['by_discipline']
+    assert isinstance(by_discipline, dict)
+    for discipline, time_data in by_discipline.items():
+        assert 'hours' in time_data
+        assert 'minutes' in time_data
+        assert isinstance(time_data['hours'], (int, float))
+        assert isinstance(time_data['minutes'], (int, float))
+
+
+def test_weekly_targets_has_expected_disciplines(client):
+    """Test that weekly targets includes expected disciplines"""
+    response = client.get('/api/weekly-targets')
+    assert response.status_code == 200
+    
+    data = response.get_json()
+    by_discipline = data['weekly_targets']['by_discipline']
+    
+    # Verify expected disciplines are present
+    expected_disciplines = ['swim', 'bike', 'run', 'strength']
+    for discipline in expected_disciplines:
+        assert discipline in by_discipline, f"Expected discipline '{discipline}' not found in targets"
+
+
+def test_weekly_targets_tss_is_number(client):
+    """Test that TSS target is a number"""
+    response = client.get('/api/weekly-targets')
+    assert response.status_code == 200
+    
+    data = response.get_json()
+    tss = data['weekly_targets']['tss']
+    assert isinstance(tss, (int, float))
+    assert tss > 0

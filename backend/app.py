@@ -363,6 +363,44 @@ def register_routes(app):
             return jsonify({'error': str(e)}), 500
 
 
+    @app.route('/api/weekly-targets', methods=['GET'])
+    def get_weekly_targets():
+        """
+        Get the weekly targets from the config file
+        Returns: {
+            "week_start_date": "2026-01-05",
+            "weekly_targets": {
+                "tss": 460,
+                "total_time": {"hours": 11, "minutes": 33},
+                "by_discipline": {
+                    "swim": {"hours": 1, "minutes": 48},
+                    "bike": {"hours": 4, "minutes": 30},
+                    "run": {"hours": 3, "minutes": 15},
+                    "strength": {"hours": 2, "minutes": 0}
+                }
+            }
+        }
+        """
+        try:
+            import json
+            from pathlib import Path
+            
+            # Path to the weekly targets config file
+            config_path = Path(__file__).parent.parent / 'config' / 'weekly_targets.json'
+            
+            if not config_path.exists():
+                return jsonify({'error': 'Weekly targets file not found'}), 404
+            
+            with open(config_path, 'r') as f:
+                targets_data = json.load(f)
+            
+            return jsonify(targets_data), 200
+            
+        except Exception as e:
+            logger.error(f"Error loading weekly targets: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+
 # ============= CALDAV EXPORT ENDPOINTS =============
 
     @app.route('/api/export/calendar', methods=['POST'])

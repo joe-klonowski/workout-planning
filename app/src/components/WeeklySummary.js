@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { DateOnly } from '../utils/DateOnly';
 import ExportModal from './ExportModal';
+import { API_ENDPOINTS } from '../config/api';
 import '../styles/WeeklySummary.css';
 
 /**
@@ -14,6 +15,28 @@ import '../styles/WeeklySummary.css';
  */
 function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCalendar }) {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [weeklyTargets, setWeeklyTargets] = useState(null);
+  const [targetsError, setTargetsError] = useState(null);
+
+  // Fetch weekly targets
+  useEffect(() => {
+    const fetchWeeklyTargets = async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.WEEKLY_TARGETS);
+        if (!response.ok) {
+          throw new Error('Failed to fetch weekly targets');
+        }
+        const data = await response.json();
+        setWeeklyTargets(data.weekly_targets);
+      } catch (error) {
+        console.error('Error fetching weekly targets:', error);
+        setTargetsError(error.message);
+      }
+    };
+
+    fetchWeeklyTargets();
+  }, []);
+
   // Filter for selected workouts only
   const selectedWorkouts = workouts.filter(w => w.isSelected);
 
@@ -108,8 +131,23 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
       <div className="summary-section total-hours">
         <div className="summary-label">Total Hours</div>
         <div className="summary-value large">{formatDuration(totalHours)}</div>
+        {weeklyTargets && weeklyTargets.total_time && (
+          <div className="summary-detail">
+            Friel Target: {formatDuration(weeklyTargets.total_time.hours + weeklyTargets.total_time.minutes / 60)}
+          </div>
+        )}
         <div className="summary-detail">{selectedWorkouts.length} workouts</div>
       </div>
+
+      {weeklyTargets && weeklyTargets.tss && (
+        <div className="summary-section tss-section">
+          <div className="summary-label">TSS (Training Stress Score)</div>
+          <div className="summary-value">
+            {selectedWorkouts.reduce((sum, w) => sum + (w.tss || 0), 0).toFixed(0)}
+          </div>
+          <div className="summary-detail">Friel Target: {weeklyTargets.tss}</div>
+        </div>
+      )}
 
       {displayTypes.length > 0 && (
         <div className="summary-section breakdown">
@@ -119,6 +157,10 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
               const stats = workoutTypeStats[type];
               const distance = formatDistance(stats.distance, type);
               
+              // Get target for this discipline
+              const disciplineKey = type.toLowerCase();
+              const target = weeklyTargets?.by_discipline?.[disciplineKey];
+              
               return (
                 <div key={type} className="breakdown-item">
                   <div className="breakdown-header">
@@ -127,12 +169,20 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
                   </div>
                   <div className="breakdown-stats">
                     <div className="breakdown-stat">
-                      <span className="stat-label">Duration:</span>
+                      <span className="stat-label">Planned duration:</span>
                       <span className="stat-value">{formatDuration(stats.hours)}</span>
                     </div>
+                    {target && (
+                      <div className="breakdown-stat">
+                        <span className="stat-label">Friel target duration:</span>
+                        <span className="stat-value">
+                          {formatDuration(target.hours + target.minutes / 60)}
+                        </span>
+                      </div>
+                    )}
                     {distance && (
                       <div className="breakdown-stat">
-                        <span className="stat-label">Distance:</span>
+                        <span className="stat-label">Planned distance:</span>
                         <span className="stat-value">{distance}</span>
                       </div>
                     )}

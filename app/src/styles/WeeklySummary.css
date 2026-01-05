@@ -103,6 +103,31 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* TSS Section */
+.tss-section {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.tss-section .summary-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+}
+
+.tss-section .summary-value {
+  color: white;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.tss-section .summary-detail {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 /* Breakdown Section */
 .breakdown {
   padding: 0;
