@@ -5,6 +5,13 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export const API_ENDPOINTS = {
+  // Auth endpoints
+  LOGIN: `${API_BASE_URL}/api/auth/login`,
+  REGISTER: `${API_BASE_URL}/api/auth/register`,
+  VERIFY: `${API_BASE_URL}/api/auth/verify`,
+  CURRENT_USER: `${API_BASE_URL}/api/auth/me`,
+  
+  // Workout endpoints
   WORKOUTS: `${API_BASE_URL}/api/workouts`,
   WORKOUT_BY_ID: (id) => `${API_BASE_URL}/api/workouts/${id}`,
   IMPORT_WORKOUTS: `${API_BASE_URL}/api/workouts/import`,
@@ -18,4 +25,30 @@ export const API_ENDPOINTS = {
   WEEKLY_TARGETS: `${API_BASE_URL}/api/weekly-targets`,
 };
 
+/**
+ * Make an API call with authentication token
+ * @param {string} url - The API endpoint URL
+ * @param {object} options - Fetch options (method, body, headers, etc.)
+ * @returns {Promise} - Fetch promise
+ */
+export const apiCall = (url, options = {}) => {
+  const token = localStorage.getItem('auth_token');
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  // Add Authorization header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
+
 export default API_BASE_URL;
+

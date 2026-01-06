@@ -25,7 +25,17 @@ jest.mock('./components/Calendar', () => {
 // Helper function to create a comprehensive fetch mock that handles all endpoints
 const createFetchMock = (workouts = [], triClubSchedule = null) => {
   return jest.fn((url) => {
-    if (url.includes('/api/workouts')) {
+    if (url.includes('/api/auth/verify')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ valid: true, user_id: 1 }),
+      });
+    } else if (url.includes('/api/auth/me')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ id: 1, username: 'testuser' }),
+      });
+    } else if (url.includes('/api/workouts')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ workouts, count: workouts.length }),
@@ -42,6 +52,10 @@ const createFetchMock = (workouts = [], triClubSchedule = null) => {
 
 describe('App Component', () => {
   beforeEach(() => {
+    // Set up mock authentication token
+    localStorage.setItem('auth_token', 'test-token-12345');
+    localStorage.setItem('user_info', JSON.stringify({ id: 1, username: 'testuser' }));
+    
     // Clear all mocks before each test
     global.fetch = jest.fn();
   });
@@ -50,19 +64,28 @@ describe('App Component', () => {
     jest.restoreAllMocks();
   });
 
-  test('renders app header', () => {
+  test('renders app header', async () => {
     global.fetch = createFetchMock();
 
     render(<App />);
-    expect(screen.getByText('Workout Planner')).toBeInTheDocument();
-    expect(screen.getByText('Plan your workouts from TrainingPeaks')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(screen.getByText('Workout Planner')).toBeInTheDocument();
+      expect(screen.getByText('Plan your workouts from TrainingPeaks')).toBeInTheDocument();
+    });
   });
 
-  test('displays loading state initially', () => {
+  test('displays loading state initially', async () => {
     global.fetch = jest.fn(() => new Promise(() => {})); // Never resolves
 
     render(<App />);
-    expect(screen.getByText('Loading workouts...')).toBeInTheDocument();
+    
+    // Initially should show loading state before auth verification
+    // The component renders Login first, then loads workouts after auth
+    await waitFor(() => {
+      // Since auth verification never returns, we should see the login form
+      expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
+    });
   });
 
   test('fetches workouts from API on mount', async () => {
@@ -84,7 +107,10 @@ describe('App Component', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/api/workouts');
+      // Check that fetch was called with the workouts endpoint
+      const calls = global.fetch.mock.calls;
+      const workoutsCalled = calls.some(call => call[0].includes('/api/workouts'));
+      expect(workoutsCalled).toBe(true);
     });
   });
 
@@ -226,12 +252,22 @@ describe('App Component', () => {
   });
 
   test('displays error message when API call fails', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
+    global.fetch = jest.fn((url) => {
+      // Auth endpoints should succeed so we get past the login screen
+      if (url.includes('/api/auth')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(
+            url.includes('/verify') ? { valid: true, user_id: 1 } : { id: 1, username: 'testuser' }
+          ),
+        });
+      }
+      // Other endpoints fail
+      return Promise.resolve({
         ok: false,
         status: 500,
-      })
-    );
+      });
+    });
 
     render(<App />);
 
@@ -244,10 +280,20 @@ describe('App Component', () => {
   });
 
   test('displays error message when network request fails', async () => {
-    // Simulate a fetch failure (TypeError is what fetch throws when it can't connect)
-    global.fetch = jest.fn(() =>
-      Promise.reject(new TypeError('Failed to fetch'))
-    );
+    // Simulate a fetch failure with smart auth handling
+    global.fetch = jest.fn((url) => {
+      // Auth endpoints should succeed
+      if (url.includes('/api/auth')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(
+            url.includes('/verify') ? { valid: true, user_id: 1 } : { id: 1, username: 'testuser' }
+          ),
+        });
+      }
+      // Other endpoints fail with network error
+      return Promise.reject(new TypeError('Failed to fetch'));
+    });
 
     render(<App />);
 

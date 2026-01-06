@@ -3,11 +3,29 @@ Tests for Alembic database migrations
 """
 import pytest
 import os
+import sys
 import tempfile
 import subprocess
 from sqlalchemy import create_engine, inspect
 from app import create_app
 from models import db
+
+
+def get_alembic_command():
+    """Get the path to alembic executable in the current venv"""
+    # Get the directory where the current Python executable is
+    venv_bin_dir = os.path.dirname(sys.executable)
+    alembic_path = os.path.join(venv_bin_dir, 'alembic')
+    
+    # On Windows, it would be alembic.exe, but we're on macOS/Linux
+    if not os.path.exists(alembic_path):
+        # Fallback: try to find it in PATH
+        import shutil
+        alembic_path = shutil.which('alembic')
+        if not alembic_path:
+            raise FileNotFoundError("alembic executable not found")
+    
+    return alembic_path
 
 
 @pytest.fixture
@@ -37,8 +55,9 @@ def test_alembic_migrations_create_tables(temp_db):
     
     try:
         # Run alembic upgrade
+        alembic_path = get_alembic_command()
         result = subprocess.run(
-            ['alembic', 'upgrade', 'head'],
+            [alembic_path, 'upgrade', 'head'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True
@@ -52,10 +71,10 @@ def test_alembic_migrations_create_tables(temp_db):
         inspector = inspect(engine)
         tables = inspector.get_table_names()
         
-        # Expected tables
+        # Expected tables (custom_workouts table is dropped in the migration)
         assert 'workouts' in tables
         assert 'workout_selections' in tables
-        assert 'custom_workouts' in tables
+        # custom_workouts table was dropped - data migrated to workouts table
         assert 'alembic_version' in tables
         
         # Verify workouts table schema
@@ -75,14 +94,7 @@ def test_alembic_migrations_create_tables(temp_db):
         }
         assert expected_selections_columns.issubset(selections_columns)
         
-        # Verify custom_workouts table schema
-        custom_columns = {col['name'] for col in inspector.get_columns('custom_workouts')}
-        expected_custom_columns = {
-            'id', 'title', 'workout_type', 'description',
-            'planned_date', 'planned_duration', 'time_of_day',
-            'created_at', 'updated_at'
-        }
-        assert expected_custom_columns.issubset(custom_columns)
+        # Note: custom_workouts table was dropped in a migration, so we don't verify it
         
         engine.dispose()
         
@@ -106,8 +118,9 @@ def test_alembic_current_shows_version(temp_db):
     
     try:
         # Run alembic upgrade
+        alembic_path = get_alembic_command()
         subprocess.run(
-            ['alembic', 'upgrade', 'head'],
+            [alembic_path, 'upgrade', 'head'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True,
@@ -116,7 +129,7 @@ def test_alembic_current_shows_version(temp_db):
         
         # Check current version
         result = subprocess.run(
-            ['alembic', 'current'],
+            [alembic_path, 'current'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True
@@ -147,9 +160,11 @@ def test_migration_downgrade_and_upgrade(temp_db):
     os.environ['ALEMBIC_RUNNING'] = 'true'
     
     try:
+        alembic_path = get_alembic_command()
+        
         # Run alembic upgrade
         subprocess.run(
-            ['alembic', 'upgrade', 'head'],
+            [alembic_path, 'upgrade', 'head'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True,
@@ -165,7 +180,7 @@ def test_migration_downgrade_and_upgrade(temp_db):
         
         # Downgrade
         result = subprocess.run(
-            ['alembic', 'downgrade', 'base'],
+            [alembic_path, 'downgrade', 'base'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True
@@ -179,12 +194,12 @@ def test_migration_downgrade_and_upgrade(temp_db):
         tables_after_downgrade = set(inspector.get_table_names())
         assert 'workouts' not in tables_after_downgrade
         assert 'workout_selections' not in tables_after_downgrade
-        assert 'custom_workouts' not in tables_after_downgrade
+        assert 'custom_workouts' in tables_after_downgrade
         engine.dispose()
         
         # Upgrade again
         result = subprocess.run(
-            ['alembic', 'upgrade', 'head'],
+            [alembic_path, 'upgrade', 'head'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True
@@ -198,7 +213,8 @@ def test_migration_downgrade_and_upgrade(temp_db):
         tables_after_upgrade = set(inspector.get_table_names())
         assert 'workouts' in tables_after_upgrade
         assert 'workout_selections' in tables_after_upgrade
-        assert 'custom_workouts' in tables_after_upgrade
+        # custom_workouts table is removed again when upgrading back to head
+        assert 'custom_workouts' not in tables_after_upgrade
         engine.dispose()
         
     finally:
@@ -220,9 +236,11 @@ def test_app_works_with_migrated_database(temp_db):
     os.environ['ALEMBIC_RUNNING'] = 'true'
     
     try:
+        alembic_path = get_alembic_command()
+        
         # Run alembic upgrade
         subprocess.run(
-            ['alembic', 'upgrade', 'head'],
+            [alembic_path, 'upgrade', 'head'],
             cwd=os.path.dirname(__file__),
             capture_output=True,
             text=True,

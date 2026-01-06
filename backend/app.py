@@ -4,7 +4,8 @@ Flask API for workout planner
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import config, Config
-from models import db, Workout, WorkoutSelection
+from models import db, Workout, WorkoutSelection, User
+from auth import generate_token, verify_token, token_required
 from caldav_client import CalDAVClient
 from datetime import datetime, date, timezone
 import csv
@@ -37,6 +38,100 @@ def create_app(config_name='development'):
 
 def register_routes(app):
     """Register all API routes"""
+    
+    # ============= AUTH ENDPOINTS =============
+
+    @app.route('/api/auth/register', methods=['POST'])
+    def register():
+        """
+        Registration endpoint is disabled.
+        This is a single-user app. Use the create_user.py script to set up the initial user.
+        """
+        return jsonify({
+            'error': 'Registration is disabled. This is a single-user app. Use the create_user.py script to set up your account.'
+        }), 403
+
+
+    @app.route('/api/auth/login', methods=['POST'])
+    def login():
+        """
+        Login with username and password
+        Body: {
+            "username": "joe",
+            "password": "securepassword"
+        }
+        """
+        try:
+            data = request.get_json()
+            if not data or not data.get('username') or not data.get('password'):
+                return jsonify({'error': 'Username and password are required'}), 400
+            
+            username = data.get('username', '')
+            password = data.get('password', '')
+            
+            # Find user
+            user = User.query.filter_by(username=username).first()
+            if not user or not user.check_password(password):
+                return jsonify({'error': 'Invalid username or password'}), 401
+            
+            # Update last login
+            user.last_login = datetime.now(timezone.utc)
+            db.session.commit()
+            
+            # Generate token
+            token = generate_token(user.id)
+            
+            return jsonify({
+                'message': 'Login successful',
+                'token': token,
+                'user': user.to_dict()
+            }), 200
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Login error: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+
+    @app.route('/api/auth/verify', methods=['GET'])
+    @token_required
+    def verify_auth(current_user_id):
+        """
+        Verify that the provided token is valid
+        Requires: Authorization header with Bearer token
+        """
+        try:
+            user = db.session.get(User, current_user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            return jsonify({
+                'valid': True,
+                'user': user.to_dict()
+            }), 200
+            
+        except Exception as e:
+            logger.error(f"Token verification error: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+
+    @app.route('/api/auth/me', methods=['GET'])
+    @token_required
+    def get_current_user(current_user_id):
+        """
+        Get current logged-in user
+        Requires: Authorization header with Bearer token
+        """
+        try:
+            user = db.session.get(User, current_user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            return jsonify(user.to_dict()), 200
+            
+        except Exception as e:
+            logger.error(f"Get user error: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
     
     # ============= WORKOUT ENDPOINTS =============
 
