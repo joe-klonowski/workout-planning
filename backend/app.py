@@ -28,7 +28,14 @@ def create_app(config_name='development'):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app)
+    
+    # Configure CORS - in production, allow same-origin; in development, allow localhost
+    if config_name == 'production':
+        # In production, the frontend is served from the same origin, so we need minimal CORS
+        CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True}})
+    else:
+        # In development, allow requests from the React dev server
+        CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000"], "supports_credentials": True}})
     
     # Register routes
     register_routes(app)
@@ -71,8 +78,14 @@ def register_routes(app):
         }
         """
         try:
-            data = request.get_json()
+            # Debug logging
+            logger.info(f"Login request received. Content-Type: {request.content_type}")
+            logger.info(f"Request data length: {len(request.data)}")
+            logger.info(f"Request headers: {dict(request.headers)}")
+            
+            data = request.get_json(force=True)
             if not data or not data.get('username') or not data.get('password'):
+                logger.error(f"Missing credentials. Data received: {data}")
                 return jsonify({'error': 'Username and password are required'}), 400
             
             username = data.get('username', '')
