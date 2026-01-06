@@ -1,6 +1,10 @@
 [build]
 builder = "RAILPACK"
 
+[build.providers]
+python = "3.10"
+node = "18"
+
 [build.commands]
 install = [
   "pip install -r backend/requirements.txt",
