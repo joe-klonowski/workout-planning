@@ -1,21 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from './components/Calendar';
-import { API_ENDPOINTS } from './config/api';
+import Login from './components/Login';
+import { API_ENDPOINTS, apiCall } from './config/api';
 import { DateOnly } from './utils/DateOnly';
 import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [triClubSchedule, setTriClubSchedule] = useState(null);
 
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      
+      if (token) {
+        try {
+          // Verify token is still valid
+          const response = await apiCall(API_ENDPOINTS.VERIFY);
+          
+          if (!response.ok) {
+            // Token is invalid or expired
+            localStorage.removeItem('auth_token');
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setLoading(false);
+            return;
+          }
+          
+          const data = await response.json();
+          setIsAuthenticated(true);
+          setCurrentUser(data.user);
+        } catch (err) {
+          console.error('Error verifying token:', err);
+          localStorage.removeItem('auth_token');
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    
+    checkAuth();
+  }, []);
+
+  // Handle successful login
+  const handleLoginSuccess = (user) => {
+    setIsAuthenticated(true);
+    setCurrentUser(user);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setWorkouts([]);
+    setTriClubSchedule(null);
+  };
+
   // Load workouts from backend API (including custom workouts)
   useEffect(() => {
+    if (!isAuthenticated) {
+      return; // Don't load workouts if not authenticated
+    }
+
     const loadWorkouts = async () => {
       try {
         console.log('Fetching workouts from:', API_ENDPOINTS.WORKOUTS);
-        const response = await fetch(API_ENDPOINTS.WORKOUTS);
+        const response = await apiCall(API_ENDPOINTS.WORKOUTS);
         console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`Failed to load workouts: ${response.status}`);
@@ -72,20 +129,22 @@ function App() {
           stack: err.stack,
           name: err.name
         });
-      } finally {
-        setLoading(false);
       }
     };
 
     loadWorkouts();
-  }, []);
+  }, [isAuthenticated]);
 
   // Load tri club schedule
   useEffect(() => {
+    if (!isAuthenticated) {
+      return; // Don't load schedule if not authenticated
+    }
+
     const loadTriClubSchedule = async () => {
       try {
         console.log('Fetching tri club schedule from:', API_ENDPOINTS.TRI_CLUB_SCHEDULE);
-        const response = await fetch(API_ENDPOINTS.TRI_CLUB_SCHEDULE);
+        const response = await apiCall(API_ENDPOINTS.TRI_CLUB_SCHEDULE);
         if (!response.ok) {
           console.warn('Failed to load tri club schedule:', response.status);
           return; // Silently fail - schedule is optional
@@ -100,16 +159,13 @@ function App() {
     };
 
     loadTriClubSchedule();
-  }, []);
+  }, [isAuthenticated]);
 
   // Handle workout selection toggle
   const handleWorkoutSelection = async (workoutId, isSelected) => {
     try {
-      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+      const response = await apiCall(API_ENDPOINTS.SELECTIONS(workoutId), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ isSelected }),
       });
 
@@ -138,11 +194,8 @@ function App() {
       const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
       
       // Use selections endpoint for all workouts
-      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+      const response = await apiCall(API_ENDPOINTS.SELECTIONS(workoutId), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ currentPlanDay: dateStr }),
       });
 
@@ -173,11 +226,8 @@ function App() {
   const handleWorkoutTimeOfDayChange = async (workoutId, timeOfDay) => {
     try {
       // Use selections endpoint for all workouts
-      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+      const response = await apiCall(API_ENDPOINTS.SELECTIONS(workoutId), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ timeOfDay: timeOfDay === 'unscheduled' ? null : timeOfDay }),
       });
 
@@ -206,11 +256,8 @@ function App() {
   // Handle workout location change
   const handleWorkoutLocationChange = async (workoutId, workoutLocation) => {
     try {
-      const response = await fetch(API_ENDPOINTS.SELECTIONS(workoutId), {
+      const response = await apiCall(API_ENDPOINTS.SELECTIONS(workoutId), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ workoutLocation }),
       });
 
@@ -239,11 +286,8 @@ function App() {
   // Handle export to calendar
   const handleExportToCalendar = async (dateRange) => {
     try {
-      const response = await fetch(API_ENDPOINTS.EXPORT_TO_CALENDAR, {
+      const response = await apiCall(API_ENDPOINTS.EXPORT_TO_CALENDAR, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(dateRange),
       });
 
@@ -277,11 +321,8 @@ function App() {
         isCustom: true
       };
       
-      const response = await fetch(API_ENDPOINTS.WORKOUTS, {
+      const response = await apiCall(API_ENDPOINTS.WORKOUTS, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(apiData),
       });
 
@@ -321,17 +362,31 @@ function App() {
   // Count custom workouts
   const customWorkoutsCount = workouts.filter(w => w.isCustom).length;
 
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Workout Planner</h1>
-        <p>Plan your workouts from TrainingPeaks</p>
+        <div className="header-content">
+          <div>
+            <h1>Workout Planner</h1>
+            <p>Plan your workouts from TrainingPeaks</p>
+          </div>
+          <div className="header-user">
+            <span>Welcome, {currentUser?.username}!</span>
+            <button onClick={handleLogout} className="logout-button">
+              Logout
+            </button>
+          </div>
+        </div>
       </header>
 
       <main className="App-main">
-        {loading && <p className="loading">Loading workouts...</p>}
         {error && <p className="error">Error: {error}</p>}
-        {!loading && !error && (
+        {!error && (
           <>
             <p className="workout-count">
               Loaded {workouts.length} workouts
