@@ -40,13 +40,22 @@ def create_app(config_name='development'):
     # Initialize extensions
     db.init_app(app)
     
-    # Configure CORS - in production, allow same-origin; in development, allow localhost
+    # Configure CORS
     if config_name == 'production':
-        # In production, the frontend is served from the same origin, so we need minimal CORS
-        CORS(app, resources={r"/api/*": {"origins": "*", "supports_credentials": True}})
+        # In production, frontend is served from same origin, but still need CORS for proper headers
+        CORS(app, resources={r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }})
     else:
         # In development, allow requests from the React dev server
-        CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000"], "supports_credentials": True}})
+        CORS(app, resources={r"/api/*": {
+            "origins": ["http://localhost:3000"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }})
     
     # Register routes
     register_routes(app)

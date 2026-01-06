@@ -2,7 +2,11 @@
  * API configuration for backend connection
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// In production build, use empty string for relative URLs (same origin as frontend)
+// In development, use localhost:5000
+// REACT_APP_API_URL can override this if set during build
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000');
 
 export const API_ENDPOINTS = {
   // Auth endpoints
