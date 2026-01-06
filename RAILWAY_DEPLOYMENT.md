@@ -100,7 +100,9 @@ railway run python backend/create_user.py <username> <password>
 
 ### Step 6: Access Your App
 
-Your app will be available at the Railway-provided URL (something like `https://your-app-name.up.railway.app`).
+Your app will be available at this URL: https://workout-planning-production.up.railway.app/
+
+The username to log in is "joe" and the password is in Joe's bitwarden (search for that URL if bitwarden has trouble finding it).
 
 ## Updating the Frontend to Use Production URL
 
