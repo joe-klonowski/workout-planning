@@ -10,9 +10,30 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    
+    # Database configuration with SSL support for PostgreSQL
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith('postgres://'):
+        # Railway uses postgres:// but SQLAlchemy needs postgresql://
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    # Add SSL mode for PostgreSQL connections (required by Railway)
+    if database_url and database_url.startswith('postgresql://'):
+        # Add sslmode=require if not already present
+        if '?' not in database_url:
+            database_url += '?sslmode=require'
+        elif 'sslmode=' not in database_url:
+            database_url += '&sslmode=require'
+    
+    SQLALCHEMY_DATABASE_URI = database_url or \
         'sqlite:///' + os.path.join(basedir, 'workout_planner.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Additional SQLAlchemy engine options for PostgreSQL SSL
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Verify connections before using them
+        'pool_recycle': 300,     # Recycle connections after 5 minutes
+    }
     
     # CORS settings
     CORS_HEADERS = 'Content-Type'
