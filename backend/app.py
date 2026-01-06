@@ -12,7 +12,14 @@ import csv
 import io
 import os
 import logging
+import sys
 
+# Configure logging to output to stdout
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
 
 
@@ -81,23 +88,34 @@ def register_routes(app):
             "password": "securepassword"
         }
         """
+        print("=== LOGIN ENDPOINT CALLED ===", flush=True)
         try:
             # Debug logging
+            print(f"Content-Type: {request.content_type}", flush=True)
+            print(f"Request data: {request.data}", flush=True)
+            print(f"Request headers: {dict(request.headers)}", flush=True)
+            
             logger.info(f"Login request received. Content-Type: {request.content_type}")
             logger.info(f"Request data length: {len(request.data)}")
             logger.info(f"Request headers: {dict(request.headers)}")
             
             data = request.get_json(force=True)
+            print(f"Parsed JSON data: {data}", flush=True)
+            
             if not data or not data.get('username') or not data.get('password'):
+                print(f"ERROR: Missing credentials. Data: {data}", flush=True)
                 logger.error(f"Missing credentials. Data received: {data}")
                 return jsonify({'error': 'Username and password are required'}), 400
             
             username = data.get('username', '')
             password = data.get('password', '')
             
+            print(f"Attempting login for username: {username}", flush=True)
+            
             # Find user
             user = User.query.filter_by(username=username).first()
             if not user or not user.check_password(password):
+                print(f"ERROR: Invalid credentials for user: {username}", flush=True)
                 return jsonify({'error': 'Invalid username or password'}), 401
             
             # Update last login
