@@ -27,7 +27,7 @@ In production, the Flask backend serves both the API endpoints and the React fro
 2. Click "New Project"
 3. Select "Deploy from GitHub repo"
 4. Choose your `workout-planning` repository
-5. Railway will automatically detect the configuration from `railway.json` and `nixpacks.toml`
+5. Railway will automatically detect the configuration from `railway.json` and `railway.toml`
 
 ### Step 2: Configure Environment Variables
 
@@ -157,8 +157,8 @@ After creating your user account, you can import workout data:
 ## Files Created for Deployment
 
 - `railway.json` - Railway service configuration
-- `nixpacks.toml` - Build configuration (Python + Node.js)
-- `Procfile` - Process commands for Railway
+- `railway.toml` - Build configuration using Railpack builder (Python + Node.js)
+- `Procfile` - Process commands for Railway (backup method)
 - Updated `backend/requirements.txt` - Added `gunicorn` for production server
 - Updated `backend/app.py` - Added static file serving for production
 
