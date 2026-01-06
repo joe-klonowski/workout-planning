@@ -29,8 +29,8 @@ COPY . .
 WORKDIR /app/app
 RUN npm run build
 
-# Set working directory back to app root
-WORKDIR /app
+# Set working directory back to backend for runtime
+WORKDIR /app/backend
 
 # Expose port (Railway will override this with $PORT)
 EXPOSE 5000
@@ -38,5 +38,5 @@ EXPOSE 5000
 # Set environment variable
 ENV FLASK_ENV=production
 
-# Run gunicorn
-CMD cd backend && gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+# Run gunicorn (using shell form to allow $PORT variable expansion)
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --timeout 120 app:app
