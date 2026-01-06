@@ -1,7 +1,7 @@
 """
 Flask API for workout planner
 """
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from config import config, Config
 from models import db, Workout, WorkoutSelection, User
@@ -18,7 +18,12 @@ logger = logging.getLogger(__name__)
 
 def create_app(config_name='development'):
     """Application factory"""
-    app = Flask(__name__)
+    # Set up static folder for production
+    static_folder = None
+    if config_name == 'production':
+        static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app', 'build')
+    
+    app = Flask(__name__, static_folder=static_folder, static_url_path='')
     app.config.from_object(config[config_name])
     
     # Initialize extensions
@@ -614,9 +619,30 @@ def register_routes(app):
             logger.error(f"Error exporting to calendar: {e}", exc_info=True)
             return jsonify({'error': str(e)}), 500
 
+    # ============= STATIC FILE SERVING (PRODUCTION) =============
+    
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react_app(path):
+        """
+        Serve React app in production.
+        In development, the React app runs on its own server (port 3000).
+        """
+        if app.config.get('ENV') == 'production' or os.environ.get('FLASK_ENV') == 'production':
+            if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+                return send_from_directory(app.static_folder, path)
+            else:
+                return send_from_directory(app.static_folder, 'index.html')
+        else:
+            # In development, redirect to the React dev server
+            return jsonify({
+                'message': 'API is running. Frontend is available at http://localhost:3000'
+            }), 200
+
 
 # Create the default app instance
-app = create_app()
+config_name = os.environ.get('FLASK_ENV', 'development')
+app = create_app(config_name)
 
 
 if __name__ == '__main__':

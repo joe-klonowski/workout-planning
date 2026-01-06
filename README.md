@@ -61,6 +61,12 @@ npm test -- --coverage    # With coverage report
 - ✅ **Error Handling**: Network failures, API errors, empty data
 - ✅ **CSV Import**: Duplicate detection, field parsing
 
+## Deployment
+
+This app is configured for deployment to Railway. See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for complete deployment instructions.
+
+Quick reference: [RAILWAY_QUICK_REF.md](RAILWAY_QUICK_REF.md)
+
 ## Getting Started
 
 ### Quick Start (Run Both Backend and Frontend)

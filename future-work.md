@@ -36,10 +36,6 @@ So some of the future feature work here is to enable that plan.
 - Import past workout data from Strava, TrainingPeaks, or Garmin (probably via API?)
 - Export to other platforms such as Garmin Connect or Hammerhead.
 
-## Devops
-- Deploy app to an actual website that can be accessed from the public internet (currently localhost only).
-  - Planning on using Railway
-
 ## Testing
 - Consider adding contract tests for the API boundary between the frontend and backend.
 - Add end-to-end tests using something like selenium that can run in the browser or a headless browser.

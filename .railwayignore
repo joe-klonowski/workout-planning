@@ -1,0 +1,39 @@
+# Don't upload these to Railway (saves build time and space)
+
+# Test files
+**/__pycache__/
+**/*.pyc
+**/test_*.py
+**/*.test.js
+**/setupTests.js
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development files
+*.db
+*.db-journal
+*.backup
+*.bak
+
+# Documentation (optional - uncomment if you want to exclude)
+# *.md
+
+# Local configuration
+.env.local
+caldav-credentials-*.env
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Scripts (not needed in production)
+check-local-status.sh
+test-all.sh
+
+# Inputs (use API to import instead)
+inputs/
