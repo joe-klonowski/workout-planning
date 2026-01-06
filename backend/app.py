@@ -33,10 +33,14 @@ def create_app(config_name='development'):
     # Register routes
     register_routes(app)
     
-    # Create tables (skip if running Alembic migrations)
+    # Create tables only if they don't exist (skip if running Alembic migrations)
     if not os.environ.get('ALEMBIC_RUNNING'):
         with app.app_context():
-            db.create_all()
+            try:
+                db.create_all()
+            except Exception as e:
+                # Tables already exist, that's fine
+                logger.warning(f"Could not create tables (they may already exist): {e}")
     
     return app
 
