@@ -22,9 +22,13 @@ def create_app(config_name='development'):
     static_folder = None
     if config_name == 'production':
         static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app', 'build')
+        logger.info(f"Production mode: static folder set to {static_folder}")
+        logger.info(f"Static folder exists: {os.path.exists(static_folder) if static_folder else 'N/A'}")
     
     app = Flask(__name__, static_folder=static_folder, static_url_path='')
     app.config.from_object(config[config_name])
+    
+    logger.info(f"App created with config: {config_name}")
     
     # Initialize extensions
     db.init_app(app)
@@ -659,7 +663,15 @@ def register_routes(app):
 
 # Create the default app instance
 config_name = os.environ.get('FLASK_ENV', 'development')
-app = create_app(config_name)
+logger.info(f"Creating app with config_name: {config_name}")
+logger.info(f"PORT environment variable: {os.environ.get('PORT', 'not set')}")
+
+try:
+    app = create_app(config_name)
+    logger.info("App created successfully")
+except Exception as e:
+    logger.error(f"Failed to create app: {e}", exc_info=True)
+    raise
 
 
 if __name__ == '__main__':
