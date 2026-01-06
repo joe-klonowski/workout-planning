@@ -114,8 +114,17 @@ def register_routes(app):
             
             # Find user
             user = User.query.filter_by(username=username).first()
-            if not user or not user.check_password(password):
-                print(f"ERROR: Invalid credentials for user: {username}", flush=True)
+            if not user:
+                print(f"ERROR: User '{username}' not found in database", flush=True)
+                # List all users for debugging
+                all_users = User.query.all()
+                print(f"Total users in database: {len(all_users)}", flush=True)
+                for u in all_users:
+                    print(f"  - User: {u.username}", flush=True)
+                return jsonify({'error': 'Invalid username or password'}), 401
+            
+            if not user.check_password(password):
+                print(f"ERROR: Invalid password for user: {username}", flush=True)
                 return jsonify({'error': 'Invalid username or password'}), 401
             
             # Update last login
