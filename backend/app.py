@@ -604,14 +604,19 @@ def register_routes(app):
             
             # Get CalDAV credentials
             credentials = Config.get_caldav_credentials()
+            logger.info(f"Retrieved CalDAV credentials - URL: {credentials.get('url')}, "
+                       f"Username: {credentials.get('username')}, "
+                       f"Password: {'***' if credentials.get('password') else 'not set'}, "
+                       f"Calendar Name: {credentials.get('calendar_name')}")
+            
             if not credentials['url'] or not credentials['username'] or not credentials['password']:
                 return jsonify({
-                    'error': 'CalDAV credentials not configured. Please set up credentials in ~/.config/workout-planner/caldav-credentials-apple.env'
+                    'error': 'CalDAV credentials not configured. Please set CALDAV_URL, CALDAV_USERNAME, and CALDAV_PASSWORD environment variables.'
                 }), 500
             
             if not credentials['calendar_name']:
                 return jsonify({
-                    'error': 'CalDAV calendar name not configured. Please set CALDAV_CALENDAR_NAME in ~/.config/workout-planner/caldav-credentials-apple.env'
+                    'error': 'CalDAV calendar name not configured. Please set CALDAV_CALENDAR_NAME environment variable.'
                 }), 500
             
             # Get workouts in the date range

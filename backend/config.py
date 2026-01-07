@@ -45,11 +45,19 @@ class Config:
         Get CalDAV credentials from file or environment variables
         Priority: environment variables > credentials file
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # Check environment variables first
         url = os.environ.get('CALDAV_URL')
         username = os.environ.get('CALDAV_USERNAME')
         password = os.environ.get('CALDAV_PASSWORD')
         calendar_name = os.environ.get('CALDAV_CALENDAR_NAME')
+        
+        logger.info(f"Reading CalDAV credentials - URL: {'set' if url else 'not set'}, "
+                   f"Username: {'set' if username else 'not set'}, "
+                   f"Password: {'set' if password else 'not set'}, "
+                   f"Calendar Name: {calendar_name if calendar_name else 'not set'}")
         
         if url and username and password:
             return {
