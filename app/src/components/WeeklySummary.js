@@ -27,7 +27,20 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
           throw new Error('Failed to fetch weekly targets');
         }
         const data = await response.json();
-        setWeeklyTargets(data.weekly_targets);
+        
+        // API now returns an array of weekly targets
+        // Find the matching week based on weekStartDate
+        if (Array.isArray(data) && weekStartDate) {
+          const weekStartStr = weekStartDate.toISOString();
+          const matchingWeek = data.find(week => week.week_start_date === weekStartStr);
+          if (matchingWeek) {
+            setWeeklyTargets(matchingWeek.weekly_targets);
+          } else {
+            setWeeklyTargets(null);
+          }
+        } else {
+          setWeeklyTargets(null);
+        }
       } catch (error) {
         console.error('Error fetching weekly targets:', error);
         setTargetsError(error.message);
@@ -35,7 +48,7 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
     };
 
     fetchWeeklyTargets();
-  }, []);
+  }, [weekStartDate]);
 
   // Filter for selected workouts only
   const selectedWorkouts = workouts.filter(w => w.isSelected);

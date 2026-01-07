@@ -1405,10 +1405,16 @@ def test_get_weekly_targets(client):
     assert response.status_code == 200
     
     data = response.get_json()
-    assert 'weekly_targets' in data
-    assert 'week_start_date' in data
+    # Response is now an array of weekly targets
+    assert isinstance(data, list)
+    assert len(data) > 0
     
-    targets = data['weekly_targets']
+    # Test the first week's structure
+    first_week = data[0]
+    assert 'weekly_targets' in first_week
+    assert 'week_start_date' in first_week
+    
+    targets = first_week['weekly_targets']
     assert 'tss' in targets
     assert 'total_time' in targets
     assert 'by_discipline' in targets
@@ -1436,7 +1442,10 @@ def test_weekly_targets_has_expected_disciplines(client):
     assert response.status_code == 200
     
     data = response.get_json()
-    by_discipline = data['weekly_targets']['by_discipline']
+    # Response is now an array, test the first week
+    assert isinstance(data, list)
+    assert len(data) > 0
+    by_discipline = data[0]['weekly_targets']['by_discipline']
     
     # Verify expected disciplines are present
     expected_disciplines = ['swim', 'bike', 'run', 'strength']
@@ -1450,6 +1459,9 @@ def test_weekly_targets_tss_is_number(client):
     assert response.status_code == 200
     
     data = response.get_json()
-    tss = data['weekly_targets']['tss']
+    # Response is now an array, test the first week
+    assert isinstance(data, list)
+    assert len(data) > 0
+    tss = data[0]['weekly_targets']['tss']
     assert isinstance(tss, (int, float))
     assert tss > 0

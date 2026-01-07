@@ -7,21 +7,25 @@ import { DateOnly } from '../utils/DateOnly';
 global.fetch = jest.fn();
 
 describe('WeeklySummary', () => {
-  const mockWeeklyTargets = {
-    weekly_targets: {
-      tss: 460,
-      total_time: {
-        hours: 11,
-        minutes: 33
-      },
-      by_discipline: {
-        swim: { hours: 1, minutes: 48 },
-        bike: { hours: 4, minutes: 30 },
-        run: { hours: 3, minutes: 15 },
-        strength: { hours: 2, minutes: 0 }
+  // Mock weekly targets now returned as an array with one entry per week
+  const mockWeeklyTargets = [
+    {
+      week_start_date: '2026-01-05',
+      weekly_targets: {
+        tss: 460,
+        total_time: {
+          hours: 11,
+          minutes: 33
+        },
+        by_discipline: {
+          swim: { hours: 1, minutes: 48 },
+          bike: { hours: 4, minutes: 30 },
+          run: { hours: 3, minutes: 15 },
+          strength: { hours: 2, minutes: 0 }
+        }
       }
     }
-  };
+  ];
 
   beforeEach(() => {
     // Reset mock before each test
@@ -51,7 +55,8 @@ describe('WeeklySummary', () => {
 
   describe('Empty state', () => {
     test('renders empty state when no workouts provided', () => {
-      render(<WeeklySummary workouts={[]} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={[]} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('Week Summary')).toBeInTheDocument();
       expect(screen.getByText('No workouts planned')).toBeInTheDocument();
@@ -60,12 +65,13 @@ describe('WeeklySummary', () => {
     });
 
     test('renders empty state when all workouts are unselected', () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ id: 1, isSelected: false }),
         createMockWorkout({ id: 2, isSelected: false }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('No workouts planned')).toBeInTheDocument();
       expect(screen.getByText('0h')).toBeInTheDocument();
@@ -74,11 +80,12 @@ describe('WeeklySummary', () => {
 
   describe('Total hours calculation', () => {
     test('calculates total hours correctly for single workout', () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ plannedDuration: 1.5 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('1h 30m');
@@ -86,13 +93,14 @@ describe('WeeklySummary', () => {
     });
 
     test('calculates total hours correctly for multiple workouts', () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ id: 1, plannedDuration: 1.5 }),
         createMockWorkout({ id: 2, plannedDuration: 2.25 }),
         createMockWorkout({ id: 3, plannedDuration: 0.75 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('4h 30m');
@@ -104,7 +112,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 2.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('2h');
@@ -115,7 +124,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 0.5 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('30m');
@@ -126,7 +136,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 1.0083333 }), // 1 hour 0.5 minutes
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       // Should round to 1h 1m or 1h
       const totalSection = screen.getByText('Total Hours').parentElement;
@@ -140,7 +151,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ id: 3, plannedDuration: 1.0, isSelected: true }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('2h');
@@ -154,7 +166,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ workoutType: 'Run', plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('By Type')).toBeInTheDocument();
       expect(screen.getByText('Run')).toBeInTheDocument();
@@ -169,7 +182,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ id: 3, workoutType: 'Run', plannedDuration: 1.5 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('Swim')).toBeInTheDocument();
       expect(screen.getByText('Bike')).toBeInTheDocument();
@@ -182,7 +196,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ id: 2, workoutType: 'Run', plannedDuration: 1.5 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       // Should show aggregated duration
       const runSection = screen.getByText('Run').closest('.breakdown-item');
@@ -198,7 +213,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ id: 4, workoutType: 'Strength', plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       // Check that workout type icons are present
       expect(screen.getByText('🏊')).toBeInTheDocument();
@@ -215,7 +231,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ id: 4, workoutType: 'Bike', plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const breakdownItems = screen.getAllByText(/Swim|Bike|Run|Strength/);
       const order = breakdownItems.map(item => item.textContent);
@@ -242,7 +259,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('500 m')).toBeInTheDocument();
     });
@@ -256,7 +274,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('2.5 km')).toBeInTheDocument();
     });
@@ -270,7 +289,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('5.0 km')).toBeInTheDocument();
     });
@@ -291,7 +311,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(screen.getByText('8.0 km')).toBeInTheDocument();
     });
@@ -305,7 +326,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const strengthSection = screen.getByText('Strength').closest('.breakdown-item');
       expect(strengthSection).not.toHaveTextContent('Distance:');
@@ -318,7 +340,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('0h');
@@ -329,7 +352,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: null }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('0h');
@@ -340,7 +364,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: undefined }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('0h');
@@ -351,7 +376,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 25.75 }), // 25 hours 45 minutes
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       const totalSection = screen.getByText('Total Hours').parentElement;
       expect(totalSection).toHaveTextContent('25h 45m');
@@ -365,7 +391,8 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       // Unknown types should not appear in ordered list, so won't be shown
       // But total hours should still work
@@ -377,14 +404,16 @@ describe('WeeklySummary', () => {
 
   describe('Component structure', () => {
     test('renders header correctly', () => {
-      render(<WeeklySummary workouts={[]} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      render(<WeeklySummary workouts={[]} weekStartDate={weekStartDate} />);
       
       const header = screen.getByText('Week Summary');
       expect(header.tagName).toBe('H3');
     });
 
     test('renders with correct CSS classes', () => {
-      const { container } = render(<WeeklySummary workouts={[]} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      const { container } = render(<WeeklySummary workouts={[]} weekStartDate={weekStartDate} />);
       
       expect(container.querySelector('.weekly-summary')).toBeInTheDocument();
       expect(container.querySelector('.summary-header')).toBeInTheDocument();
@@ -392,7 +421,8 @@ describe('WeeklySummary', () => {
     });
 
     test('does not render breakdown section when no workouts', () => {
-      const { container } = render(<WeeklySummary workouts={[]} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      const { container } = render(<WeeklySummary workouts={[]} weekStartDate={weekStartDate} />);
       
       expect(container.querySelector('.breakdown')).not.toBeInTheDocument();
     });
@@ -402,7 +432,8 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
-      const { container } = render(<WeeklySummary workouts={workouts} />);
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      const { container } = render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
       
       expect(container.querySelector('.breakdown')).toBeInTheDocument();
     });
@@ -410,11 +441,12 @@ describe('WeeklySummary', () => {
 
   describe('Weekly targets', () => {
     test('fetches and displays weekly targets', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       // Wait for the fetch to complete
       await waitFor(() => {
@@ -428,6 +460,7 @@ describe('WeeklySummary', () => {
     });
 
     test('displays TSS target when available', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ 
           plannedDuration: 1.0,
@@ -435,7 +468,7 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
         expect(screen.getByText(/TSS \(Training Stress Score\)/)).toBeInTheDocument();
@@ -447,6 +480,7 @@ describe('WeeklySummary', () => {
     });
 
     test('displays discipline-specific targets', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ 
           id: 1,
@@ -460,7 +494,7 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
         const swimSection = screen.getByText('Swim').closest('.breakdown-item');
@@ -476,6 +510,7 @@ describe('WeeklySummary', () => {
     });
 
     test('handles fetch error gracefully', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       // Mock fetch to return an error
       fetch.mockRejectedValueOnce(new Error('Network error'));
 
@@ -484,7 +519,7 @@ describe('WeeklySummary', () => {
       ];
 
       // Should not throw an error
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       // Component should still render without targets
       expect(screen.getByText('Week Summary')).toBeInTheDocument();
@@ -498,6 +533,7 @@ describe('WeeklySummary', () => {
     });
 
     test('handles API response error gracefully', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       // Mock fetch to return a failed response
       fetch.mockResolvedValueOnce({
         ok: false,
@@ -508,7 +544,7 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       // Component should still render without targets
       expect(screen.getByText('Week Summary')).toBeInTheDocument();
@@ -518,18 +554,19 @@ describe('WeeklySummary', () => {
       });
     });
 
-    test('does not display targets when API returns null', async () => {
-      // Mock fetch to return null targets
+    test('does not display targets when API returns empty array', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      // Mock fetch to return empty array (no matching week)
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ weekly_targets: null }),
+        json: async () => [],
       });
 
       const workouts = [
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
         expect(fetch).toHaveBeenCalled();
@@ -539,7 +576,24 @@ describe('WeeklySummary', () => {
       expect(screen.queryByText(/Target:/)).not.toBeInTheDocument();
     });
 
+    test('does not display targets when week does not match', async () => {
+      const weekStartDate = new DateOnly(2026, 2, 9); // Different week not in mock data
+      const workouts = [
+        createMockWorkout({ plannedDuration: 1.0 }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
+
+      await waitFor(() => {
+        expect(fetch).toHaveBeenCalled();
+      });
+
+      // Should not display target line since week doesn't match
+      expect(screen.queryByText(/Friel Target:/)).not.toBeInTheDocument();
+    });
+
     test('displays actual TSS calculation', async () => {
+      const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ 
           id: 1,
@@ -553,7 +607,7 @@ describe('WeeklySummary', () => {
         }),
       ];
 
-      render(<WeeklySummary workouts={workouts} />);
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
         // Actual TSS should be sum of all selected workouts
