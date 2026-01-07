@@ -1,28 +1,338 @@
-{
-  "week_start_date": "2026-01-05",
-  "weekly_targets": {
-    "tss": 460,
-    "total_time": {
-      "hours": 11,
-      "minutes": 33
-    },
-    "by_discipline": {
-      "swim": {
-        "hours": 1,
-        "minutes": 48
+[
+  {
+    "week_start_date": "2026-01-05",
+    "weekly_targets": {
+      "tss": 460,
+      "total_time": {
+        "hours": 11,
+        "minutes": 33
       },
-      "bike": {
-        "hours": 4,
-        "minutes": 30
-      },
-      "run": {
-        "hours": 3,
+      "by_discipline": {
+        "swim": {
+          "hours": 1,
+          "minutes": 48
+        },
+        "bike": {
+          "hours": 4,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 3,
+          "minutes": 15
+        },
+        "strength": {
+          "hours": 2,
+          "minutes": 0
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-01-12",
+    "weekly_targets": {
+      "tss": 569,
+      "total_time": {
+        "hours": 13,
         "minutes": 15
       },
-      "strength": {
-        "hours": 2,
-        "minutes": 0
+      "by_discipline": {
+        "swim": {
+          "hours": 2,
+          "minutes": 0
+        },
+        "bike": {
+          "hours": 5,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 3,
+          "minutes": 45
+        },
+        "strength": {
+          "hours": 2,
+          "minutes": 0
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-01-19",
+    "weekly_targets": {
+      "tss": 669,
+      "total_time": {
+        "hours": 15,
+        "minutes": 23
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 1,
+          "minutes": 53
+        },
+        "bike": {
+          "hours": 6,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 5,
+          "minutes": 0
+        },
+        "strength": {
+          "hours": 2,
+          "minutes": 0
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-01-26",
+    "weekly_targets": {
+      "tss": 293,
+      "total_time": {
+        "hours": 6,
+        "minutes": 43
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 1,
+          "minutes": 28
+        },
+        "bike": {
+          "hours": 2,
+          "minutes": 0
+        },
+        "run": {
+          "hours": 1,
+          "minutes": 45
+        },
+        "strength": {
+          "hours": 1,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-02-02",
+    "weekly_targets": {
+      "tss": 704,
+      "total_time": {
+        "hours": 13,
+        "minutes": 19
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 2,
+          "minutes": 14
+        },
+        "bike": {
+          "hours": 5,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 4,
+          "minutes": 45
+        },
+        "strength": {
+          "hours": 1,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-02-09",
+    "weekly_targets": {
+      "tss": 698,
+      "total_time": {
+        "hours": 14,
+        "minutes": 55
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 2,
+          "minutes": 55
+        },
+        "bike": {
+          "hours": 6,
+          "minutes": 0
+        },
+        "run": {
+          "hours": 4,
+          "minutes": 30
+        },
+        "strength": {
+          "hours": 1,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-02-16",
+    "weekly_targets": {
+      "tss": 749,
+      "total_time": {
+        "hours": 16,
+        "minutes": 2
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 3,
+          "minutes": 2
+        },
+        "bike": {
+          "hours": 7,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 4,
+          "minutes": 0
+        },
+        "strength": {
+          "hours": 1,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-02-23",
+    "weekly_targets": {
+      "tss": 411,
+      "total_time": {
+        "hours": 9,
+        "minutes": 43
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 1,
+          "minutes": 28
+        },
+        "bike": {
+          "hours": 4,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 2,
+          "minutes": 15
+        },
+        "strength": {
+          "hours": 1,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-03-02",
+    "weekly_targets": {
+      "tss": 766,
+      "total_time": {
+        "hours": 15,
+        "minutes": 35
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 3,
+          "minutes": 5
+        },
+        "bike": {
+          "hours": 7,
+          "minutes": 0
+        },
+        "run": {
+          "hours": 5,
+          "minutes": 0
+        },
+        "strength": {
+          "hours": 0,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-03-09",
+    "weekly_targets": {
+      "tss": 804,
+      "total_time": {
+        "hours": 16,
+        "minutes": 5
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 3,
+          "minutes": 20
+        },
+        "bike": {
+          "hours": 7,
+          "minutes": 0
+        },
+        "run": {
+          "hours": 5,
+          "minutes": 15
+        },
+        "strength": {
+          "hours": 0,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-03-16",
+    "weekly_targets": {
+      "tss": 836,
+      "total_time": {
+        "hours": 16,
+        "minutes": 45
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 3,
+          "minutes": 30
+        },
+        "bike": {
+          "hours": 7,
+          "minutes": 0
+        },
+        "run": {
+          "hours": 5,
+          "minutes": 45
+        },
+        "strength": {
+          "hours": 0,
+          "minutes": 30
+        }
+      }
+    }
+  },
+  {
+    "week_start_date": "2026-03-23",
+    "weekly_targets": {
+      "tss": 333,
+      "total_time": {
+        "hours": 7,
+        "minutes": 43
+      },
+      "by_discipline": {
+        "swim": {
+          "hours": 1,
+          "minutes": 28
+        },
+        "bike": {
+          "hours": 3,
+          "minutes": 30
+        },
+        "run": {
+          "hours": 2,
+          "minutes": 15
+        },
+        "strength": {
+          "hours": 0,
+          "minutes": 30
+        }
       }
     }
   }
-}
+]
