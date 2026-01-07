@@ -48,6 +48,10 @@ class Config:
         import logging
         logger = logging.getLogger(__name__)
         
+        # Debug: List all CALDAV environment variables
+        caldav_env_vars = {k: ('***' if 'PASSWORD' in k else v) for k, v in os.environ.items() if k.startswith('CALDAV')}
+        logger.info(f"CALDAV environment variables found: {caldav_env_vars}")
+        
         # Check environment variables first
         url = os.environ.get('CALDAV_URL')
         username = os.environ.get('CALDAV_USERNAME')
