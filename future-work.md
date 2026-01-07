@@ -35,7 +35,7 @@ So some of the future feature work here is to enable that plan.
 ## Integrations with other apps/platforms
 - Export to other platforms such as Garmin Connect or Hammerhead.
 - Import past workouts and planned workouts from TrainingPeaks.
-  - Currently the way to get data from TrainingPeaks is through input files like workouts.csv. These are downloaded from TrainingPeaks' app and I've manually copied them into the repository.
+  - Currently the way to get data from TrainingPeaks is through input files like workouts.csv. Take a look at the inputs directory for a couple of examples including both past workouts and planned (future) workouts. These are downloaded from TrainingPeaks' app and I've manually copied them into the repository.
   - Instead, we want to get new data by uploading similar files in the UI.
   - There should be a button in the UI to import workouts from TrainingPeaks.
   - This should work both for past workouts and future workouts.
