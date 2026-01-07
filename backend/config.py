@@ -52,6 +52,10 @@ class Config:
         caldav_env_vars = {k: ('***' if 'PASSWORD' in k else v) for k, v in os.environ.items() if k.startswith('CALDAV')}
         logger.info(f"CALDAV environment variables found: {caldav_env_vars}")
         
+        # Debug: List ALL environment variables to check for misspellings
+        all_env_keys = sorted([k for k in os.environ.keys() if 'CALDAV' in k.upper() or 'CALENDAR' in k.upper()])
+        logger.info(f"All env vars containing 'CALDAV' or 'CALENDAR': {all_env_keys}")
+        
         # Check environment variables first
         url = os.environ.get('CALDAV_URL')
         username = os.environ.get('CALDAV_USERNAME')
