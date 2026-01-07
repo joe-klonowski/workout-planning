@@ -52,6 +52,7 @@ So some of the future feature work here is to enable that plan.
 - Calendar.js class is getting pretty God-like. Refactor it into smaller parts. Likely the best first cut is to create a separate component/UI element to represent a single day.
 
 ## Known issues
+- Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
 - Export to Apple Cal doesn't work in prod, likely because it's missing the necessary file/environment variables with the Apple Cal config.
 
 ## Other
