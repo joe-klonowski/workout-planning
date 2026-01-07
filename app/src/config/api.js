@@ -38,8 +38,11 @@ export const API_ENDPOINTS = {
 export const apiCall = (url, options = {}) => {
   const token = localStorage.getItem('auth_token');
   
+  // Don't set Content-Type for FormData - let browser set it with boundary
+  const isFormData = options.body instanceof FormData;
+  
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
   

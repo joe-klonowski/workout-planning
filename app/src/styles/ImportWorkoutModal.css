@@ -1,0 +1,183 @@
+.import-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.import-description {
+  margin-bottom: 1.5rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.file-upload-area {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-label {
+  display: block;
+  padding: 2rem;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #f8f9fa;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.file-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  font-size: 2rem;
+}
+
+.upload-text {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.file-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-icon {
+  font-size: 2rem;
+}
+
+.file-name {
+  color: #333;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.file-size {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: #efe;
+  border: 1px solid #cfc;
+  color: #3c3;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.success-message::before {
+  content: '✓';
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.import-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.import-info h3 {
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem 0;
+  color: #333;
+}
+
+.import-info ol {
+  margin: 0 0 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.import-info li {
+  margin: 0.25rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.import-note {
+  margin: 0.75rem 0 0 0;
+  padding: 0.5rem;
+  background-color: #fff9e6;
+  border-left: 3px solid #ffa500;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.import-note strong {
+  color: #333;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-button,
+.import-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #d0d0d0;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.import-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.import-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.import-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #6c757d;
+}

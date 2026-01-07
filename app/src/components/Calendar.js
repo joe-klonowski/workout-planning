@@ -6,6 +6,7 @@ import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutCard from './WorkoutCard';
 import WorkoutDetailModal from './WorkoutDetailModal';
 import AddWorkoutModal from './AddWorkoutModal';
+import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import '../styles/Calendar.css';
 
@@ -20,16 +21,18 @@ import '../styles/Calendar.css';
  * @param {Function} onWorkoutLocationChange - Callback for when user changes workout location
  * @param {Function} onExportToCalendar - Callback for exporting workouts to calendar
  * @param {Function} onAddCustomWorkout - Callback for adding a custom workout
+ * @param {Function} onImportWorkouts - Callback for importing workouts from CSV file
  */
 function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts }) {
   const [currentDate, setCurrentDate] = useState(initialDate.toDate());
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
+  const [isImportWorkoutModalOpen, setIsImportWorkoutModalOpen] = useState(false);
   const [addWorkoutInitialDate, setAddWorkoutInitialDate] = useState(null);
   const [draggedWorkout, setDraggedWorkout] = useState(null);
   const [showTimeSlots, setShowTimeSlots] = useState(false); // Separate state to control time slot visibility
@@ -544,6 +547,12 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           </div>
           <div className="header-right">
             <button 
+              onClick={() => setIsImportWorkoutModalOpen(true)} 
+              className="import-workout-button"
+            >
+              📥 Import from TrainingPeaks
+            </button>
+            <button 
               onClick={() => {
                 setAddWorkoutInitialDate(null);
                 setIsAddWorkoutModalOpen(true);
@@ -732,6 +741,12 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
         onSave={onAddCustomWorkout}
         initialDate={addWorkoutInitialDate}
       />
+      
+      <ImportWorkoutModal
+        isOpen={isImportWorkoutModalOpen}
+        onClose={() => setIsImportWorkoutModalOpen(false)}
+        onImport={onImportWorkouts}
+      />
     </div>
 
     {viewMode === 'week' && (
@@ -781,6 +796,7 @@ Calendar.propTypes = {
   onWorkoutLocationChange: PropTypes.func,
   onExportToCalendar: PropTypes.func,
   onAddCustomWorkout: PropTypes.func,
+  onImportWorkouts: PropTypes.func,
 };
 
 Calendar.defaultProps = {

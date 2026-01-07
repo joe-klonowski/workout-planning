@@ -359,6 +359,64 @@ function App() {
     }
   };
 
+  // Handle importing workouts from CSV file
+  const handleImportWorkouts = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiCall(API_ENDPOINTS.IMPORT_WORKOUTS, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header - let browser set it with boundary for FormData
+        headers: {},
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to import workouts: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Reload workouts to show newly imported ones
+      const workoutsResponse = await apiCall(API_ENDPOINTS.WORKOUTS);
+      if (!workoutsResponse.ok) {
+        throw new Error(`Failed to reload workouts: ${workoutsResponse.status}`);
+      }
+      
+      const data = await workoutsResponse.json();
+      const transformedWorkouts = data.workouts.map(workout => {
+        const displayDate = workout.selection?.currentPlanDay || workout.originallyPlannedDay;
+        const [year, month, day] = displayDate.split('-').map(Number);
+        
+        return {
+          id: workout.id,
+          title: workout.title,
+          workoutType: workout.workoutType,
+          workoutDescription: workout.workoutDescription,
+          plannedDuration: workout.plannedDuration,
+          plannedDistanceInMeters: workout.plannedDistanceInMeters,
+          tss: workout.tss,
+          originallyPlannedDay: workout.originallyPlannedDay,
+          currentPlanDay: workout.selection?.currentPlanDay,
+          workoutDate: new DateOnly(year, month, day),
+          isSelected: workout.selection?.isSelected ?? true,
+          timeOfDay: workout.selection?.timeOfDay,
+          workoutLocation: workout.selection?.workoutLocation,
+          isCustom: workout.isCustom || false,
+        };
+      });
+      
+      setWorkouts(transformedWorkouts);
+      
+      return result;
+    } catch (err) {
+      console.error('Error importing workouts:', err);
+      throw err;
+    }
+  };
+
   // Count custom workouts
   const customWorkoutsCount = workouts.filter(w => w.isCustom).length;
 
@@ -401,6 +459,7 @@ function App() {
               onWorkoutLocationChange={handleWorkoutLocationChange}
               onExportToCalendar={handleExportToCalendar}
               onAddCustomWorkout={handleAddCustomWorkout}
+              onImportWorkouts={handleImportWorkouts}
             />
           </>
         )}
