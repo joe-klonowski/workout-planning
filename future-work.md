@@ -34,6 +34,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Integrations with other apps/platforms
 - Export to other platforms such as Garmin Connect or Hammerhead.
+- Import from TrainingPeaks UI feature should save the CSV file to local storage on the backend, so that I can easily inspect it later. Probably this means we need a directory to hold these import files and a structure and naming schemes in that directory to be able to easily tell when each file was imported and which file is the most recent.
 
 ## Testing
 - Consider adding contract tests for the API boundary between the frontend and backend.
