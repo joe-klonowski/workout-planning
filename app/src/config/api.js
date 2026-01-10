@@ -24,6 +24,11 @@ export const API_ENDPOINTS = {
   EXPORT_TO_CALENDAR: `${API_BASE_URL}/api/export/calendar`,
   TRI_CLUB_SCHEDULE: `${API_BASE_URL}/api/tri-club-schedule`,
   WEEKLY_TARGETS: `${API_BASE_URL}/api/weekly-targets`,
+  
+  // Weather endpoints
+  WEATHER: `${API_BASE_URL}/api/weather`,
+  WEATHER_BY_DATE: (date) => `${API_BASE_URL}/api/weather/${date}`,
+  WEATHER_BY_TIME_OF_DAY: (date) => `${API_BASE_URL}/api/weather/by-time-of-day/${date}`,
 };
 
 /**

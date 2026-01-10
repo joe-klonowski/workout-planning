@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
+import WeatherWidget from './WeatherWidget';
 import '../styles/WorkoutDetailModal.css';
 
 /**
@@ -122,6 +123,12 @@ function WorkoutDetailModal({ workout, isOpen, onClose, onWorkoutLocationChange 
               </div>
             </div>
           )}
+
+          <WeatherWidget 
+            date={workout.workoutDate?.toISOString()} 
+            workoutType={workout.workoutType}
+            isOpen={true}
+          />
 
           {workout.workoutDescription && (
             <div className="detail-section">
