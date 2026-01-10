@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiCall } from '../config/api';
+import { apiCall, API_ENDPOINTS } from '../config/api';
 import '../styles/Login.css';
 
 function Login({ onLoginSuccess }) {
@@ -16,19 +16,28 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await apiCall('/api/auth/login', {
+      console.log('📤 Attempting login with username:', username);
+      console.log('📤 Request body: { username, password: (redacted) }');
+      
+      const response = await apiCall(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'server': response.headers.get('server')
+      });
+      
+      const data = await response.json();
+      console.log('📥 Response body:', data);
+
       if (!response.ok) {
-        const data = await response.json();
-        setError(data.error || 'An error occurred');
+        setError(data.error || `An error occurred (status: ${response.status})`);
         setLoading(false);
         return;
       }
-
-      const data = await response.json();
       
       // Store token in localStorage
       localStorage.setItem('auth_token', data.token);
