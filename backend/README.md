@@ -82,6 +82,31 @@ pytest -m "" -v
 - Delete the calendar when tests complete
 - Your other calendars are never modified
 
+#### Weather API Integration Tests
+
+The weather integration tests connect to the real Open-Meteo weather API to verify it's working. These tests are also optional and skipped by default.
+
+**Run weather integration tests:**
+```bash
+# Run only weather integration tests
+pytest test_weather_integration.py -m integration -v
+
+# Run all integration tests (both CalDAV and weather)
+pytest -m integration -v
+```
+
+**What weather integration tests verify:**
+- Open-Meteo API is accessible and responding
+- Daily forecast retrieval works correctly
+- Date range forecast retrieval works
+- Hourly forecast retrieval works
+- Time-of-day forecast grouping (morning/afternoon/evening) works
+- Weather codes and descriptions are valid
+- Chicago location is correct
+- API response times are acceptable
+
+**Note:** Weather tests use live API calls and are network-dependent. They'll be skipped if the API is unavailable.
+
 ## API Endpoints
 
 ### Workouts
@@ -102,6 +127,17 @@ pytest -m "" -v
 ### Utilities
 - `GET /api/health` - Health check
 - `GET /api/stats` - Get workout statistics
+
+### Weather
+- `GET /api/weather` - Get daily weather forecast for a date range
+  - Query params: `start_date`, `end_date` (ISO format, optional - defaults to today + 7 days)
+  - Returns: latitude, longitude, timezone, and arrays of dates, temperatures, rain probability, wind speed, weather codes
+- `GET /api/weather/<date>` - Get daily weather for a specific date
+  - Path param: date (ISO format, e.g., `2026-01-10`)
+  - Returns: date, temperature, rain probability, wind speed, weather code, and weather description
+- `GET /api/weather/by-time-of-day/<date>` - Get weather grouped by time of day (morning, afternoon, evening)
+  - Path param: date (ISO format)
+  - Returns: morning, afternoon, and evening forecasts with temperature, rain probability, wind speed, weather code, and description
 
 ## Database Schema
 

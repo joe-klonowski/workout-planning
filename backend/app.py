@@ -577,6 +577,128 @@ def register_routes(app):
             logger.error(f"Error loading weekly targets: {e}", exc_info=True)
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/weather', methods=['GET'])
+    def get_weather():
+        """
+        Get weather forecast for Chicago
+        Query parameters:
+            - start_date: ISO format date (default: today)
+            - end_date: ISO format date (default: 7 days from start)
+        
+        Returns: {
+            "latitude": 41.795604164195446,
+            "longitude": -87.57838836383468,
+            "timezone": "America/Chicago",
+            "dates": ["2026-01-10", "2026-01-11"],
+            "temperatures": [32.5, 35.2],
+            "rain_probability": [20, 60],
+            "windspeed": [10.5, 15.3],
+            "weather_codes": [2, 51]
+        }
+        """
+        try:
+            from weather_client import WeatherClient, WeatherAPIError
+            
+            # Get date parameters from query string
+            start_date_str = request.args.get('start_date')
+            end_date_str = request.args.get('end_date')
+            
+            start_date = None
+            end_date = None
+            
+            if start_date_str:
+                start_date = datetime.fromisoformat(start_date_str).date()
+            if end_date_str:
+                end_date = datetime.fromisoformat(end_date_str).date()
+            
+            client = WeatherClient()
+            forecast = client.get_forecast(start_date, end_date)
+            
+            return jsonify(forecast), 200
+        
+        except WeatherAPIError as e:
+            logger.warning(f"Weather API error: {e}")
+            return jsonify({'error': str(e)}), 503
+        except ValueError as e:
+            logger.warning(f"Invalid date format: {e}")
+            return jsonify({'error': f'Invalid date format. Use ISO format (YYYY-MM-DD): {e}'}), 400
+        except Exception as e:
+            logger.error(f"Error fetching weather: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/weather/<date_str>', methods=['GET'])
+    def get_daily_weather(date_str):
+        """
+        Get weather forecast for a specific date
+        
+        Returns: {
+            "date": "2026-01-10",
+            "temperature": 35.5,
+            "rain_probability": 40,
+            "windspeed": 12.3,
+            "weather_code": 61,
+            "description": "Slight rain"
+        }
+        """
+        try:
+            from weather_client import WeatherClient, WeatherAPIError
+            
+            forecast_date = datetime.fromisoformat(date_str).date()
+            
+            client = WeatherClient()
+            daily_forecast = client.get_daily_forecast(forecast_date)
+            
+            return jsonify(daily_forecast), 200
+        
+        except WeatherAPIError as e:
+            logger.warning(f"Weather API error: {e}")
+            return jsonify({'error': str(e)}), 503
+        except ValueError as e:
+            logger.warning(f"Invalid date format: {e}")
+            return jsonify({'error': f'Invalid date format. Use ISO format (YYYY-MM-DD): {e}'}), 400
+        except Exception as e:
+            logger.error(f"Error fetching daily weather: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/weather/by-time-of-day/<date_str>', methods=['GET'])
+    def get_weather_by_time_of_day(date_str):
+        """
+        Get weather forecast grouped by time of day (morning, afternoon, evening)
+        
+        Returns: {
+            "date": "2026-01-10",
+            "morning": {
+                "temperature": 32.5,
+                "rain_probability": 20,
+                "windspeed": 10.5,
+                "weather_code": 2,
+                "description": "Partly cloudy"
+            },
+            "afternoon": {...},
+            "evening": {...}
+        }
+        """
+        try:
+            from weather_client import WeatherClient, WeatherAPIError
+            from datetime import datetime
+            
+            forecast_date = datetime.fromisoformat(date_str).date()
+            
+            client = WeatherClient()
+            forecast = client.get_weather_by_time_of_day(forecast_date)
+            
+            return jsonify(forecast), 200
+        
+        except WeatherAPIError as e:
+            logger.warning(f"Weather API error: {e}")
+            return jsonify({'error': str(e)}), 503
+        except ValueError as e:
+            logger.warning(f"Invalid date format: {e}")
+            return jsonify({'error': f'Invalid date format. Use ISO format (YYYY-MM-DD): {e}'}), 400
+        except Exception as e:
+            logger.error(f"Error fetching time-of-day weather: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
+
 
 # ============= CALDAV EXPORT ENDPOINTS =============
 
