@@ -16,7 +16,7 @@ describe('WeatherWidget', () => {
     jest.clearAllMocks();
   });
 
-  test('should render nothing when isOpen is false', () => {
+  test('should render nothing when isOpen is false', async () => {
     const { container } = render(
       <WeatherWidget 
         date="2026-01-10" 
@@ -24,10 +24,12 @@ describe('WeatherWidget', () => {
         isOpen={false} 
       />
     );
-    expect(container.firstChild).toBeNull();
+    await waitFor(() => {
+      expect(container.firstChild).toBeNull();
+    });
   });
 
-  test('should render nothing when date is not provided', () => {
+  test('should render nothing when date is not provided', async () => {
     const { container } = render(
       <WeatherWidget 
         date={null} 
@@ -35,10 +37,12 @@ describe('WeatherWidget', () => {
         isOpen={true} 
       />
     );
-    expect(container.firstChild).toBeNull();
+    await waitFor(() => {
+      expect(container.firstChild).toBeNull();
+    });
   });
 
-  test('should show loading state while fetching', () => {
+  test('should show loading state while fetching', async () => {
     apiCall.mockReturnValueOnce(new Promise(() => {})); // Never resolves
     
     render(
@@ -49,7 +53,9 @@ describe('WeatherWidget', () => {
       />
     );
     
-    expect(screen.getByText('Loading weather...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Loading weather...')).toBeInTheDocument();
+    });
   });
 
   test('should display weather data when fetch succeeds', async () => {

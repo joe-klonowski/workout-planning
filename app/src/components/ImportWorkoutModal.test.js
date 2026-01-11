@@ -11,7 +11,7 @@ describe('ImportWorkoutModal', () => {
     jest.clearAllMocks();
   });
 
-  test('renders nothing when not open', () => {
+  test('renders nothing when not open', async () => {
     const { container } = render(
       <ImportWorkoutModal
         isOpen={false}
@@ -19,10 +19,12 @@ describe('ImportWorkoutModal', () => {
         onImport={mockOnImport}
       />
     );
-    expect(container).toBeEmptyDOMElement();
+    await waitFor(() => {
+      expect(container).toBeEmptyDOMElement();
+    });
   });
 
-  test('renders modal when open', () => {
+  test('renders modal when open', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -31,13 +33,16 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    expect(screen.getByText('Import Workouts from TrainingPeaks')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Import Workouts from TrainingPeaks')).toBeInTheDocument();
+    });
+    
     expect(screen.getByText(/Upload a CSV file exported from TrainingPeaks/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Import Workouts' })).toBeInTheDocument();
   });
 
-  test('import button is disabled when no file is selected', () => {
+  test('import button is disabled when no file is selected', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -46,11 +51,13 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    const importButton = screen.getByRole('button', { name: 'Import Workouts' });
-    expect(importButton).toBeDisabled();
+    await waitFor(() => {
+      const importButton = screen.getByRole('button', { name: 'Import Workouts' });
+      expect(importButton).toBeDisabled();
+    });
   });
 
-  test('calls onClose when cancel button is clicked', () => {
+  test('calls onClose when cancel button is clicked', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -59,11 +66,14 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    });
+    
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onClose when close button (×) is clicked', () => {
+  test('calls onClose when close button (×) is clicked', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -72,11 +82,14 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    fireEvent.click(screen.getByLabelText('Close'));
+    await waitFor(() => {
+      fireEvent.click(screen.getByLabelText('Close'));
+    });
+    
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onClose when clicking outside modal', () => {
+  test('calls onClose when clicking outside modal', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -85,12 +98,15 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    const overlay = screen.getByText('Import Workouts from TrainingPeaks').closest('.modal-overlay');
-    fireEvent.click(overlay);
+    await waitFor(() => {
+      const overlay = screen.getByText('Import Workouts from TrainingPeaks').closest('.modal-overlay');
+      fireEvent.click(overlay);
+    });
+    
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  test('does not close when clicking inside modal content', () => {
+  test('does not close when clicking inside modal content', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -99,12 +115,15 @@ describe('ImportWorkoutModal', () => {
       />
     );
     
-    const modalContent = screen.getByText('Import Workouts from TrainingPeaks').closest('.modal-content');
-    fireEvent.click(modalContent);
+    await waitFor(() => {
+      const modalContent = screen.getByText('Import Workouts from TrainingPeaks').closest('.modal-content');
+      fireEvent.click(modalContent);
+    });
+    
     expect(mockOnClose).not.toHaveBeenCalled();
   });
 
-  test('shows error when non-CSV file is selected', () => {
+  test('shows error when non-CSV file is selected', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -116,12 +135,14 @@ describe('ImportWorkoutModal', () => {
     const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/Click to select a CSV file/);
     
-    fireEvent.change(input, { target: { files: [file] } });
+    await waitFor(() => {
+      fireEvent.change(input, { target: { files: [file] } });
+    });
     
     expect(screen.getByText('Please select a CSV file')).toBeInTheDocument();
   });
 
-  test('accepts CSV file selection', () => {
+  test('accepts CSV file selection', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -133,13 +154,15 @@ describe('ImportWorkoutModal', () => {
     const file = new File(['test,content'], 'workouts.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(/Click to select a CSV file/);
     
-    fireEvent.change(input, { target: { files: [file] } });
+    await waitFor(() => {
+      fireEvent.change(input, { target: { files: [file] } });
+      expect(screen.getByText('workouts.csv')).toBeInTheDocument();
+    });
     
-    expect(screen.getByText('workouts.csv')).toBeInTheDocument();
     expect(screen.getByText(/0.0 KB/)).toBeInTheDocument();
   });
 
-  test('import button is enabled when CSV file is selected', () => {
+  test('import button is enabled when CSV file is selected', async () => {
     render(
       <ImportWorkoutModal
         isOpen={true}
@@ -151,10 +174,11 @@ describe('ImportWorkoutModal', () => {
     const file = new File(['test,content'], 'workouts.csv', { type: 'text/csv' });
     const input = screen.getByLabelText(/Click to select a CSV file/);
     
-    fireEvent.change(input, { target: { files: [file] } });
-    
-    const importButton = screen.getByRole('button', { name: 'Import Workouts' });
-    expect(importButton).not.toBeDisabled();
+    await waitFor(() => {
+      fireEvent.change(input, { target: { files: [file] } });
+      const importButton = screen.getByRole('button', { name: 'Import Workouts' });
+      expect(importButton).not.toBeDisabled();
+    });
   });
 
   test('shows error when trying to import without file', async () => {

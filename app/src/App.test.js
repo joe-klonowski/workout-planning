@@ -41,17 +41,12 @@ afterEach(() => {
 test('renders the Workout Planner title', async () => {
   render(<App />);
   
-  await waitFor(() => {
-    const titleElement = screen.getByText('Workout Planner');
-    expect(titleElement).toBeInTheDocument();
-  });
+  // This should resolve quickly (10s of ms, not seconds)
+  expect(await screen.findByText('Workout Planner')).toBeInTheDocument();
 });
 
 test('renders the app description', async () => {
   render(<App />);
   
-  await waitFor(() => {
-    const descriptionElement = screen.getByText('Plan your workouts from TrainingPeaks');
-    expect(descriptionElement).toBeInTheDocument();
-  });
+  expect(await screen.findByText('Plan your workouts from TrainingPeaks')).toBeInTheDocument();
 });

@@ -226,8 +226,9 @@ describe('DayTimeSlot Component', () => {
   test('should handle weather API errors gracefully', async () => {
     apiCall.mockRejectedValueOnce(new Error('API Error'));
 
+    let component;
     await act(async () => {
-      render(
+      component = render(
         <DayTimeSlot
           dayObj={mockDayObj}
           timeSlot="morning"
@@ -243,11 +244,12 @@ describe('DayTimeSlot Component', () => {
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
+      
+      // Wait for the error to be caught and state to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
 
     // Should still render the header even if weather fails
-    await waitFor(() => {
-      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
-    });
+    expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
   });
 });
