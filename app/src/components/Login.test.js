@@ -37,6 +37,8 @@ describe('Login Component', () => {
     const mockOnLoginSuccess = jest.fn();
     apiCall.mockResolvedValueOnce({
       ok: true,
+      status: 200,
+      headers: new Map([['content-type', 'application/json']]),
       json: async () => ({
         token: 'test-token',
         user: { id: 1, username: 'joe' },
@@ -55,7 +57,7 @@ describe('Login Component', () => {
 
     await waitFor(() => {
       expect(apiCall).toHaveBeenCalledWith(
-        '/api/auth/login',
+        'http://localhost:5000/api/auth/login',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ username: 'joe', password: 'password123' }),
@@ -68,6 +70,8 @@ describe('Login Component', () => {
     const mockOnLoginSuccess = jest.fn();
     apiCall.mockResolvedValueOnce({
       ok: true,
+      status: 200,
+      headers: new Map([['content-type', 'application/json']]),
       json: async () => ({
         token: 'test-token',
         user: { id: 1, username: 'joe' },
@@ -89,6 +93,8 @@ describe('Login Component', () => {
     const mockOnLoginSuccess = jest.fn();
     apiCall.mockResolvedValueOnce({
       ok: true,
+      status: 200,
+      headers: new Map([['content-type', 'application/json']]),
       json: async () => ({
         token: 'test-token',
         user: { id: 1, username: 'joe' },
@@ -110,6 +116,8 @@ describe('Login Component', () => {
     const mockOnLoginSuccess = jest.fn();
     apiCall.mockResolvedValueOnce({
       ok: false,
+      status: 401,
+      headers: new Map([['content-type', 'application/json']]),
       json: async () => ({ error: 'Invalid credentials' }),
     });
 
