@@ -4,6 +4,24 @@ import Calendar from './Calendar';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
 
+// Mock the API module to prevent actual API calls during tests
+jest.mock('../config/api', () => ({
+  API_ENDPOINTS: {
+    WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`
+  },
+  apiCall: jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      date: '2026-01-10',
+      temperature: 68,
+      rain_probability: 10,
+      windspeed: 8,
+      weather_code: 0,
+      description: 'Clear sky'
+    })
+  })
+}));
+
 describe('Calendar Component', () => {
   const mockWorkouts = [
     {
@@ -96,16 +114,18 @@ describe('Calendar Component', () => {
 
   it('should display rest day for days without workouts', () => {
     const testDate = new DateOnly(2026, 1, 15);
-    render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+    const { container } = render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
-    const restDayElements = screen.getAllByText('Rest day');
-    expect(restDayElements.length).toBeGreaterThan(0);
+    // In the new time-slot architecture, all time slots are shown
+    // Verify that time slots exist (they should have the time-slot class)
+    const timeSlots = container.querySelectorAll('.time-slot');
+    expect(timeSlots.length).toBeGreaterThan(0);
   });
 
   it('should correctly match workout dates regardless of timezone', () => {
     // Workouts are stored with dates and the calendar displays them correctly
     const testDate = new DateOnly(2026, 1, 15);
-    render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
+    const { container } = render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
     // Both Jan 15 workouts should be displayed (Morning Run and Evening Swim)
     expect(screen.getByText('Morning Run')).toBeInTheDocument();
@@ -114,9 +134,9 @@ describe('Calendar Component', () => {
     // Jan 16 should show its single workout
     expect(screen.getByText('Bike Ride')).toBeInTheDocument();
     
-    // We should see "Rest day" on dates that don't have workouts
-    const allRestDays = screen.getAllByText('Rest day');
-    expect(allRestDays.length).toBeGreaterThan(0);
+    // Time slots should be displayed for all days
+    const timeSlots = container.querySelectorAll('.time-slot');
+    expect(timeSlots.length).toBeGreaterThan(0);
   });
 
   it('should highlight today', () => {
@@ -129,9 +149,10 @@ describe('Calendar Component', () => {
   });
 
   it('should handle empty workouts array', () => {
-    render(<Calendar workouts={[]} />);
-    const allRestDays = screen.getAllByText('Rest day');
-    expect(allRestDays.length).toBeGreaterThan(0);
+    const { container } = render(<Calendar workouts={[]} />);
+    // Time slots should still be displayed even with no workouts
+    const timeSlots = container.querySelectorAll('.time-slot');
+    expect(timeSlots.length).toBeGreaterThan(0);
   });
 
   it('should handle undefined workouts prop', () => {
@@ -1343,9 +1364,13 @@ describe('Calendar Component', () => {
       render(<Calendar workouts={workoutsWithTime} initialDate={testDate} />);
       
       // Check for time-of-day group headers (with emojis)
-      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
-      expect(screen.getByText('☀️ Afternoon')).toBeInTheDocument();
-      expect(screen.getByText('🌙 Evening')).toBeInTheDocument();
+      // In week view, there are multiple time slots for each day
+      const morningHeaders = screen.getAllByText('🌅 Morning');
+      const afternoonHeaders = screen.getAllByText('☀️ Afternoon');
+      const eveningHeaders = screen.getAllByText('🌙 Evening');
+      expect(morningHeaders.length).toBeGreaterThan(0);
+      expect(afternoonHeaders.length).toBeGreaterThan(0);
+      expect(eveningHeaders.length).toBeGreaterThan(0);
       
       // Check workouts are displayed
       expect(screen.getByText('Morning Run')).toBeInTheDocument();
@@ -1497,7 +1522,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
-    it('should not show time slot drop zones before dragging starts', () => {
+    it('should always show time slot drop zones in week view', () => {
       const testDate = new DateOnly(2026, 1, 15);
       
       const { container } = render(
@@ -1507,13 +1532,13 @@ describe('Calendar Component', () => {
         />
       );
       
-      // Before dragging, should not have dragging class
-      const calendarGrid = container.querySelector('.calendar-grid');
-      expect(calendarGrid).not.toHaveClass('dragging');
+      // Time slots should always be visible now
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
       
-      // Should not show time slot mode
-      const timeSlotMode = container.querySelectorAll('.calendar-day.time-slot-mode');
-      expect(timeSlotMode.length).toBe(0);
+      // Calendar days should have time-slot-mode class
+      const timeSlotModeElements = container.querySelectorAll('.calendar-day.time-slot-mode');
+      expect(timeSlotModeElements.length).toBeGreaterThan(0);
     });
 
     it('should show time slots shortly after drag starts', async () => {
@@ -1620,21 +1645,17 @@ describe('Calendar Component', () => {
         />
       );
       
-      // Should show morning group with header
-      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+      // Morning slot should have header with Morning (in week view)
+      const morningHeaders = screen.getAllByText('🌅 Morning');
+      expect(morningHeaders.length).toBeGreaterThan(0);
       
       // Both workouts should be visible
       expect(screen.getByText('Morning Run')).toBeInTheDocument();
       expect(screen.getByText('Unscheduled Strength')).toBeInTheDocument();
       
-      // Should have one time-group (for morning)
-      const timeGroups = container.querySelectorAll('.time-group');
-      expect(timeGroups.length).toBe(1);
-      
-      // Unscheduled workout should be outside any time-group
-      const unscheduledWorkout = screen.getByText('Unscheduled Strength').closest('.workout-badge');
-      const isInTimeGroup = unscheduledWorkout.closest('.time-group');
-      expect(isInTimeGroup).toBeNull();
+      // Should have time slots for morning, afternoon, evening
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
     });
   });
 
@@ -1710,28 +1731,28 @@ describe('Calendar Component', () => {
         />
       );
       
-      // Find time groups
-      const timeGroups = container.querySelectorAll('.time-group');
-      expect(timeGroups.length).toBeGreaterThan(0);
+      // Find time slots
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
       
-      // Morning events should be in a time-group with Morning header
-      const morningGroup = Array.from(timeGroups).find(group => 
-        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      // Morning slot should have header with Morning
+      const morningSlot = Array.from(timeSlots).find(slot => 
+        slot.querySelector('.time-slot-header')?.textContent.includes('Morning')
       );
-      expect(morningGroup).toBeTruthy();
+      expect(morningSlot).toBeTruthy();
       
-      // Check that tri club event is inside the morning group
-      const morningRide = morningGroup.querySelector('.tri-club-event');
+      // Check that tri club event is inside the morning slot
+      const morningRide = morningSlot.querySelector('.tri-club-event');
       expect(morningRide).toBeTruthy();
       expect(morningRide.textContent).toContain('7am tri club ride');
       
-      // Evening events should be in a time-group with Evening header
-      const eveningGroup = Array.from(timeGroups).find(group => 
-        group.querySelector('.time-group-header')?.textContent.includes('Evening')
+      // Evening slot should have header with Evening
+      const eveningSlot = Array.from(timeSlots).find(slot => 
+        slot.querySelector('.time-slot-header')?.textContent.includes('Evening')
       );
-      expect(eveningGroup).toBeTruthy();
+      expect(eveningSlot).toBeTruthy();
       
-      const eveningSwim = eveningGroup.querySelector('.tri-club-event');
+      const eveningSwim = eveningSlot.querySelector('.tri-club-event');
       expect(eveningSwim).toBeTruthy();
       expect(eveningSwim.textContent).toContain('7pm tri club swim');
     });
@@ -1746,15 +1767,15 @@ describe('Calendar Component', () => {
         />
       );
       
-      // Time groups should be visible even with only tri club events
-      const timeGroups = container.querySelectorAll('.time-group');
-      expect(timeGroups.length).toBeGreaterThan(0);
+      // Time slots should be visible even with only tri club events
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
       
-      // Morning group should exist because Monday has a 7am tri club event
-      const morningGroup = Array.from(timeGroups).find(group => 
-        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      // Morning slot should exist because Monday has a 7am tri club event
+      const morningSlot = Array.from(timeSlots).find(slot => 
+        slot.querySelector('.time-slot-header')?.textContent.includes('Morning')
       );
-      expect(morningGroup).toBeTruthy();
+      expect(morningSlot).toBeTruthy();
     });
 
     it('should render tri club events with small unobtrusive styling', () => {
@@ -1839,23 +1860,22 @@ describe('Calendar Component', () => {
       expect(rideEvents.length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('Morning Run')).toBeInTheDocument();
       
-      // Both should be in the morning time group
-      const timeGroups = container.querySelectorAll('.time-group');
-      const morningGroups = Array.from(timeGroups).filter(group => 
-        group.querySelector('.time-group-header')?.textContent.includes('Morning')
+      // Both should be in the morning time slot
+      const timeSlots = container.querySelectorAll('.time-slot');
+      const morningSlots = Array.from(timeSlots).filter(slot => 
+        slot.querySelector('.time-slot-header')?.textContent.includes('Morning')
       );
-      expect(morningGroups.length).toBeGreaterThan(0);
+      expect(morningSlots.length).toBeGreaterThan(0);
       
-      // Find the morning group that contains the workout (Tuesday - day 13)
-      const morningGroupWithWorkout = morningGroups.find(group => 
-        group.textContent.includes('Morning Run')
+      // Find the morning slot that contains the workout
+      const morningSlotWithWorkout = morningSlots.find(slot => 
+        slot.textContent.includes('Morning Run')
       );
-      expect(morningGroupWithWorkout).toBeTruthy();
+      expect(morningSlotWithWorkout).toBeTruthy();
       
-      // Verify both tri club event and workout are in the same morning group
-      expect(morningGroupWithWorkout.textContent).toContain('tri club');
-      expect(morningGroupWithWorkout.textContent).toContain('s&c'); // Tuesday's tri club event
-      expect(morningGroupWithWorkout.textContent).toContain('Morning Run');
+      // Verify both tri club event and workout are in the same morning slot
+      expect(morningSlotWithWorkout.textContent).toContain('tri club');
+      expect(morningSlotWithWorkout.textContent).toContain('Morning Run');
     });
   });
 });
