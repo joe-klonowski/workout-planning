@@ -42,7 +42,7 @@ describe('DayTimeSlot Component', () => {
   const mockOnDrop = jest.fn();
 
   test('should render time slot header', async () => {
-    apiCall.mockResolvedValueOnce({
+    apiCall.mockResolvedValue({
       ok: true,
       json: async () => ({
         date: '2026-01-10',
@@ -72,7 +72,9 @@ describe('DayTimeSlot Component', () => {
       );
     });
 
-    expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+    });
   });
 
   test('should fetch and display weather data for morning/afternoon/evening slots', async () => {
@@ -85,14 +87,13 @@ describe('DayTimeSlot Component', () => {
       description: 'Partly cloudy'
     };
 
-    apiCall.mockResolvedValueOnce({
+    apiCall.mockResolvedValue({
       ok: true,
       json: async () => mockWeatherData
     });
 
-    let container;
     await act(async () => {
-      const result = render(
+      render(
         <DayTimeSlot
           dayObj={mockDayObj}
           timeSlot="morning"
@@ -108,15 +109,16 @@ describe('DayTimeSlot Component', () => {
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
-      container = result.container;
     });
 
     await waitFor(() => {
       expect(screen.getByText(/52°F/)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('30%')).toBeInTheDocument();
-    expect(screen.getByText(/13 mph/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('30%')).toBeInTheDocument();
+      expect(screen.getByText(/13 mph/)).toBeInTheDocument();
+    });
   });
 
   test('should not fetch weather for unscheduled slot', async () => {
@@ -139,14 +141,15 @@ describe('DayTimeSlot Component', () => {
       );
     });
 
-    // Wait a bit to ensure no API call was made
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitFor(() => {
+      expect(screen.getByText('Unscheduled')).toBeInTheDocument();
+    });
 
     expect(apiCall).not.toHaveBeenCalled();
   });
 
   test('should display workouts when provided', async () => {
-    apiCall.mockResolvedValueOnce({
+    apiCall.mockResolvedValue({
       ok: true,
       json: async () => ({
         date: '2026-01-10',
@@ -181,12 +184,14 @@ describe('DayTimeSlot Component', () => {
       );
     });
 
-    expect(screen.getByText('Morning Run')).toBeInTheDocument();
-    expect(screen.getByText('Strength Training')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+      expect(screen.getByText('Strength Training')).toBeInTheDocument();
+    });
   });
 
   test('should display tri club events when provided', async () => {
-    apiCall.mockResolvedValueOnce({
+    apiCall.mockResolvedValue({
       ok: true,
       json: async () => ({
         date: '2026-01-10',
@@ -220,15 +225,19 @@ describe('DayTimeSlot Component', () => {
       );
     });
 
-    expect(screen.getByText(/7:00am tri club ride/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/7:00am tri club ride/)).toBeInTheDocument();
+    });
   });
 
   test('should handle weather API errors gracefully', async () => {
-    apiCall.mockRejectedValueOnce(new Error('API Error'));
+    // Suppress console.error for this test since we expect an error
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    
+    apiCall.mockRejectedValue(new Error('API Error'));
 
-    let component;
     await act(async () => {
-      component = render(
+      render(
         <DayTimeSlot
           dayObj={mockDayObj}
           timeSlot="morning"
@@ -244,12 +253,12 @@ describe('DayTimeSlot Component', () => {
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
-      
-      // Wait for the error to be caught and state to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
     });
 
-    // Should still render the header even if weather fails
-    expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+    });
+    
+    consoleSpy.mockRestore();
   });
 });

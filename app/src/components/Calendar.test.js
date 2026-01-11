@@ -5,24 +5,35 @@ import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
 
 // Mock the API module to prevent actual API calls during tests
-jest.mock('../config/api', () => ({
-  API_ENDPOINTS: {
-    WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`
-  },
-  apiCall: jest.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({
-      date: '2026-01-10',
-      temperature: 68,
-      rain_probability: 10,
-      windspeed: 8,
-      weather_code: 0,
-      description: 'Clear sky'
+jest.mock('../config/api', () => {
+  const mockWeatherData = {
+    date: '2026-01-10',
+    temperature: 68,
+    rain_probability: 10,
+    windspeed: 8,
+    weather_code: 0,
+    description: 'Clear sky'
+  };
+  
+  return {
+    API_ENDPOINTS: {
+      WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`
+    },
+    apiCall: jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockWeatherData
     })
-  })
-}));
+  };
+});
+
+// Get the mocked apiCall function
+const { apiCall } = require('../config/api');
 
 describe('Calendar Component', () => {
+  beforeEach(() => {
+    apiCall.mockClear();
+  });
+
   const mockWorkouts = [
     {
       title: 'Morning Run',
@@ -122,37 +133,47 @@ describe('Calendar Component', () => {
     expect(timeSlots.length).toBeGreaterThan(0);
   });
 
-  it('should correctly match workout dates regardless of timezone', () => {
+  it('should correctly match workout dates regardless of timezone', async () => {
     // Workouts are stored with dates and the calendar displays them correctly
     const testDate = new DateOnly(2026, 1, 15);
     const { container } = render(<Calendar workouts={mockWorkouts} initialDate={testDate} />);
     
+    // Wait for workouts to render
+    await waitFor(() => {
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+    });
+    
     // Both Jan 15 workouts should be displayed (Morning Run and Evening Swim)
-    expect(screen.getByText('Morning Run')).toBeInTheDocument();
     expect(screen.getByText('Evening Swim')).toBeInTheDocument();
     
     // Jan 16 should show its single workout
     expect(screen.getByText('Bike Ride')).toBeInTheDocument();
     
     // Time slots should be displayed for all days
-    const timeSlots = container.querySelectorAll('.time-slot');
-    expect(timeSlots.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
+    });
   });
 
-  it('should highlight today', () => {
+  it('should highlight today', async () => {
     const today = new Date();
     const testDate = new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
     render(<Calendar workouts={[]} initialDate={testDate} />);
     
-    const todayElement = document.querySelector('.calendar-day.is-today');
-    expect(todayElement).toBeInTheDocument();
+    await waitFor(() => {
+      const todayElement = document.querySelector('.calendar-day.is-today');
+      expect(todayElement).toBeInTheDocument();
+    });
   });
 
-  it('should handle empty workouts array', () => {
+  it('should handle empty workouts array', async () => {
     const { container } = render(<Calendar workouts={[]} />);
     // Time slots should still be displayed even with no workouts
-    const timeSlots = container.querySelectorAll('.time-slot');
-    expect(timeSlots.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
+    });
   });
 
   it('should handle undefined workouts prop', () => {
@@ -779,22 +800,22 @@ describe('Calendar Component', () => {
       // (This is what App.js does after the API call succeeds)
       const updatedWorkout = { ...bikeWorkout, workoutLocation: 'indoor' };
       
-      await act(async () => {
-        rerender(
-          <Calendar 
-            workouts={[updatedWorkout]} 
-            initialDate={testDate}
-            onWorkoutLocationChange={mockLocationChange}
-          />
-        );
-      });
+      rerender(
+        <Calendar 
+          workouts={[updatedWorkout]} 
+          initialDate={testDate}
+          onWorkoutLocationChange={mockLocationChange}
+        />
+      );
 
       // The modal should still be open and now show the updated location
       // This is what the useEffect fix ensures
       await waitFor(() => {
         modal = document.querySelector('.modal-content');
         expect(modal).toBeInTheDocument();
-        
+      });
+
+      await waitFor(() => {
         // The indoor button should now be active
         const updatedIndoorButton = screen.getByTitle('Indoor workout');
         expect(updatedIndoorButton).toHaveClass('active');
@@ -1119,6 +1140,10 @@ describe('Calendar Component', () => {
   });
 
   describe('Drag and Drop Functionality', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('should make workout badges draggable', () => {
       const testDate = new DateOnly(2026, 1, 15);
       const workouts = [
@@ -1358,6 +1383,10 @@ describe('Calendar Component', () => {
         isSelected: true,
       },
     ];
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
 
     it('should group workouts by time of day when they have timeOfDay set', () => {
       const testDate = new DateOnly(2026, 1, 15);
