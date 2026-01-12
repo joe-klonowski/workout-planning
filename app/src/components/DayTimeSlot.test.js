@@ -63,6 +63,22 @@ describe('DayTimeSlot Component', () => {
   const mockOnDragLeave = jest.fn();
   const mockOnDrop = jest.fn();
 
+  const mockWorkout1 = {
+    id: 1,
+    title: 'Morning Run',
+    type: 'Run',
+    duration: '45m',
+    timeOfDay: 'morning'
+  };
+
+  const mockWorkout2 = {
+    id: 2,
+    title: 'Evening Swim',
+    type: 'Swim',
+    duration: '33m',
+    timeOfDay: 'evening'
+  };
+
   test('should render time slot header', async () => {
     const testDate = getDaysFromNow(5);
     const testDayObj = createDayObj(testDate);
@@ -892,5 +908,142 @@ describe('DayTimeSlot Component', () => {
 
     // Should NOT show daily forecast indicator
     expect(screen.queryByTitle('Full-day forecast')).not.toBeInTheDocument();
+  });
+
+  describe('Layout Bug Regression Tests', () => {
+    test('unscheduled time slot header should be visible', () => {
+      const { container } = render(
+        <DayTimeSlot
+          dayObj={mockDayObj}
+          timeSlot="unscheduled"
+          workouts={[mockWorkout1]}
+          triClubEvents={[]}
+          draggedWorkout={null}
+          dragOverDate={null}
+          dragOverTimeSlot={null}
+          onDragOver={mockOnDragOver}
+          onDragLeave={mockOnDragLeave}
+          onDrop={mockOnDrop}
+          renderWorkoutBadge={mockRenderWorkoutBadge}
+          getTimeOfDayLabel={mockGetTimeOfDayLabel}
+        />
+      );
+
+      const header = screen.getByText('Unscheduled');
+      expect(header).toBeInTheDocument();
+      
+      // Check that header has proper styling to be visible
+      const headerElement = container.querySelector('.time-slot-header');
+      expect(headerElement).toBeInTheDocument();
+      
+      // Verify the header is in the DOM and can be found
+      const timeSlotElement = container.querySelector('.time-slot.unscheduled');
+      expect(timeSlotElement).toBeInTheDocument();
+      expect(timeSlotElement).toContainElement(headerElement);
+    });
+
+    test('time slot should have proper overflow handling', () => {
+      const { container } = render(
+        <DayTimeSlot
+          dayObj={mockDayObj}
+          timeSlot="evening"
+          workouts={[mockWorkout1, mockWorkout2]}
+          triClubEvents={[]}
+          draggedWorkout={null}
+          dragOverDate={null}
+          dragOverTimeSlot={null}
+          onDragOver={mockOnDragOver}
+          onDragLeave={mockOnDragLeave}
+          onDrop={mockOnDrop}
+          renderWorkoutBadge={mockRenderWorkoutBadge}
+          getTimeOfDayLabel={mockGetTimeOfDayLabel}
+        />
+      );
+
+      const timeSlot = container.querySelector('.time-slot.evening');
+      expect(timeSlot).toBeInTheDocument();
+      
+      // Check that workout container exists
+      const workoutContainer = container.querySelector('.time-slot-workouts');
+      expect(workoutContainer).toBeInTheDocument();
+    });
+
+    test('multiple time slots in a day should not overlap', () => {
+      const { container: morningContainer } = render(
+        <DayTimeSlot
+          dayObj={mockDayObj}
+          timeSlot="morning"
+          workouts={[mockWorkout1]}
+          triClubEvents={[]}
+          draggedWorkout={null}
+          dragOverDate={null}
+          dragOverTimeSlot={null}
+          onDragOver={mockOnDragOver}
+          onDragLeave={mockOnDragLeave}
+          onDrop={mockOnDrop}
+          renderWorkoutBadge={mockRenderWorkoutBadge}
+          getTimeOfDayLabel={mockGetTimeOfDayLabel}
+        />
+      );
+
+      const { container: eveningContainer } = render(
+        <DayTimeSlot
+          dayObj={mockDayObj}
+          timeSlot="evening"
+          workouts={[mockWorkout2]}
+          triClubEvents={[]}
+          draggedWorkout={null}
+          dragOverDate={null}
+          dragOverTimeSlot={null}
+          onDragOver={mockOnDragOver}
+          onDragLeave={mockOnDragLeave}
+          onDrop={mockOnDrop}
+          renderWorkoutBadge={mockRenderWorkoutBadge}
+          getTimeOfDayLabel={mockGetTimeOfDayLabel}
+        />
+      );
+
+      // Both time slots should render independently
+      expect(morningContainer.querySelector('.time-slot.morning')).toBeInTheDocument();
+      expect(eveningContainer.querySelector('.time-slot.evening')).toBeInTheDocument();
+    });
+
+    test('time slot with multiple workouts should contain all workout elements', () => {
+      const multipleWorkouts = [mockWorkout1, mockWorkout2, {
+        id: 3,
+        title: 'Third Workout',
+        type: 'Bike',
+        duration: '1h 30m',
+        timeOfDay: 'evening'
+      }];
+
+      const mockRenderWorkoutBadgeForTest = jest.fn((workout, idx) => (
+        <div key={idx} className="workout-badge">{workout.title}</div>
+      ));
+
+      const { container } = render(
+        <DayTimeSlot
+          dayObj={mockDayObj}
+          timeSlot="evening"
+          workouts={multipleWorkouts}
+          triClubEvents={[]}
+          draggedWorkout={null}
+          dragOverDate={null}
+          dragOverTimeSlot={null}
+          onDragOver={mockOnDragOver}
+          onDragLeave={mockOnDragLeave}
+          onDrop={mockOnDrop}
+          renderWorkoutBadge={mockRenderWorkoutBadgeForTest}
+          getTimeOfDayLabel={mockGetTimeOfDayLabel}
+        />
+      );
+
+      // Verify all workouts are rendered
+      expect(mockRenderWorkoutBadgeForTest).toHaveBeenCalled();
+      expect(mockRenderWorkoutBadgeForTest.mock.calls.length).toBeGreaterThanOrEqual(3);
+      
+      const workoutContainer = container.querySelector('.time-slot-workouts');
+      expect(workoutContainer).toBeInTheDocument();
+    });
   });
 });

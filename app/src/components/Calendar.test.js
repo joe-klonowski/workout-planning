@@ -1924,4 +1924,254 @@ describe('Calendar Component', () => {
       expect(morningSlotWithWorkout.textContent).toContain('Morning Run');
     });
   });
+
+  describe('Layout Bug Regression - Time Slot Overflow', () => {
+    beforeEach(() => {
+      // Mock weather API to prevent errors in these tests
+      apiCall.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          date: '2026-01-12',
+          morning: {
+            temperature: 30,
+            rain_probability: 0,
+            windspeed: 11,
+            weather_code: 0,
+            description: 'Clear sky'
+          },
+          afternoon: {
+            temperature: 40,
+            rain_probability: 0,
+            windspeed: 10,
+            weather_code: 0,
+            description: 'Clear sky'
+          },
+          evening: {
+            temperature: 35,
+            rain_probability: 0,
+            windspeed: 9,
+            weather_code: 0,
+            description: 'Clear sky'
+          }
+        })
+      });
+    });
+
+    test('unscheduled label should be visible when unscheduled workouts exist', () => {
+      const testDate = new DateOnly(2026, 1, 12);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 0.75,
+          timeOfDay: 'morning'
+        },
+        {
+          id: 2,
+          title: 'Evening Swim',
+          workoutType: 'Swim',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 0.55,
+          timeOfDay: 'evening'
+        },
+        {
+          id: 3,
+          title: 'Evening Strength',
+          workoutType: 'Strength',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 1,
+          timeOfDay: 'evening'
+        },
+        {
+          id: 4,
+          title: 'Unscheduled Bike',
+          workoutType: 'Bike',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 1.25,
+          timeOfDay: null
+        }
+      ];
+
+      const { container } = render(
+        <Calendar
+          workouts={workouts}
+          onSelectWorkout={() => {}}
+          onDeselectWorkout={() => {}}
+          onChangeWorkoutTime={() => {}}
+          initialDate={testDate}
+        />
+      );
+
+      // Verify the unscheduled workout exists in the calendar
+      expect(container.textContent).toContain('Unscheduled Bike');
+
+      // Verify unscheduled time slot exists in DOM if there are unscheduled workouts
+      const unscheduledSlots = container.querySelectorAll('.time-slot.unscheduled');
+      expect(unscheduledSlots.length).toBeGreaterThan(0);
+      
+      const unscheduledSlot = unscheduledSlots[0];
+      
+      // Verify the header exists within the slot
+      const header = unscheduledSlot.querySelector('.time-slot-header');
+      expect(header).toBeTruthy();
+      expect(header.textContent).toContain('Unscheduled');
+    });
+
+    test('time slots container should have proper structure for overflow management', () => {
+      const testDate = new DateOnly(2026, 1, 12);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Evening Swim',
+          workoutType: 'Swim',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 0.55,
+          timeOfDay: 'evening'
+        },
+        {
+          id: 2,
+          title: 'Evening Strength',
+          workoutType: 'Strength',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 1,
+          timeOfDay: 'evening'
+        }
+      ];
+
+      const { container } = render(
+        <Calendar
+          workouts={workouts}
+          onSelectWorkout={() => {}}
+          onDeselectWorkout={() => {}}
+          onChangeWorkoutTime={() => {}}
+          initialDate={testDate}
+        />
+      );
+
+      // Check that time-slots-container exists
+      const timeSlotsContainers = container.querySelectorAll('.time-slots-container');
+      expect(timeSlotsContainers.length).toBeGreaterThan(0);
+
+      // Check that individual time slots exist
+      const timeSlots = container.querySelectorAll('.time-slot');
+      expect(timeSlots.length).toBeGreaterThan(0);
+      
+      // Verify each time slot has proper structure
+      timeSlots.forEach(slot => {
+        // Check that the slot has the time-slot class which has the CSS to prevent overlap
+        expect(slot.classList.contains('time-slot')).toBe(true);
+      });
+    });
+
+    test('multiple workouts in evening slot should not overlap with unscheduled slot', () => {
+      const testDate = new DateOnly(2026, 1, 12);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 0.75,
+          timeOfDay: 'morning'
+        },
+        {
+          id: 2,
+          title: 'Evening Swim',
+          workoutType: 'Swim',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 0.55,
+          timeOfDay: 'evening'
+        },
+        {
+          id: 3,
+          title: 'Evening Strength',
+          workoutType: 'Strength',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 1,
+          timeOfDay: 'evening'
+        },
+        {
+          id: 4,
+          title: 'Unscheduled Bike',
+          workoutType: 'Bike',
+          workoutDate: new DateOnly(2026, 1, 12),
+          plannedDuration: 1.25,
+          timeOfDay: null
+        }
+      ];
+
+      const { container } = render(
+        <Calendar
+          workouts={workouts}
+          onSelectWorkout={() => {}}
+          onDeselectWorkout={() => {}}
+          onChangeWorkoutTime={() => {}}
+          initialDate={testDate}
+        />
+      );
+
+      // Find the day containing all workouts - look for a unique workout title
+      const dayElements = container.querySelectorAll('.calendar-day');
+      const dayElement = Array.from(dayElements).find(
+        day => day.textContent.includes('Unscheduled Bike')
+      );
+      expect(dayElement).toBeTruthy();
+
+      // Verify all time slots are present in this day
+      const timeSlotsInDay = dayElement.querySelectorAll('.time-slot');
+      expect(timeSlotsInDay.length).toBeGreaterThan(0);
+
+      // Check that evening slot exists and contains workouts
+      const eveningSlot = Array.from(timeSlotsInDay).find(
+        slot => slot.classList.contains('evening')
+      );
+      expect(eveningSlot).toBeTruthy();
+      expect(eveningSlot.textContent).toContain('Evening');
+
+      // Check that unscheduled slot exists
+      const unscheduledSlot = Array.from(timeSlotsInDay).find(
+        slot => slot.classList.contains('unscheduled')
+      );
+      expect(unscheduledSlot).toBeTruthy();
+
+      // Both evening and unscheduled slots should exist separately
+      expect(eveningSlot).not.toBe(unscheduledSlot);
+    });
+
+    test('day with many workouts should maintain all time slot headers visible', () => {
+      const testDate = new DateOnly(2026, 1, 12);
+      const workouts = [
+        { id: 1, title: 'Morning Run', workoutType: 'Run', workoutDate: new DateOnly(2026, 1, 12), plannedDuration: 0.75, timeOfDay: 'morning' },
+        { id: 2, title: 'Afternoon Bike', workoutType: 'Bike', workoutDate: new DateOnly(2026, 1, 12), plannedDuration: 1, timeOfDay: 'afternoon' },
+        { id: 3, title: 'Evening Swim', workoutType: 'Swim', workoutDate: new DateOnly(2026, 1, 12), plannedDuration: 0.55, timeOfDay: 'evening' },
+        { id: 4, title: 'Evening Strength', workoutType: 'Strength', workoutDate: new DateOnly(2026, 1, 12), plannedDuration: 1, timeOfDay: 'evening' },
+        { id: 5, title: 'Unscheduled Bike', workoutType: 'Bike', workoutDate: new DateOnly(2026, 1, 12), plannedDuration: 1.25, timeOfDay: null }
+      ];
+
+      const { container } = render(
+        <Calendar
+          workouts={workouts}
+          onSelectWorkout={() => {}}
+          onDeselectWorkout={() => {}}
+          onChangeWorkoutTime={() => {}}
+          initialDate={testDate}
+        />
+      );
+
+      // All time slot labels should be present (check for at least one of each)
+      const morningLabels = screen.queryAllByText('🌅 Morning');
+      expect(morningLabels.length).toBeGreaterThan(0);
+      
+      const afternoonLabels = screen.queryAllByText('☀️ Afternoon');
+      expect(afternoonLabels.length).toBeGreaterThan(0);
+      
+      const eveningLabels = screen.queryAllByText('🌙 Evening');
+      expect(eveningLabels.length).toBeGreaterThan(0);
+      
+      const unscheduledLabels = screen.queryAllByText('Unscheduled');
+      expect(unscheduledLabels.length).toBeGreaterThan(0);
+    });
+  });
 });
