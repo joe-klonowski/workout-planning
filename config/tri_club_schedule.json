@@ -2,7 +2,6 @@
   "effective_date": "2026-01-01",
   "schedule": {
     "monday": [
-      { "time": "07:00", "activity": "Ride" },
       { "time": "19:00", "activity": "Swim" }
     ],
     "tuesday": [
@@ -16,13 +15,12 @@
       { "time": "19:00", "activity": "Run Indoor" }
     ],
     "friday": [
-      { "time": "07:30", "activity": "Ride" }
     ],
     "saturday": [
-      { "time": "09:00", "activity": "Swim" }
+      { "time": "09:00", "activity": "Long/Brick Event" }
     ],
     "sunday": [
-      { "time": "09:00", "activity": "Long/Brick Event" }
+      { "time": "09:00", "activity": "Swim" }
     ]
   }
 }
