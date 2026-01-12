@@ -1017,9 +1017,10 @@ describe('DayTimeSlot Component', () => {
         timeOfDay: 'evening'
       }];
 
-      const mockRenderWorkoutBadgeForTest = jest.fn((workout, idx) => (
-        <div key={idx} className="workout-badge">{workout.title}</div>
-      ));
+      const mockOnWorkoutDragStart = jest.fn();
+      const mockOnWorkoutDragEnd = jest.fn();
+      const mockOnWorkoutClick = jest.fn();
+      const mockOnWorkoutSelectionToggle = jest.fn();
 
       const { container } = render(
         <DayTimeSlot
@@ -1033,17 +1034,21 @@ describe('DayTimeSlot Component', () => {
           onDragOver={mockOnDragOver}
           onDragLeave={mockOnDragLeave}
           onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadgeForTest}
+          onWorkoutDragStart={mockOnWorkoutDragStart}
+          onWorkoutDragEnd={mockOnWorkoutDragEnd}
+          onWorkoutClick={mockOnWorkoutClick}
+          onWorkoutSelectionToggle={mockOnWorkoutSelectionToggle}
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
 
       // Verify all workouts are rendered
-      expect(mockRenderWorkoutBadgeForTest).toHaveBeenCalled();
-      expect(mockRenderWorkoutBadgeForTest.mock.calls.length).toBeGreaterThanOrEqual(3);
-      
       const workoutContainer = container.querySelector('.time-slot-workouts');
       expect(workoutContainer).toBeInTheDocument();
+      
+      // Check that all workout badges are rendered
+      const workoutBadges = container.querySelectorAll('.workout-badge');
+      expect(workoutBadges.length).toBeGreaterThanOrEqual(3);
     });
   });
 });

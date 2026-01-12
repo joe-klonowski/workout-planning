@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 import { getWeatherInfo, isWeatherAvailable, isHourlyWeatherAvailable } from '../utils/weatherUtils';
+import WorkoutBadge from './WorkoutBadge';
 import '../styles/DayTimeSlot.css';
 
 /**
@@ -19,7 +20,10 @@ function DayTimeSlot({
   onDragOver,
   onDragLeave,
   onDrop,
-  renderWorkoutBadge,
+  onWorkoutDragStart,
+  onWorkoutDragEnd,
+  onWorkoutClick,
+  onWorkoutSelectionToggle,
   getTimeOfDayLabel 
 }) {
   const [weather, setWeather] = useState(null);
@@ -166,7 +170,17 @@ function DayTimeSlot({
 
       {/* Workouts */}
       <div className="time-slot-workouts">
-        {workouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+        {workouts.map((workout, idx) => (
+          <WorkoutBadge
+            key={idx}
+            workout={workout}
+            onDragStart={onWorkoutDragStart}
+            onDragEnd={onWorkoutDragEnd}
+            onWorkoutClick={onWorkoutClick}
+            onSelectionToggle={onWorkoutSelectionToggle}
+            draggedWorkoutId={draggedWorkout?.id}
+          />
+        ))}
       </div>
 
       {/* Placeholder for empty unscheduled slots */}
@@ -192,7 +206,10 @@ DayTimeSlot.propTypes = {
   onDragOver: PropTypes.func.isRequired,
   onDragLeave: PropTypes.func.isRequired,
   onDrop: PropTypes.func.isRequired,
-  renderWorkoutBadge: PropTypes.func.isRequired,
+  onWorkoutDragStart: PropTypes.func.isRequired,
+  onWorkoutDragEnd: PropTypes.func.isRequired,
+  onWorkoutClick: PropTypes.func.isRequired,
+  onWorkoutSelectionToggle: PropTypes.func,
   getTimeOfDayLabel: PropTypes.func.isRequired,
 };
 

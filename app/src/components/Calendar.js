@@ -9,6 +9,7 @@ import AddWorkoutModal from './AddWorkoutModal';
 import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import DayTimeSlot from './DayTimeSlot';
+import WorkoutBadge from './WorkoutBadge';
 import '../styles/Calendar.css';
 
 /**
@@ -378,113 +379,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   };
 
   // Render a workout badge
-  const renderWorkoutBadge = (workout, idx) => {
-    const style = getWorkoutTypeStyle(workout.workoutType);
-    
-    // Helper to get location display info
-    const getLocationDisplay = () => {
-      if (!workout.workoutLocation) return null;
-      
-      const locationEmojis = {
-        'indoor': '🏠',
-        'outdoor': '🌤️'
-      };
-      
-      const emoji = locationEmojis[workout.workoutLocation.toLowerCase()] || '';
-      
-      return { emoji };
-    };
-    
-    const locationDisplay = getLocationDisplay();
-    
-    return (
-      <div
-        key={idx}
-        className={`workout-badge ${!workout.isSelected ? 'unselected' : ''}`}
-        style={{
-          backgroundColor: style.backgroundColor,
-          borderLeft: `4px solid ${style.color}`,
-          cursor: draggedWorkout?.id === workout.id ? 'grabbing' : 'grab',
-          opacity: workout.isSelected ? 1 : 0.5,
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        draggable={true}
-        onDragStart={(e) => handleDragStart(e, workout)}
-        onDragEnd={handleDragEnd}
-      >
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '4px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="workout-icon">{style.icon}</span>
-            {workout.plannedDuration > 0 && (
-              <span className="workout-duration" style={{
-                fontSize: '11px',
-                fontWeight: '600',
-                color: '#666',
-                backgroundColor: '#f0f0f0',
-                padding: '2px 6px',
-                borderRadius: '8px',
-                whiteSpace: 'nowrap'
-              }}>
-                {formatDuration(workout.plannedDuration)}
-              </span>
-            )}
-            {locationDisplay && workout.workoutType === 'Bike' && (
-              <span className="workout-location" style={{
-                fontSize: '11px',
-                fontWeight: '600',
-                color: '#1976d2',
-                backgroundColor: '#e3f2fd',
-                padding: '2px 6px',
-                borderRadius: '8px',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px'
-              }}>
-                <span style={{ fontSize: '10px' }}>{locationDisplay.emoji}</span>
-                <span>{locationDisplay.label}</span>
-              </span>
-            )}
-          </div>
-          {onWorkoutSelectionToggle && (
-            <button
-              className={`selection-button ${workout.isSelected ? 'remove' : 'add'}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onWorkoutSelectionToggle(workout.id, !workout.isSelected);
-              }}
-              aria-label={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-              title={workout.isSelected ? 'Remove from plan' : 'Add to plan'}
-            >
-              {workout.isSelected ? '✕' : '+'}
-            </button>
-          )}
-        </div>
-        <div
-          onClick={() => {
-            setSelectedWorkout(workout);
-            setIsModalOpen(true);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              setSelectedWorkout(workout);
-              setIsModalOpen(true);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          <span className="workout-title">{workout.title}</span>
-        </div>
-      </div>
-    );
+  // Handler for clicking on a workout badge
+  const handleWorkoutClick = (workout) => {
+    setSelectedWorkout(workout);
+    setIsModalOpen(true);
   };
 
   // Render a time slot drop zone with workouts
@@ -519,7 +417,17 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           </div>
         )}
         <div className="time-slot-workouts">
-          {workouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+          {workouts.map((workout, idx) => (
+            <WorkoutBadge
+              key={idx}
+              workout={workout}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onWorkoutClick={() => handleWorkoutClick(workout)}
+              onSelectionToggle={onWorkoutSelectionToggle}
+              draggedWorkoutId={draggedWorkout?.id}
+            />
+          ))}
         </div>
         {draggedWorkout && !hasContent && (
           <div className="time-slot-placeholder">
@@ -617,7 +525,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
                     onDragOver={(e) => handleDragOver(e, dayObj.date, 'morning')}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, dayObj, 'morning')}
-                    renderWorkoutBadge={renderWorkoutBadge}
+                    onWorkoutDragStart={handleDragStart}
+                    onWorkoutDragEnd={handleDragEnd}
+                    onWorkoutClick={handleWorkoutClick}
+                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
                     getTimeOfDayLabel={getTimeOfDayLabel}
                   />
                   <DayTimeSlot
@@ -631,7 +542,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
                     onDragOver={(e) => handleDragOver(e, dayObj.date, 'afternoon')}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, dayObj, 'afternoon')}
-                    renderWorkoutBadge={renderWorkoutBadge}
+                    onWorkoutDragStart={handleDragStart}
+                    onWorkoutDragEnd={handleDragEnd}
+                    onWorkoutClick={handleWorkoutClick}
+                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
                     getTimeOfDayLabel={getTimeOfDayLabel}
                   />
                   <DayTimeSlot
@@ -645,7 +559,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
                     onDragOver={(e) => handleDragOver(e, dayObj.date, 'evening')}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, dayObj, 'evening')}
-                    renderWorkoutBadge={renderWorkoutBadge}
+                    onWorkoutDragStart={handleDragStart}
+                    onWorkoutDragEnd={handleDragEnd}
+                    onWorkoutClick={handleWorkoutClick}
+                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
                     getTimeOfDayLabel={getTimeOfDayLabel}
                   />
                   {workoutGroups.unscheduled.length > 0 && (
@@ -660,7 +577,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
                       onDragOver={(e) => handleDragOver(e, dayObj.date, 'unscheduled')}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, dayObj, 'unscheduled')}
-                      renderWorkoutBadge={renderWorkoutBadge}
+                      onWorkoutDragStart={handleDragStart}
+                      onWorkoutDragEnd={handleDragEnd}
+                      onWorkoutClick={handleWorkoutClick}
+                      onWorkoutSelectionToggle={onWorkoutSelectionToggle}
                       getTimeOfDayLabel={getTimeOfDayLabel}
                     />
                   )}
@@ -685,7 +605,17 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
                 <div className="workouts-container">
                   {dayWorkouts.length > 0 ? (
                     <div className="workouts-list">
-                      {dayWorkouts.map((workout, idx) => renderWorkoutBadge(workout, idx))}
+                      {dayWorkouts.map((workout, idx) => (
+                        <WorkoutBadge
+                          key={idx}
+                          workout={workout}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onWorkoutClick={() => handleWorkoutClick(workout)}
+                          onSelectionToggle={onWorkoutSelectionToggle}
+                          draggedWorkoutId={draggedWorkout?.id}
+                        />
+                      ))}
                     </div>
                   ) : (
                     <div className="no-workouts">Rest day</div>
