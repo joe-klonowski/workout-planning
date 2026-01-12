@@ -138,6 +138,68 @@ def test_custom_workout_model(app):
         assert custom_dict['workoutType'] == "Bike"
 
 
+# ============= CORS CONFIGURATION TESTS =============
+
+def test_cors_headers_in_production(app):
+    """Test that CORS headers are properly configured for production"""
+    # Create production app
+    prod_app = create_app('production')
+    client = prod_app.test_client()
+    
+    # Make an OPTIONS preflight request
+    response = client.options('/api/health',
+                             headers={
+                                 'Origin': 'https://workout-planning-production.up.railway.app',
+                                 'Access-Control-Request-Method': 'GET',
+                                 'Access-Control-Request-Headers': 'Authorization'
+                             })
+    
+    # Check CORS headers are present
+    assert 'Access-Control-Allow-Origin' in response.headers
+    assert 'Access-Control-Allow-Methods' in response.headers
+    assert 'Access-Control-Allow-Headers' in response.headers
+    
+    # Verify allowed methods include our API methods
+    allowed_methods = response.headers.get('Access-Control-Allow-Methods', '')
+    assert 'GET' in allowed_methods
+    assert 'POST' in allowed_methods
+    assert 'PUT' in allowed_methods
+    assert 'DELETE' in allowed_methods
+
+
+def test_cors_headers_in_development(app):
+    """Test that CORS allows localhost:3000 in development"""
+    # Development app (default fixture)
+    client = app.test_client()
+    
+    # Make an OPTIONS preflight request from React dev server
+    response = client.options('/api/workouts',
+                             headers={
+                                 'Origin': 'http://localhost:3000',
+                                 'Access-Control-Request-Method': 'GET',
+                                 'Access-Control-Request-Headers': 'Authorization, Content-Type'
+                             })
+    
+    # Check CORS headers allow localhost:3000
+    assert 'Access-Control-Allow-Origin' in response.headers
+    origin = response.headers.get('Access-Control-Allow-Origin')
+    assert origin == 'http://localhost:3000'
+    
+    # Check credentials are supported in development
+    credentials = response.headers.get('Access-Control-Allow-Credentials')
+    assert credentials == 'true'
+
+
+def test_api_request_includes_cors_headers(client):
+    """Test that actual API requests include CORS headers"""
+    response = client.get('/api/health',
+                         headers={'Origin': 'http://localhost:3000'})
+    
+    assert response.status_code == 200
+    # CORS headers should be present in the response
+    assert 'Access-Control-Allow-Origin' in response.headers
+
+
 # ============= API ENDPOINT TESTS =============
 
 def test_health_check(client):

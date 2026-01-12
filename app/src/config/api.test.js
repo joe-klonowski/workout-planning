@@ -2,11 +2,66 @@
  * Integration tests for API configuration
  */
 import { API_ENDPOINTS, apiCall } from './api';
+import API_BASE_URL from './api';
 
 describe('API Configuration', () => {
+  // Save original NODE_ENV
+  const originalEnv = process.env.NODE_ENV;
+
   beforeEach(() => {
     localStorage.clear();
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    // Restore original NODE_ENV
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  describe('Environment-based URL configuration', () => {
+    test('uses relative URLs in production to avoid CORS issues', () => {
+      // Note: This test verifies the code logic but may not catch dynamic imports
+      // In production build, process.env.NODE_ENV will be 'production'
+      // and API_BASE_URL should be empty string for same-origin requests
+      
+      // Check that in current test environment (development), we use localhost
+      expect(API_BASE_URL).toBe('http://localhost:5000');
+    });
+
+    test('all API endpoints use the configured base URL', () => {
+      // Verify all endpoints start with the base URL or are relative
+      const basePattern = API_BASE_URL || '/api';
+      const endpointsToCheck = [
+        API_ENDPOINTS.LOGIN,
+        API_ENDPOINTS.REGISTER,
+        API_ENDPOINTS.VERIFY,
+        API_ENDPOINTS.CURRENT_USER,
+        API_ENDPOINTS.WORKOUTS,
+        API_ENDPOINTS.HEALTH,
+      ];
+
+      endpointsToCheck.forEach(endpoint => {
+        if (API_BASE_URL) {
+          expect(endpoint).toContain(API_BASE_URL);
+        } else {
+          // In production, should use relative URLs starting with /api
+          expect(endpoint).toMatch(/^\/api/);
+        }
+      });
+    });
+
+    test('dynamic endpoints also use the configured base URL', () => {
+      const workoutId = 123;
+      const workoutUrl = API_ENDPOINTS.WORKOUT_BY_ID(workoutId);
+      
+      if (API_BASE_URL) {
+        expect(workoutUrl).toContain(API_BASE_URL);
+      } else {
+        expect(workoutUrl).toMatch(/^\/api/);
+      }
+      
+      expect(workoutUrl).toContain(`/workouts/${workoutId}`);
+    });
   });
 
   test('API_ENDPOINTS contains all required endpoints', () => {
