@@ -42,11 +42,15 @@ def create_app(config_name='development'):
     
     # Configure CORS
     if config_name == 'production':
-        # In production, frontend is served from same origin, but still need CORS for proper headers
+        # In production, frontend is served from same origin
+        # Use same-origin policy - no CORS needed for same-origin requests
+        # But configure CORS to allow proper headers for API endpoints
         CORS(app, resources={r"/api/*": {
             "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": False  # No credentials needed for same-origin
         }})
     else:
         # In development, allow requests from the React dev server

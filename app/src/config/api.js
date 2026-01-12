@@ -2,8 +2,11 @@
  * API configuration for backend connection
  */
 
-// Always use the backend on localhost:5000
-const API_BASE_URL = 'http://localhost:5000';
+// In production (served by Flask), use relative URLs to avoid CORS issues
+// In development (React dev server), use localhost:5000
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '' 
+  : 'http://localhost:5000';
 
 export const API_ENDPOINTS = {
   // Auth endpoints
