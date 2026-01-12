@@ -7,7 +7,8 @@ import { API_ENDPOINTS, apiCall } from '../config/api';
 // Mock the API module
 jest.mock('../config/api', () => ({
   API_ENDPOINTS: {
-    WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`
+    WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`,
+    WEATHER_BY_TIME_OF_DAY: (date) => `http://localhost:5000/api/weather/by-time-of-day/${date}`
   },
   apiCall: jest.fn()
 }));
@@ -17,11 +18,23 @@ describe('DayTimeSlot Component', () => {
     jest.clearAllMocks();
   });
 
-  // Helper function to get a date string X days from now
+  // Helper function to get a date string X days from now (in local timezone)
   const getDaysFromNow = (days) => {
     const date = new Date();
     date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0];
+    // Use local date parts instead of toISOString to avoid UTC conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper function to convert a Date to local date string (YYYY-MM-DD)
+  const toLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const createDayObj = (dateString) => ({
@@ -58,10 +71,24 @@ describe('DayTimeSlot Component', () => {
       ok: true,
       json: async () => ({
         date: testDate,
-        temperature: 68,
-        rain_probability: 20,
-        windspeed: 10,
-        weather_code: 0
+        morning: {
+          temperature: 68,
+          rain_probability: 20,
+          windspeed: 10,
+          weather_code: 0
+        },
+        afternoon: {
+          temperature: 75,
+          rain_probability: 15,
+          windspeed: 12,
+          weather_code: 1
+        },
+        evening: {
+          temperature: 70,
+          rain_probability: 25,
+          windspeed: 8,
+          weather_code: 2
+        }
       })
     });
 
@@ -95,11 +122,27 @@ describe('DayTimeSlot Component', () => {
     
     const mockWeatherData = {
       date: testDate,
-      temperature: 52.3,
-      rain_probability: 30,
-      windspeed: 12.5,
-      weather_code: 2,
-      description: 'Partly cloudy'
+      morning: {
+        temperature: 45.2,
+        rain_probability: 20,
+        windspeed: 8.5,
+        weather_code: 1,
+        description: 'Mainly clear'
+      },
+      afternoon: {
+        temperature: 52.3,
+        rain_probability: 30,
+        windspeed: 12.5,
+        weather_code: 2,
+        description: 'Partly cloudy'
+      },
+      evening: {
+        temperature: 48.1,
+        rain_probability: 40,
+        windspeed: 10.2,
+        weather_code: 3,
+        description: 'Overcast'
+      }
     };
 
     apiCall.mockResolvedValue({
@@ -127,12 +170,12 @@ describe('DayTimeSlot Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/52°F/)).toBeInTheDocument();
+      expect(screen.getByText(/45°F/)).toBeInTheDocument();
     });
 
     await waitFor(() => {
-      expect(screen.getByText('30%')).toBeInTheDocument();
-      expect(screen.getByText(/13 mph/)).toBeInTheDocument();
+      expect(screen.getByText('20%')).toBeInTheDocument();
+      expect(screen.getByText(/9 mph/)).toBeInTheDocument();
     });
   });
 
@@ -163,15 +206,112 @@ describe('DayTimeSlot Component', () => {
     expect(apiCall).not.toHaveBeenCalled();
   });
 
+  test('should display different weather for different time slots', async () => {
+    const testDate = getDaysFromNow(5);
+    const testDayObj = createDayObj(testDate);
+    
+    const mockWeatherData = {
+      date: testDate,
+      morning: {
+        temperature: 45.2,
+        rain_probability: 20,
+        windspeed: 8.5,
+        weather_code: 1,
+        description: 'Mainly clear'
+      },
+      afternoon: {
+        temperature: 62.8,
+        rain_probability: 10,
+        windspeed: 12.5,
+        weather_code: 2,
+        description: 'Partly cloudy'
+      },
+      evening: {
+        temperature: 54.3,
+        rain_probability: 35,
+        windspeed: 10.2,
+        weather_code: 3,
+        description: 'Overcast'
+      }
+    };
+
+    apiCall.mockResolvedValue({
+      ok: true,
+      json: async () => mockWeatherData
+    });
+
+    // Render morning slot
+    const { rerender, unmount } = render(
+      <DayTimeSlot
+        dayObj={testDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/45°F/)).toBeInTheDocument();
+      expect(screen.getByText('20%')).toBeInTheDocument();
+    });
+
+    unmount();
+
+    // Render afternoon slot
+    render(
+      <DayTimeSlot
+        dayObj={testDayObj}
+        timeSlot="afternoon"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/63°F/)).toBeInTheDocument();
+      expect(screen.getByText('10%')).toBeInTheDocument();
+    });
+  });
+
   test('should display workouts when provided', async () => {
     apiCall.mockResolvedValue({
       ok: true,
       json: async () => ({
         date: '2026-01-10',
-        temperature: 68,
-        rain_probability: 10,
-        windspeed: 8,
-        weather_code: 0
+        morning: {
+          temperature: 68,
+          rain_probability: 10,
+          windspeed: 8,
+          weather_code: 0
+        },
+        afternoon: {
+          temperature: 75,
+          rain_probability: 5,
+          windspeed: 10,
+          weather_code: 1
+        },
+        evening: {
+          temperature: 70,
+          rain_probability: 15,
+          windspeed: 7,
+          weather_code: 2
+        }
       })
     });
 
@@ -210,10 +350,24 @@ describe('DayTimeSlot Component', () => {
       ok: true,
       json: async () => ({
         date: '2026-01-10',
-        temperature: 68,
-        rain_probability: 10,
-        windspeed: 8,
-        weather_code: 0
+        morning: {
+          temperature: 68,
+          rain_probability: 10,
+          windspeed: 8,
+          weather_code: 0
+        },
+        afternoon: {
+          temperature: 75,
+          rain_probability: 5,
+          windspeed: 10,
+          weather_code: 1
+        },
+        evening: {
+          temperature: 70,
+          rain_probability: 15,
+          windspeed: 7,
+          weather_code: 2
+        }
       })
     });
 
@@ -281,7 +435,7 @@ describe('DayTimeSlot Component', () => {
     // Create a date object for yesterday
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = yesterday.toISOString().split('T')[0];
+    const yesterdayString = toLocalDateString(yesterday);
     
     const pastDayObj = {
       date: {
@@ -320,7 +474,7 @@ describe('DayTimeSlot Component', () => {
     // Create a date object for 20 days in the future
     const farFuture = new Date();
     farFuture.setDate(farFuture.getDate() + 20);
-    const farFutureString = farFuture.toISOString().split('T')[0];
+    const farFutureString = toLocalDateString(farFuture);
     
     const futureDayObj = {
       date: {
@@ -356,10 +510,10 @@ describe('DayTimeSlot Component', () => {
   });
 
   test('should fetch weather for dates within forecast range', async () => {
-    // Create a date object for 10 days in the future
+    // Create a date object for 5 days in the future (within hourly range)
     const nearFuture = new Date();
-    nearFuture.setDate(nearFuture.getDate() + 10);
-    const nearFutureString = nearFuture.toISOString().split('T')[0];
+    nearFuture.setDate(nearFuture.getDate() + 5);
+    const nearFutureString = toLocalDateString(nearFuture);
     
     const futureDayObj = {
       date: {
@@ -369,10 +523,24 @@ describe('DayTimeSlot Component', () => {
 
     const mockWeatherData = {
       date: nearFutureString,
-      temperature: 72,
-      rain_probability: 15,
-      windspeed: 10,
-      weather_code: 1
+      morning: {
+        temperature: 65,
+        rain_probability: 10,
+        windspeed: 8,
+        weather_code: 0
+      },
+      afternoon: {
+        temperature: 72,
+        rain_probability: 15,
+        windspeed: 10,
+        weather_code: 1
+      },
+      evening: {
+        temperature: 68,
+        rain_probability: 20,
+        windspeed: 9,
+        weather_code: 2
+      }
     };
 
     apiCall.mockResolvedValue({
@@ -400,20 +568,20 @@ describe('DayTimeSlot Component', () => {
     // Should make API call for date within range
     await waitFor(() => {
       expect(apiCall).toHaveBeenCalledWith(
-        `http://localhost:5000/api/weather/${nearFutureString}`
+        `http://localhost:5000/api/weather/by-time-of-day/${nearFutureString}`
       );
     });
 
-    // Should display weather
+    // Should display weather (evening slot shows 68°F)
     await waitFor(() => {
-      expect(screen.getByText(/72°F/)).toBeInTheDocument();
+      expect(screen.getByText(/68°F/)).toBeInTheDocument();
     });
   });
 
   test('should not fetch weather for today when date is exactly at boundary', async () => {
     // Test today (day 0)
     const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
+    const todayString = toLocalDateString(today);
     
     const todayDayObj = {
       date: {
@@ -423,10 +591,24 @@ describe('DayTimeSlot Component', () => {
 
     const mockWeatherData = {
       date: todayString,
-      temperature: 70,
-      rain_probability: 10,
-      windspeed: 8,
-      weather_code: 0
+      morning: {
+        temperature: 65,
+        rain_probability: 5,
+        windspeed: 7,
+        weather_code: 0
+      },
+      afternoon: {
+        temperature: 70,
+        rain_probability: 10,
+        windspeed: 8,
+        weather_code: 1
+      },
+      evening: {
+        temperature: 68,
+        rain_probability: 15,
+        windspeed: 6,
+        weather_code: 2
+      }
     };
 
     apiCall.mockResolvedValue({
@@ -456,9 +638,259 @@ describe('DayTimeSlot Component', () => {
       expect(apiCall).toHaveBeenCalled();
     });
 
+    // Should display weather (morning slot shows 65°F)
+    await waitFor(() => {
+      expect(screen.getByText(/65°F/)).toBeInTheDocument();
+    });
+  });
+
+  test('should use daily forecast for dates 8-16 days out', async () => {
+    // Create a date object for 10 days in the future (beyond hourly range)
+    const farFuture = new Date();
+    farFuture.setDate(farFuture.getDate() + 10);
+    const farFutureString = toLocalDateString(farFuture);
+    
+    const futureDayObj = {
+      date: {
+        toISOString: () => farFutureString
+      }
+    };
+
+    const mockDailyWeatherData = {
+      date: farFutureString,
+      temperature: 78,
+      rain_probability: 25,
+      windspeed: 11,
+      weather_code: 1,
+      description: 'Mainly clear'
+    };
+
+    apiCall.mockResolvedValue({
+      ok: true,
+      json: async () => mockDailyWeatherData
+    });
+
+    render(
+      <DayTimeSlot
+        dayObj={futureDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    // Should call daily weather endpoint for dates beyond 7 days
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledWith(
+        `http://localhost:5000/api/weather/${farFutureString}`
+      );
+    });
+
     // Should display weather
     await waitFor(() => {
-      expect(screen.getByText(/70°F/)).toBeInTheDocument();
+      expect(screen.getByText(/78°F/)).toBeInTheDocument();
     });
+
+    // Should show daily forecast indicator
+    await waitFor(() => {
+      expect(screen.getByTitle('Full-day forecast')).toBeInTheDocument();
+    });
+  });
+
+  test('should not show weather in afternoon/evening slots for daily forecasts', async () => {
+    // Create a date object for 10 days in the future (beyond hourly range)
+    const farFuture = new Date();
+    farFuture.setDate(farFuture.getDate() + 10);
+    const farFutureString = toLocalDateString(farFuture);
+    
+    const futureDayObj = {
+      date: {
+        toISOString: () => farFutureString
+      }
+    };
+
+    const mockDailyWeatherData = {
+      date: farFutureString,
+      temperature: 78,
+      rain_probability: 25,
+      windspeed: 11,
+      weather_code: 1,
+      description: 'Mainly clear'
+    };
+
+    apiCall.mockResolvedValue({
+      ok: true,
+      json: async () => mockDailyWeatherData
+    });
+
+    // Test afternoon slot
+    render(
+      <DayTimeSlot
+        dayObj={futureDayObj}
+        timeSlot="afternoon"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    // Should NOT call API for afternoon slot with daily forecast
+    await waitFor(() => {
+      expect(apiCall).not.toHaveBeenCalled();
+    });
+
+    // Should not display weather
+    expect(screen.queryByText(/°F/)).not.toBeInTheDocument();
+  });
+
+  test('should use daily forecast for day 8 (boundary between hourly and daily)', async () => {
+    // Day 8 is the first day beyond hourly forecast range
+    const day8 = new Date();
+    day8.setDate(day8.getDate() + 8);
+    const day8String = toLocalDateString(day8);
+    
+    const day8Obj = {
+      date: {
+        toISOString: () => day8String
+      }
+    };
+
+    const mockDailyWeatherData = {
+      date: day8String,
+      temperature: 72,
+      rain_probability: 30,
+      windspeed: 12,
+      weather_code: 2,
+      description: 'Partly cloudy'
+    };
+
+    apiCall.mockResolvedValue({
+      ok: true,
+      json: async () => mockDailyWeatherData
+    });
+
+    render(
+      <DayTimeSlot
+        dayObj={day8Obj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    // Should call daily weather endpoint for day 8
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledWith(
+        `http://localhost:5000/api/weather/${day8String}`
+      );
+    });
+
+    // Should display weather
+    await waitFor(() => {
+      expect(screen.getByText(/72°F/)).toBeInTheDocument();
+    });
+
+    // Should show daily forecast indicator
+    await waitFor(() => {
+      expect(screen.getByTitle('Full-day forecast')).toBeInTheDocument();
+    });
+  });
+
+  test('should use hourly forecast for day 7 (last day of hourly range)', async () => {
+    // Day 7 is the last day with hourly forecasts
+    const day7 = new Date();
+    day7.setDate(day7.getDate() + 7);
+    const day7String = toLocalDateString(day7);
+    
+    const day7Obj = {
+      date: {
+        toISOString: () => day7String
+      }
+    };
+
+    const mockHourlyWeatherData = {
+      date: day7String,
+      morning: {
+        temperature: 55,
+        rain_probability: 15,
+        windspeed: 9,
+        weather_code: 1,
+        description: 'Mainly clear'
+      },
+      afternoon: {
+        temperature: 65,
+        rain_probability: 10,
+        windspeed: 11,
+        weather_code: 0,
+        description: 'Clear sky'
+      },
+      evening: {
+        temperature: 60,
+        rain_probability: 20,
+        windspeed: 8,
+        weather_code: 2,
+        description: 'Partly cloudy'
+      }
+    };
+
+    apiCall.mockResolvedValue({
+      ok: true,
+      json: async () => mockHourlyWeatherData
+    });
+
+    render(
+      <DayTimeSlot
+        dayObj={day7Obj}
+        timeSlot="afternoon"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    // Should call time-of-day weather endpoint for day 7
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledWith(
+        `http://localhost:5000/api/weather/by-time-of-day/${day7String}`
+      );
+    });
+
+    // Should display weather for afternoon slot
+    await waitFor(() => {
+      expect(screen.getByText(/65°F/)).toBeInTheDocument();
+    });
+
+    // Should NOT show daily forecast indicator
+    expect(screen.queryByTitle('Full-day forecast')).not.toBeInTheDocument();
   });
 });

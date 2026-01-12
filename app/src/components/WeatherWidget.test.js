@@ -16,11 +16,14 @@ describe('WeatherWidget', () => {
     jest.clearAllMocks();
   });
 
-  // Helper function to get a date string X days from now
+  // Helper function to get a date string X days from now (in local timezone)
   const getDaysFromNow = (days) => {
     const date = new Date();
     date.setDate(date.getDate() + days);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   test('should render nothing when isOpen is false', async () => {
@@ -197,9 +200,14 @@ describe('WeatherWidget', () => {
 
   test('should not fetch weather for dates beyond 16-day forecast range', async () => {
     // Calculate a date 20 days in the future (beyond the 16-day limit)
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 20);
-    const futureDateString = futureDate.toISOString().split('T')[0];
+    const futureDateString = (() => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 20);
+      const year = futureDate.getFullYear();
+      const month = String(futureDate.getMonth() + 1).padStart(2, '0');
+      const day = String(futureDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })();
 
     const { container } = render(
       <WeatherWidget 
@@ -236,9 +244,14 @@ describe('WeatherWidget', () => {
     apiCall.mockResolvedValueOnce(mockResponse);
 
     // Start with a date within range
-    const nearDate = new Date();
-    nearDate.setDate(nearDate.getDate() + 5);
-    const nearDateString = nearDate.toISOString().split('T')[0];
+    const nearDateString = (() => {
+      const nearDate = new Date();
+      nearDate.setDate(nearDate.getDate() + 5);
+      const year = nearDate.getFullYear();
+      const month = String(nearDate.getMonth() + 1).padStart(2, '0');
+      const day = String(nearDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })();
 
     const { container, rerender } = render(
       <WeatherWidget 
@@ -254,9 +267,14 @@ describe('WeatherWidget', () => {
     });
 
     // Change to a date beyond the forecast range
-    const farDate = new Date();
-    farDate.setDate(farDate.getDate() + 20);
-    const farDateString = farDate.toISOString().split('T')[0];
+    const farDateString = (() => {
+      const farDate = new Date();
+      farDate.setDate(farDate.getDate() + 20);
+      const year = farDate.getFullYear();
+      const month = String(farDate.getMonth() + 1).padStart(2, '0');
+      const day = String(farDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })();
 
     rerender(
       <WeatherWidget 
@@ -316,9 +334,14 @@ describe('WeatherWidget', () => {
 
   test('should not fetch weather for past dates', async () => {
     // Calculate yesterday's date
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = yesterday.toISOString().split('T')[0];
+    const yesterdayString = (() => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const year = yesterday.getFullYear();
+      const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+      const day = String(yesterday.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })();
 
     const { container } = render(
       <WeatherWidget 

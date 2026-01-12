@@ -8,16 +8,33 @@ import { DateOnly } from '../utils/DateOnly';
 jest.mock('../config/api', () => {
   const mockWeatherData = {
     date: '2026-01-10',
-    temperature: 68,
-    rain_probability: 10,
-    windspeed: 8,
-    weather_code: 0,
-    description: 'Clear sky'
+    morning: {
+      temperature: 58,
+      rain_probability: 10,
+      windspeed: 7,
+      weather_code: 0,
+      description: 'Clear sky'
+    },
+    afternoon: {
+      temperature: 68,
+      rain_probability: 10,
+      windspeed: 8,
+      weather_code: 0,
+      description: 'Clear sky'
+    },
+    evening: {
+      temperature: 62,
+      rain_probability: 15,
+      windspeed: 6,
+      weather_code: 1,
+      description: 'Mainly clear'
+    }
   };
   
   return {
     API_ENDPOINTS: {
-      WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`
+      WEATHER_BY_DATE: (date) => `http://localhost:5000/api/weather/${date}`,
+      WEATHER_BY_TIME_OF_DAY: (date) => `http://localhost:5000/api/weather/by-time-of-day/${date}`
     },
     apiCall: jest.fn().mockResolvedValue({
       ok: true,

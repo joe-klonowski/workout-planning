@@ -51,6 +51,35 @@ export const getWeatherInfo = (code) => {
 };
 
 /**
+ * Check if hourly weather forecast is available for a given date
+ * Hourly forecasts are available for the next 7 days
+ * @param {string} dateString - ISO format date string (YYYY-MM-DD)
+ * @returns {boolean} True if hourly forecast is available, false otherwise
+ */
+export const isHourlyWeatherAvailable = (dateString) => {
+  if (!dateString) {
+    return false;
+  }
+  
+  try {
+    // Parse date in local timezone to avoid UTC/local time confusion
+    const [year, month, day] = dateString.split('-').map(Number);
+    const targetDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Calculate days difference
+    const diffTime = targetDate - today;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Hourly weather is available for today through the next 7 days
+    return diffDays >= 0 && diffDays <= MAX_HOURLY_FORECAST_DAYS;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
  * Check if weather forecast is available for a given date
  * Daily forecasts are available for the next 16 days
  * @param {string} dateString - ISO format date string (YYYY-MM-DD)
@@ -62,16 +91,15 @@ export const isWeatherAvailable = (dateString) => {
   }
   
   try {
-    const targetDate = new Date(dateString);
+    // Parse date in local timezone to avoid UTC/local time confusion
+    const [year, month, day] = dateString.split('-').map(Number);
+    const targetDate = new Date(year, month - 1, day, 0, 0, 0, 0);
     const today = new Date();
-    
-    // Reset time portion to compare dates only
     today.setHours(0, 0, 0, 0);
-    targetDate.setHours(0, 0, 0, 0);
     
     // Calculate days difference
     const diffTime = targetDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     // Weather is available for today through the next 16 days
     return diffDays >= 0 && diffDays <= MAX_DAILY_FORECAST_DAYS;
@@ -87,11 +115,16 @@ export const isWeatherAvailable = (dateString) => {
 export const getMaxWeatherForecastDate = () => {
   const maxDate = new Date();
   maxDate.setDate(maxDate.getDate() + MAX_DAILY_FORECAST_DAYS);
-  return maxDate.toISOString().split('T')[0];
+  // Use local date parts to avoid UTC conversion
+  const year = maxDate.getFullYear();
+  const month = String(maxDate.getMonth() + 1).padStart(2, '0');
+  const day = String(maxDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export default {
   getWeatherInfo,
   isWeatherAvailable,
+  isHourlyWeatherAvailable,
   getMaxWeatherForecastDate
 };

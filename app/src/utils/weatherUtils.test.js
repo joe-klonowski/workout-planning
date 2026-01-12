@@ -4,6 +4,14 @@ import {
   getMaxWeatherForecastDate
 } from './weatherUtils';
 
+// Helper function to convert Date to local date string (YYYY-MM-DD)
+const toLocalDateString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 describe('weatherUtils', () => {
   describe('getWeatherInfo', () => {
     test('should return clear sky info for code 0', () => {
@@ -37,49 +45,49 @@ describe('weatherUtils', () => {
 
   describe('isWeatherAvailable', () => {
     test('should return true for today', () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalDateString(new Date());
       expect(isWeatherAvailable(today)).toBe(true);
     });
 
     test('should return true for tomorrow', () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const dateString = tomorrow.toISOString().split('T')[0];
+      const dateString = toLocalDateString(tomorrow);
       expect(isWeatherAvailable(dateString)).toBe(true);
     });
 
     test('should return true for 10 days from now', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 10);
-      const dateString = futureDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(futureDate);
       expect(isWeatherAvailable(dateString)).toBe(true);
     });
 
     test('should return true for 16 days from now (boundary)', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 16);
-      const dateString = futureDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(futureDate);
       expect(isWeatherAvailable(dateString)).toBe(true);
     });
 
     test('should return false for 17 days from now', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 17);
-      const dateString = futureDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(futureDate);
       expect(isWeatherAvailable(dateString)).toBe(false);
     });
 
     test('should return false for 30 days from now', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 30);
-      const dateString = futureDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(futureDate);
       expect(isWeatherAvailable(dateString)).toBe(false);
     });
 
     test('should return false for past dates', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const dateString = yesterday.toISOString().split('T')[0];
+      const dateString = toLocalDateString(yesterday);
       expect(isWeatherAvailable(dateString)).toBe(false);
     });
 
@@ -105,7 +113,7 @@ describe('weatherUtils', () => {
       const maxDate = getMaxWeatherForecastDate();
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + 16);
-      const expectedString = expectedDate.toISOString().split('T')[0];
+      const expectedString = toLocalDateString(expectedDate);
       
       expect(maxDate).toBe(expectedString);
     });

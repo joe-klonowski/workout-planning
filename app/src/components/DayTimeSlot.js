@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
-import { getWeatherInfo, isWeatherAvailable } from '../utils/weatherUtils';
+import { getWeatherInfo, isWeatherAvailable, isHourlyWeatherAvailable } from '../utils/weatherUtils';
 import '../styles/DayTimeSlot.css';
 
 /**
@@ -23,10 +23,11 @@ function DayTimeSlot({
   getTimeOfDayLabel 
 }) {
   const [weather, setWeather] = useState(null);
+  const [isDailyForecast, setIsDailyForecast] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
-  // Fetch weather only for morning slot (once per day)
+  // Fetch weather - use hourly (time-of-day) for days 0-7, daily for days 8-16
   useEffect(() => {
     if (timeSlot !== 'morning' && timeSlot !== 'afternoon' && timeSlot !== 'evening') {
       return; // Skip unscheduled
@@ -36,6 +37,19 @@ function DayTimeSlot({
     
     // Check if weather is available for this date before making API call
     if (!isWeatherAvailable(dateStr)) {
+      setWeather(null);
+      setIsDailyForecast(false);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
+    // Check if hourly forecast is available
+    const hasHourlyForecast = isHourlyWeatherAvailable(dateStr);
+    setIsDailyForecast(!hasHourlyForecast);
+
+    // For daily forecasts (days 7-16), only show weather in morning slot
+    if (!hasHourlyForecast && timeSlot !== 'morning') {
       setWeather(null);
       setError(false);
       setLoading(false);
@@ -47,22 +61,43 @@ function DayTimeSlot({
 
     const fetchWeather = async () => {
       try {
-        const url = API_ENDPOINTS.WEATHER_BY_DATE(dateStr);
-        const response = await apiCall(url);
+        let weatherData;
         
-        if (!response.ok) {
-          setError(true);
-          setWeather(null);
-          return;
+        if (hasHourlyForecast) {
+          // Use time-of-day endpoint for days 0-7
+          const url = API_ENDPOINTS.WEATHER_BY_TIME_OF_DAY(dateStr);
+          const response = await apiCall(url);
+          
+          if (!response.ok) {
+            setError(true);
+            setWeather(null);
+            setIsDailyForecast(false);
+            return;
+          }
+          
+          const data = await response.json();
+          weatherData = data[timeSlot];
+        } else {
+          // Use daily endpoint for days 8-16
+          const url = API_ENDPOINTS.WEATHER_BY_DATE(dateStr);
+          const response = await apiCall(url);
+          
+          if (!response.ok) {
+            setError(true);
+            setWeather(null);
+            return;
+          }
+          
+          weatherData = await response.json();
         }
         
-        const data = await response.json();
-        setWeather(data);
+        setWeather(weatherData);
         setError(false);
       } catch (err) {
         console.error('Error fetching weather:', err);
         setError(true);
         setWeather(null);
+        setIsDailyForecast(false);
       } finally {
         setLoading(false);
       }
@@ -90,7 +125,12 @@ function DayTimeSlot({
     >
       {/* Header with time label and weather */}
       <div className="time-slot-header-row">
-        <div className="time-slot-header">{getTimeOfDayLabel(timeSlot)}</div>
+        <div className="time-slot-header">
+          {getTimeOfDayLabel(timeSlot)}
+          {isDailyForecast && shouldShowWeather && (
+            <span className="daily-forecast-indicator" title="Full-day forecast">📅</span>
+          )}
+        </div>
         {shouldShowWeather && (
           <div className="time-slot-weather-mini">
             <span className="weather-emoji-mini">{weatherInfo.emoji}</span>
