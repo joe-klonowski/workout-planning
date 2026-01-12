@@ -44,6 +44,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
+- Weather data shows in the app even past when forecasts won't be realistic. My understanding is that the OpenMeteo API only provides hourly forecasts for the next 7 days and daily forecasts for the next 16. Fix so that weather is NOT shown if we're looking at a date farther in the future than what the weather API provides predictions for.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
