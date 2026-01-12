@@ -22,11 +22,13 @@ So some of the future feature work here is to enable that plan.
 - Summarize how much the user is planning to do each week.
 - Add support for mobile.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
+- Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
 - Add first bit of description to workout card.
 - When date cell fills, don't limit the height of the date cell and force user to scroll to find workouts. Instead, just make the date cell longer to fit everything.
+- When the app first loads, it makes a bunch of calls to the weather API and then eventually updates all the weather-related components in the frontend one by one as the API returns the necessary data. This is fine and good, except that those components seem to have different size in "waiting for weather data" mode and "have weather data and displaying it" mode. That means that the layout is constantly jumping around as weather widgets update, which is visually distracting and might cause misclicks if the user tries to click on a component while it's moving because of this behavior. Fix this so that the weather widgets are the same size regardless of whether they're waiting for weather data or have weather data.
 
 
 ## Integrations with other apps/platforms
@@ -44,6 +46,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
+- It seems like dragging a workout to a new time slot causes all the weather data to reload. That's very unnecessary. Don't reload weather data really ever, unless the weather data is more than, let's say, 6 hours out of date.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
