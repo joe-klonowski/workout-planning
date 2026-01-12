@@ -44,6 +44,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
+- Login gives a CORS missing error in prod. Fix this so that login works both in the dev environment and in prod.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
