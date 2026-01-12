@@ -44,6 +44,12 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
+- DayTimeSlot component in the UI should display weather for that time slot if hourly forecasts are available for that day.
+  - Currently it seems like every time slot in a day shows the same weather. This is a bug. It should show different weather for morning and afternoon (at least, on most days).
+  - Use the following times of day to get forecasts:
+    - Morning time slot: 7am
+    - Afternoon time slot: noon
+    - Evening time slot: 7pm
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
