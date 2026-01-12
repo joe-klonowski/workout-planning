@@ -2,6 +2,12 @@
  * Weather utility functions for converting WMO codes and formatting weather data
  */
 
+// OpenMeteo API forecast range limits
+// Hourly forecasts available for next 7 days
+// Daily forecasts available for next 16 days
+const MAX_HOURLY_FORECAST_DAYS = 7;
+const MAX_DAILY_FORECAST_DAYS = 16;
+
 // WMO Weather Code interpretation guide
 // Reference: https://www.weatherapi.com/docs/weather_codes.php
 const WMO_WEATHER_CODES = {
@@ -44,6 +50,48 @@ export const getWeatherInfo = (code) => {
   };
 };
 
+/**
+ * Check if weather forecast is available for a given date
+ * Daily forecasts are available for the next 16 days
+ * @param {string} dateString - ISO format date string (YYYY-MM-DD)
+ * @returns {boolean} True if forecast is available, false otherwise
+ */
+export const isWeatherAvailable = (dateString) => {
+  if (!dateString) {
+    return false;
+  }
+  
+  try {
+    const targetDate = new Date(dateString);
+    const today = new Date();
+    
+    // Reset time portion to compare dates only
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    // Calculate days difference
+    const diffTime = targetDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Weather is available for today through the next 16 days
+    return diffDays >= 0 && diffDays <= MAX_DAILY_FORECAST_DAYS;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Get maximum date for which weather forecast is available
+ * @returns {string} ISO format date string (YYYY-MM-DD)
+ */
+export const getMaxWeatherForecastDate = () => {
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + MAX_DAILY_FORECAST_DAYS);
+  return maxDate.toISOString().split('T')[0];
+};
+
 export default {
-  getWeatherInfo
+  getWeatherInfo,
+  isWeatherAvailable,
+  getMaxWeatherForecastDate
 };

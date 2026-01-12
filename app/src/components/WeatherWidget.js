@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
-import { getWeatherInfo } from '../utils/weatherUtils';
+import { getWeatherInfo, isWeatherAvailable, getMaxWeatherForecastDate } from '../utils/weatherUtils';
 import '../styles/WeatherWidget.css';
 
 /**
@@ -19,6 +19,14 @@ function WeatherWidget({ date, workoutType, isOpen }) {
     if (!isOpen || !date) {
       setWeather(null);
       setError(null);
+      return;
+    }
+
+    // Check if weather is available for this date before making API call
+    if (!isWeatherAvailable(date)) {
+      setWeather(null);
+      setError(null); // Don't show as error - just don't display weather
+      setLoading(false);
       return;
     }
 
@@ -48,6 +56,11 @@ function WeatherWidget({ date, workoutType, isOpen }) {
   }, [date, isOpen]);
 
   if (!isOpen) {
+    return null;
+  }
+
+  // Don't show weather widget for dates beyond forecast range
+  if (!isWeatherAvailable(date)) {
     return null;
   }
 

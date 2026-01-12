@@ -238,4 +238,45 @@ class TestTimeOfDayWeatherEndpoints:
         
         assert response.status_code == 503
         data = response.get_json()
+        assert 'error' in data    
+    def test_get_weather_date_too_far_in_future(self, client):
+        """Test weather endpoint returns 503 for dates beyond 16-day forecast range"""
+        from datetime import date, timedelta
+        
+        # Try to get forecast for 20 days from now (beyond 16-day limit)
+        future_date = (date.today() + timedelta(days=20)).isoformat()
+        
+        response = client.get(f'/api/weather?start_date={future_date}')
+        
+        assert response.status_code == 503
+        data = response.get_json()
         assert 'error' in data
+        assert '16-day forecast range' in data['error']
+    
+    def test_get_daily_weather_date_too_far_in_future(self, client):
+        """Test daily weather endpoint returns 503 for dates beyond 16-day forecast range"""
+        from datetime import date, timedelta
+        
+        # Try to get forecast for 20 days from now (beyond 16-day limit)
+        future_date = (date.today() + timedelta(days=20)).isoformat()
+        
+        response = client.get(f'/api/weather/{future_date}')
+        
+        assert response.status_code == 503
+        data = response.get_json()
+        assert 'error' in data
+        assert '16-day forecast range' in data['error']
+    
+    def test_get_weather_by_time_of_day_date_too_far_in_future(self, client):
+        """Test time-of-day weather endpoint returns 503 for dates beyond 7-day forecast range"""
+        from datetime import date, timedelta
+        
+        # Try to get forecast for 10 days from now (beyond 7-day hourly limit)
+        future_date = (date.today() + timedelta(days=10)).isoformat()
+        
+        response = client.get(f'/api/weather/by-time-of-day/{future_date}')
+        
+        assert response.status_code == 503
+        data = response.get_json()
+        assert 'error' in data
+        assert '7-day hourly forecast range' in data['error']

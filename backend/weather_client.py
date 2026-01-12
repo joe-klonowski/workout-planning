@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 CHICAGO_LAT = 41.795604164195446
 CHICAGO_LON = -87.57838836383468
 
+# OpenMeteo API forecast range limits
+MAX_HOURLY_FORECAST_DAYS = 7  # Hourly forecasts available for next 7 days
+MAX_DAILY_FORECAST_DAYS = 16   # Daily forecasts available for next 16 days
+
 # Time-of-day groupings (24-hour format)
 MORNING_START = 5    # 5:00 AM
 MORNING_END = 12     # 12:00 PM (noon)
@@ -62,12 +66,28 @@ class WeatherClient:
             - weather_codes: List of WMO weather codes
         
         Raises:
-            WeatherAPIError: If API request fails
+            WeatherAPIError: If API request fails or date is beyond forecast range
         """
         if start_date is None:
             start_date = date.today()
         if end_date is None:
             end_date = start_date + timedelta(days=7)
+        
+        # Validate date is within forecast range
+        today = date.today()
+        max_date = today + timedelta(days=MAX_DAILY_FORECAST_DAYS)
+        
+        if start_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast date {start_date} is beyond the {MAX_DAILY_FORECAST_DAYS}-day forecast range. "
+                f"Weather forecasts are only available through {max_date.isoformat()}."
+            )
+        
+        if end_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast end date {end_date} is beyond the {MAX_DAILY_FORECAST_DAYS}-day forecast range. "
+                f"Weather forecasts are only available through {max_date.isoformat()}."
+            )
         
         try:
             params = {
@@ -127,10 +147,20 @@ class WeatherClient:
             - description: Human-readable weather description
         
         Raises:
-            WeatherAPIError: If API request fails or date not found
+            WeatherAPIError: If API request fails, date not found, or date is beyond forecast range
         """
         if forecast_date is None:
             forecast_date = date.today()
+        
+        # Validate date is within forecast range
+        today = date.today()
+        max_date = today + timedelta(days=MAX_DAILY_FORECAST_DAYS)
+        
+        if forecast_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast date {forecast_date} is beyond the {MAX_DAILY_FORECAST_DAYS}-day forecast range. "
+                f"Weather forecasts are only available through {max_date.isoformat()}."
+            )
         
         forecast = self.get_forecast(forecast_date, forecast_date)
         
@@ -164,12 +194,28 @@ class WeatherClient:
             - weather_codes: List of WMO weather codes
         
         Raises:
-            WeatherAPIError: If API request fails
+            WeatherAPIError: If API request fails or date is beyond forecast range
         """
         if start_date is None:
             start_date = date.today()
         if end_date is None:
             end_date = start_date + timedelta(days=7)
+        
+        # Validate date is within hourly forecast range
+        today = date.today()
+        max_date = today + timedelta(days=MAX_HOURLY_FORECAST_DAYS)
+        
+        if start_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast date {start_date} is beyond the {MAX_HOURLY_FORECAST_DAYS}-day hourly forecast range. "
+                f"Hourly weather forecasts are only available through {max_date.isoformat()}."
+            )
+        
+        if end_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast end date {end_date} is beyond the {MAX_HOURLY_FORECAST_DAYS}-day hourly forecast range. "
+                f"Hourly weather forecasts are only available through {max_date.isoformat()}."
+            )
         
         try:
             params = {
@@ -235,10 +281,20 @@ class WeatherClient:
             }
         
         Raises:
-            WeatherAPIError: If API request fails or date not found
+            WeatherAPIError: If API request fails, date not found, or date is beyond forecast range
         """
         if forecast_date is None:
             forecast_date = date.today()
+        
+        # Validate date is within hourly forecast range (required for time-of-day grouping)
+        today = date.today()
+        max_date = today + timedelta(days=MAX_HOURLY_FORECAST_DAYS)
+        
+        if forecast_date > max_date:
+            raise WeatherAPIError(
+                f"Forecast date {forecast_date} is beyond the {MAX_HOURLY_FORECAST_DAYS}-day hourly forecast range. "
+                f"Time-of-day weather forecasts are only available through {max_date.isoformat()}."
+            )
         
         hourly = self.get_hourly_forecast(forecast_date, forecast_date)
         

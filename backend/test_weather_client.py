@@ -443,3 +443,122 @@ class TestTimeOfDayForecast:
         client = WeatherClient()
         with pytest.raises(WeatherAPIError):
             client.get_weather_by_time_of_day(date(2026, 1, 10))
+    
+    def test_get_forecast_date_too_far_in_future(self):
+        """Test that forecast raises error for dates beyond 16-day forecast range"""
+        client = WeatherClient()
+        
+        # Try to get forecast for 20 days from now (beyond 16-day limit)
+        future_date = date.today() + timedelta(days=20)
+        
+        with pytest.raises(WeatherAPIError) as exc_info:
+            client.get_forecast(start_date=future_date)
+        
+        assert "beyond the 16-day forecast range" in str(exc_info.value)
+        assert future_date.isoformat() in str(exc_info.value)
+    
+    def test_get_forecast_end_date_too_far_in_future(self):
+        """Test that forecast raises error when end date is beyond 16-day forecast range"""
+        client = WeatherClient()
+        
+        # Start date is within range, but end date is not
+        start_date = date.today() + timedelta(days=10)
+        end_date = date.today() + timedelta(days=20)
+        
+        with pytest.raises(WeatherAPIError) as exc_info:
+            client.get_forecast(start_date=start_date, end_date=end_date)
+        
+        assert "beyond the 16-day forecast range" in str(exc_info.value)
+    
+    def test_get_daily_forecast_date_too_far_in_future(self):
+        """Test that daily forecast raises error for dates beyond 16-day forecast range"""
+        client = WeatherClient()
+        
+        # Try to get forecast for 20 days from now (beyond 16-day limit)
+        future_date = date.today() + timedelta(days=20)
+        
+        with pytest.raises(WeatherAPIError) as exc_info:
+            client.get_daily_forecast(forecast_date=future_date)
+        
+        assert "beyond the 16-day forecast range" in str(exc_info.value)
+        assert future_date.isoformat() in str(exc_info.value)
+    
+    def test_get_hourly_forecast_date_too_far_in_future(self):
+        """Test that hourly forecast raises error for dates beyond 7-day forecast range"""
+        client = WeatherClient()
+        
+        # Try to get hourly forecast for 10 days from now (beyond 7-day limit)
+        future_date = date.today() + timedelta(days=10)
+        
+        with pytest.raises(WeatherAPIError) as exc_info:
+            client.get_hourly_forecast(start_date=future_date)
+        
+        assert "beyond the 7-day hourly forecast range" in str(exc_info.value)
+        assert future_date.isoformat() in str(exc_info.value)
+    
+    def test_get_weather_by_time_of_day_date_too_far_in_future(self):
+        """Test that time-of-day forecast raises error for dates beyond 7-day forecast range"""
+        client = WeatherClient()
+        
+        # Try to get time-of-day forecast for 10 days from now (beyond 7-day hourly limit)
+        future_date = date.today() + timedelta(days=10)
+        
+        with pytest.raises(WeatherAPIError) as exc_info:
+            client.get_weather_by_time_of_day(forecast_date=future_date)
+        
+        assert "beyond the 7-day hourly forecast range" in str(exc_info.value)
+        assert future_date.isoformat() in str(exc_info.value)
+    
+    @patch('weather_client.requests.get')
+    def test_get_forecast_date_within_range(self, mock_get):
+        """Test that forecast succeeds for dates within 16-day forecast range"""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            'latitude': 41.8,
+            'longitude': -87.6,
+            'timezone': 'America/Chicago',
+            'daily': {
+                'time': ['2026-01-20'],
+                'temperature_2m_max': [35.0],
+                'precipitation_probability_max': [10],
+                'windspeed_10m_max': [8.0],
+                'weather_code': [1]
+            }
+        }
+        mock_get.return_value = mock_response
+        
+        client = WeatherClient()
+        
+        # Try to get forecast for 10 days from now (within 16-day limit)
+        future_date = date.today() + timedelta(days=10)
+        
+        # Should succeed without raising an error
+        forecast = client.get_forecast(start_date=future_date, end_date=future_date)
+        assert forecast is not None
+    
+    @patch('weather_client.requests.get')
+    def test_get_hourly_forecast_date_within_range(self, mock_get):
+        """Test that hourly forecast succeeds for dates within 7-day forecast range"""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            'latitude': 41.8,
+            'longitude': -87.6,
+            'timezone': 'America/Chicago',
+            'hourly': {
+                'time': ['2026-01-15T12:00'],
+                'temperature_2m': [35.0],
+                'precipitation_probability': [10],
+                'windspeed_10m': [8.0],
+                'weather_code': [1]
+            }
+        }
+        mock_get.return_value = mock_response
+        
+        client = WeatherClient()
+        
+        # Try to get hourly forecast for 5 days from now (within 7-day limit)
+        future_date = date.today() + timedelta(days=5)
+        
+        # Should succeed without raising an error
+        forecast = client.get_hourly_forecast(start_date=future_date, end_date=future_date)
+        assert forecast is not None

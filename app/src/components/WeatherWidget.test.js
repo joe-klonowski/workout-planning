@@ -16,10 +16,17 @@ describe('WeatherWidget', () => {
     jest.clearAllMocks();
   });
 
+  // Helper function to get a date string X days from now
+  const getDaysFromNow = (days) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0];
+  };
+
   test('should render nothing when isOpen is false', async () => {
     const { container } = render(
       <WeatherWidget 
-        date="2026-01-10" 
+        date={getDaysFromNow(1)} 
         workoutType="Run" 
         isOpen={false} 
       />
@@ -47,7 +54,7 @@ describe('WeatherWidget', () => {
     
     render(
       <WeatherWidget 
-        date="2026-01-10" 
+        date={getDaysFromNow(1)} 
         workoutType="Run" 
         isOpen={true} 
       />
@@ -59,8 +66,9 @@ describe('WeatherWidget', () => {
   });
 
   test('should display weather data when fetch succeeds', async () => {
+    const testDate = getDaysFromNow(1);
     const mockWeatherData = {
-      date: '2026-01-10',
+      date: testDate,
       temperature: 52.3,
       rain_probability: 30,
       windspeed: 12.5,
@@ -77,7 +85,7 @@ describe('WeatherWidget', () => {
 
     render(
       <WeatherWidget 
-        date="2026-01-10" 
+        date={testDate} 
         workoutType="Run" 
         isOpen={true} 
       />
@@ -93,8 +101,11 @@ describe('WeatherWidget', () => {
   });
 
   test('should refetch when date prop changes', async () => {
+    const testDate1 = getDaysFromNow(1);
+    const testDate2 = getDaysFromNow(2);
+    
     const mockWeatherData1 = {
-      date: '2026-01-10',
+      date: testDate1,
       temperature: 50,
       rain_probability: 20,
       windspeed: 10,
@@ -103,7 +114,7 @@ describe('WeatherWidget', () => {
     };
 
     const mockWeatherData2 = {
-      date: '2026-01-11',
+      date: testDate2,
       temperature: 60,
       rain_probability: 40,
       windspeed: 15,
@@ -125,7 +136,7 @@ describe('WeatherWidget', () => {
 
     const { rerender } = render(
       <WeatherWidget 
-        date="2026-01-10" 
+        date={testDate1} 
         workoutType="Run" 
         isOpen={true} 
       />
@@ -140,7 +151,7 @@ describe('WeatherWidget', () => {
 
     rerender(
       <WeatherWidget 
-        date="2026-01-11" 
+        date={testDate2} 
         workoutType="Run" 
         isOpen={true} 
       />
@@ -152,8 +163,9 @@ describe('WeatherWidget', () => {
   });
 
   test('should call API with correct endpoint', async () => {
+    const testDate = getDaysFromNow(1);
     const mockWeatherData = {
-      date: '2026-01-10',
+      date: testDate,
       temperature: 52.3,
       rain_probability: 30,
       windspeed: 12.5,
@@ -170,7 +182,7 @@ describe('WeatherWidget', () => {
 
     render(
       <WeatherWidget 
-        date="2026-01-10" 
+        date={testDate} 
         workoutType="Run" 
         isOpen={true} 
       />
@@ -178,8 +190,150 @@ describe('WeatherWidget', () => {
 
     await waitFor(() => {
       expect(apiCall).toHaveBeenCalledWith(
-        'http://localhost:5000/api/weather/2026-01-10'
+        `http://localhost:5000/api/weather/${testDate}`
       );
     });
+  });
+
+  test('should not fetch weather for dates beyond 16-day forecast range', async () => {
+    // Calculate a date 20 days in the future (beyond the 16-day limit)
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 20);
+    const futureDateString = futureDate.toISOString().split('T')[0];
+
+    const { container } = render(
+      <WeatherWidget 
+        date={futureDateString} 
+        workoutType="Run" 
+        isOpen={true} 
+      />
+    );
+
+    // Wait a bit to ensure no API call is made
+    await waitFor(() => {
+      expect(apiCall).not.toHaveBeenCalled();
+    });
+
+    // Widget should render nothing
+    expect(container.firstChild).toBeNull();
+  });
+
+  test('should not fetch weather for dates beyond 16-day forecast range even after date change', async () => {
+    const mockWeatherData = {
+      date: '2026-01-15',
+      temperature: 50,
+      rain_probability: 20,
+      windspeed: 10,
+      weather_code: 0,
+      description: 'Clear sky'
+    };
+
+    const mockResponse = {
+      ok: true,
+      json: async () => mockWeatherData
+    };
+
+    apiCall.mockResolvedValueOnce(mockResponse);
+
+    // Start with a date within range
+    const nearDate = new Date();
+    nearDate.setDate(nearDate.getDate() + 5);
+    const nearDateString = nearDate.toISOString().split('T')[0];
+
+    const { container, rerender } = render(
+      <WeatherWidget 
+        date={nearDateString} 
+        workoutType="Run" 
+        isOpen={true} 
+      />
+    );
+
+    // Wait for initial fetch
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledTimes(1);
+    });
+
+    // Change to a date beyond the forecast range
+    const farDate = new Date();
+    farDate.setDate(farDate.getDate() + 20);
+    const farDateString = farDate.toISOString().split('T')[0];
+
+    rerender(
+      <WeatherWidget 
+        date={farDateString} 
+        workoutType="Run" 
+        isOpen={true} 
+      />
+    );
+
+    // Should not make another API call
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledTimes(1);
+    });
+
+    // Widget should render nothing
+    expect(container.firstChild).toBeNull();
+  });
+
+  test('should fetch weather for dates within 16-day forecast range', async () => {
+    // Calculate a date 10 days in the future (within the 16-day limit)
+    const futureDate = getDaysFromNow(10);
+    
+    const mockWeatherData = {
+      date: futureDate,
+      temperature: 55,
+      rain_probability: 10,
+      windspeed: 8,
+      weather_code: 1,
+      description: 'Mainly clear'
+    };
+
+    const mockResponse = {
+      ok: true,
+      json: async () => mockWeatherData
+    };
+
+    apiCall.mockResolvedValueOnce(mockResponse);
+
+    render(
+      <WeatherWidget 
+        date={futureDate} 
+        workoutType="Run" 
+        isOpen={true} 
+      />
+    );
+
+    // Should make API call
+    await waitFor(() => {
+      expect(apiCall).toHaveBeenCalledTimes(1);
+    });
+
+    // Should display weather
+    await waitFor(() => {
+      expect(screen.getByText('Mainly clear')).toBeInTheDocument();
+    });
+  });
+
+  test('should not fetch weather for past dates', async () => {
+    // Calculate yesterday's date
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = yesterday.toISOString().split('T')[0];
+
+    const { container } = render(
+      <WeatherWidget 
+        date={yesterdayString} 
+        workoutType="Run" 
+        isOpen={true} 
+      />
+    );
+
+    // Should not make API call
+    await waitFor(() => {
+      expect(apiCall).not.toHaveBeenCalled();
+    });
+
+    // Widget should render nothing
+    expect(container.firstChild).toBeNull();
   });
 });
