@@ -50,3 +50,6 @@ htmlcov/
 # Backups
 *.backup
 *.bak
+
+# Test credentials (local only)
+test-credentials.json
