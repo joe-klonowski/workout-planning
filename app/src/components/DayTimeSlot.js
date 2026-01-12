@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
-import { getWeatherInfo } from '../utils/weatherUtils';
+import { getWeatherInfo, isWeatherAvailable } from '../utils/weatherUtils';
 import '../styles/DayTimeSlot.css';
 
 /**
@@ -32,12 +32,21 @@ function DayTimeSlot({
       return; // Skip unscheduled
     }
 
+    const dateStr = dayObj.date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // Check if weather is available for this date before making API call
+    if (!isWeatherAvailable(dateStr)) {
+      setWeather(null);
+      setError(false);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(false);
 
     const fetchWeather = async () => {
       try {
-        const dateStr = dayObj.date.toISOString().split('T')[0]; // YYYY-MM-DD format
         const url = API_ENDPOINTS.WEATHER_BY_DATE(dateStr);
         const response = await apiCall(url);
         
@@ -60,7 +69,7 @@ function DayTimeSlot({
     };
 
     fetchWeather();
-  }, [dayObj.date, timeSlot, API_ENDPOINTS, apiCall]);
+  }, [dayObj.date, timeSlot]);
 
   const isBeingDraggedOver = draggedWorkout && 
     dragOverDate === dayObj.date.toISOString() && 
