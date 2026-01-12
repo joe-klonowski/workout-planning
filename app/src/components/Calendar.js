@@ -10,6 +10,7 @@ import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import DayTimeSlot from './DayTimeSlot';
 import WorkoutBadge from './WorkoutBadge';
+import CalendarHeader from './CalendarHeader';
 import '../styles/Calendar.css';
 
 /**
@@ -441,51 +442,19 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   return (
     <div className="calendar-wrapper">
       <div className="calendar">
-        <div className="calendar-header">
-          <div className="header-left">
-            <button onClick={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth} className="nav-button">
-              ← Previous
-            </button>
-            <h2 className="month-year">{monthYear}</h2>
-            <button onClick={viewMode === 'week' ? goToNextWeek : goToNextMonth} className="nav-button">
-              Next →
-            </button>
-            <button onClick={goToToday} className="today-button">
-              Today
-            </button>
-          </div>
-          <div className="header-right">
-            <button 
-              onClick={() => setIsImportWorkoutModalOpen(true)} 
-              className="import-workout-button"
-            >
-              📥 Import from TrainingPeaks
-            </button>
-            <button 
-              onClick={() => {
-                setAddWorkoutInitialDate(null);
-                setIsAddWorkoutModalOpen(true);
-              }} 
-              className="add-workout-button"
-            >
-              + Add Workout
-            </button>
-            <div className="view-toggle">
-              <button
-                onClick={() => setViewMode('week')}
-                className={`toggle-button ${viewMode === 'week' ? 'active' : ''}`}
-              >
-                Week
-              </button>
-              <button
-                onClick={() => setViewMode('month')}
-                className={`toggle-button ${viewMode === 'month' ? 'active' : ''}`}
-              >
-                Month
-              </button>
-            </div>
-          </div>
-        </div>
+        <CalendarHeader
+          monthYear={monthYear}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onNavPrevious={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth}
+          onNavNext={viewMode === 'week' ? goToNextWeek : goToNextMonth}
+          onGoToToday={goToToday}
+          onOpenImport={() => setIsImportWorkoutModalOpen(true)}
+          onOpenAddWorkout={() => {
+            setAddWorkoutInitialDate(null);
+            setIsAddWorkoutModalOpen(true);
+          }}
+        />
 
         <div className="day-of-week-headers">
           <div className="day-of-week">Mon</div>

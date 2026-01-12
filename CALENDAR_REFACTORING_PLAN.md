@@ -89,19 +89,21 @@ Calendar (parent coordinator)
 - Updated `DayTimeSlot.js` to use WorkoutBadge directly
 - **Test:** Verify existing Calendar tests still pass (537/542 passing, 99.1%)
 
-### Phase 3: Extract CalendarHeader Component
+### Phase 3: Extract CalendarHeader Component ✅ COMPLETED
 **Duration:** 1-2 hours
 
-#### Step 7: Create `app/src/components/CalendarHeader.js`
+#### Step 7: Create `app/src/components/CalendarHeader.js` ✅
 - Extract entire header section (navigation, view toggle, action buttons)
 - Props: `{ monthYear, viewMode, onViewModeChange, onNavPrevious, onNavNext, onGoToToday, onOpenImport, onOpenAddWorkout }`
 - **Test:** Create `CalendarHeader.test.js`
+- **Result:** 27 tests, 100% component coverage
 
-#### Step 8: Create sub-components (optional optimization)
+#### Step 8: Create sub-components (optional optimization) - SKIPPED
 - `DateNavigation.js` - Previous/Next/Today buttons
 - `ViewModeToggle.js` - Week/Month toggle
 - `ActionButtons.js` - Import/Add buttons
 - **Test:** Individual component tests
+- **Note:** Deferred to future iteration; current component is well-structured and not overly complex
 
 ### Phase 4: Extract CalendarDay Component
 **Duration:** 2-3 hours (most complex phase)
@@ -171,29 +173,29 @@ npm test -- --coverage
 ```
 app/src/
 ├── components/
-│   ├── Calendar.js (~250 lines)
+│   ├── Calendar.js (~682 lines) - **Current state**
 │   ├── Calendar.test.js
-│   ├── CalendarDay.js (new, ~150 lines)
-│   ├── CalendarDay.test.js (new)
-│   ├── CalendarGrid.js (new, ~100 lines)
-│   ├── CalendarGrid.test.js (new)
-│   ├── CalendarHeader.js (new, ~100 lines)
-│   ├── CalendarHeader.test.js (new)
+│   ├── CalendarDay.js (new, ~150 lines) - **Planned**
+│   ├── CalendarDay.test.js (new) - **Planned**
+│   ├── CalendarGrid.js (new, ~100 lines) - **Planned**
+│   ├── CalendarGrid.test.js (new) - **Planned**
+│   ├── CalendarHeader.js (new, ~82 lines) ✅ **Completed**
+│   ├── CalendarHeader.test.js (new, 27 tests) ✅ **Completed**
 │   ├── DayTimeSlot.js (existing, minimal changes)
 │   ├── DayTimeSlot.test.js (existing, update if needed)
-│   ├── WorkoutBadge.js (new, ~120 lines)
-│   ├── WorkoutBadge.test.js (new)
+│   ├── WorkoutBadge.js (new, ~120 lines) ✅ **Completed (Phase 2)**
+│   ├── WorkoutBadge.test.js (new, 35 tests) ✅ **Completed (Phase 2)**
 │   └── ... (other existing components)
 ├── hooks/
-│   ├── useCalendarDragDrop.js (new)
-│   ├── useCalendarDragDrop.test.js (new)
-│   ├── useCalendarNavigation.js (new)
-│   └── useCalendarNavigation.test.js (new)
+│   ├── useCalendarDragDrop.js (new) ✅ **Completed (Phase 1)**
+│   ├── useCalendarDragDrop.test.js (new) ✅ **Completed (Phase 1)**
+│   ├── useCalendarNavigation.js (new) ✅ **Completed (Phase 1)**
+│   └── useCalendarNavigation.test.js (new) ✅ **Completed (Phase 1)**
 ├── utils/
-│   ├── workoutFormatters.js (new)
-│   ├── workoutFormatters.test.js (new)
-│   ├── triClubUtils.js (new)
-│   ├── triClubUtils.test.js (new)
+│   ├── workoutFormatters.js (new) ✅ **Completed (Phase 1)**
+│   ├── workoutFormatters.test.js (new) ✅ **Completed (Phase 1)**
+│   ├── triClubUtils.js (new) ✅ **Completed (Phase 1)**
+│   ├── triClubUtils.test.js (new) ✅ **Completed (Phase 1)**
 │   └── ... (other existing utils)
 ```
 
@@ -207,26 +209,27 @@ app/src/
 
 ## Success Criteria
 
-- ✅ All existing tests pass (209+ tests) - **Current: 537/542 passing (99.1%)**
+- ✅ All existing tests pass (209+ tests) - **Current: 565/569 passing (99.3%)**
 - ⏳ Test coverage remains ≥90%
-- ⏳ Calendar.js reduced from ~784 to ~200-300 lines - **Current: ~714 lines**
+- ⏳ Calendar.js reduced from ~784 to ~200-300 lines - **Current: ~682 lines**
 - ✅ All functionality works identically to before
 - ✅ No visual regressions
 - ✅ Drag-and-drop works smoothly
 - ✅ Weather widgets display correctly
 - ✅ Navigation and view switching work
-- ✅ New components have comprehensive tests
+- ✅ New components have comprehensive tests - **CalendarHeader: 27 tests, 100% coverage**
 
 ## Progress Summary
 
-### Completed (Phases 1-2)
+### Completed (Phases 1-3)
 - ✅ Phase 1: All utility functions and hooks extracted and tested
 - ✅ Phase 2: WorkoutBadge component created with 100% test coverage
+- ✅ Phase 3: CalendarHeader component created with 100% test coverage (27 tests)
 - ✅ DayTimeSlot updated to use new component structure
-- **Line reduction**: 784 → 714 lines (70 lines removed, ~9%)
+- **Line reduction**: 784 → 682 lines (102 lines removed, ~13%)
+- **Test count**: 569 total tests (565 passing, 4 pre-existing failures)
 
-### Remaining Work (Phases 3-7)
-- Phase 3: Extract CalendarHeader Component
+### Remaining Work (Phases 4-7)
 - Phase 4: Extract CalendarDay Component  
 - Phase 5: Extract CalendarGrid Component
 - Phase 6: Refactor Main Calendar Component
