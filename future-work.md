@@ -44,6 +44,13 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - Sometimes dragging workouts around to new time slots causes an error popup in the UI. It seems that refreshing the page fixes the problem and puts the workout where it was dragged to.
+- There appears to be a layout bug in the calendar component. To reproduce in dev environment:
+  - Go to calendar component.
+  - Go to the week that contains Jan 12 2026.
+  - Put a run workout in the morning, and swim and strength workouts in the evening (if they're not there already).
+  - Put a bike workout in the "unscheduled" part of that day (if not there already).
+  - Observe that the "unscheduled" label isn't visible, maybe it's hidden behind workout cards? It should be visible.
+  - Observe that the bike workout card is overlapping with the swim workout card. Cards should not overlap.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
