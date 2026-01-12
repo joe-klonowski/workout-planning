@@ -53,31 +53,40 @@ describe('Calendar Component', () => {
 
   const mockWorkouts = [
     {
+      id: 1,
       title: 'Morning Run',
       workoutType: 'Run',
       workoutDate: new DateOnly(2026, 1, 15),
+      timeOfDay: 'morning',
       plannedDuration: 0.75,
       plannedDistanceInMeters: 5000,
       workoutDescription: 'Easy 5k run',
       coachComments: 'Keep it easy',
+      isSelected: true,
     },
     {
+      id: 2,
       title: 'Evening Swim',
       workoutType: 'Swim',
       workoutDate: new DateOnly(2026, 1, 15),
+      timeOfDay: 'evening',
       plannedDuration: 1,
       plannedDistanceInMeters: 2000,
       workoutDescription: 'Swim workout',
       coachComments: '',
+      isSelected: true,
     },
     {
+      id: 3,
       title: 'Bike Ride',
       workoutType: 'Bike',
       workoutDate: new DateOnly(2026, 1, 16),
+      timeOfDay: 'morning',
       plannedDuration: 2,
       plannedDistanceInMeters: 40000,
       workoutDescription: 'Long ride',
       coachComments: '',
+      isSelected: true,
     },
   ];
 
@@ -774,11 +783,13 @@ describe('Calendar Component', () => {
         title: 'Bike Ride',
         workoutType: 'Bike',
         workoutDate: new DateOnly(2026, 1, 15),
+        timeOfDay: 'morning',
         plannedDuration: 2,
         plannedDistanceInMeters: 40000,
         workoutDescription: 'Long ride',
         coachComments: '',
         workoutLocation: null, // Initially no location set
+        isSelected: true,
       };
 
       const testDate = new DateOnly(2026, 1, 15);

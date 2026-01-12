@@ -176,7 +176,7 @@ function DayTimeSlot({
             workout={workout}
             onDragStart={onWorkoutDragStart}
             onDragEnd={onWorkoutDragEnd}
-            onWorkoutClick={onWorkoutClick}
+            onWorkoutClick={() => onWorkoutClick(workout)}
             onSelectionToggle={onWorkoutSelectionToggle}
             draggedWorkoutId={draggedWorkout?.id}
           />
