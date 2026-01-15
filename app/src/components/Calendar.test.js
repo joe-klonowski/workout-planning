@@ -1367,6 +1367,83 @@ describe('Calendar Component', () => {
       
       expect(mockDateChange).toHaveBeenCalled();
     });
+
+    it('should not trigger weekly-targets API calls during drag (without drop)', async () => {
+      // Mock fetch to track API calls
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => []
+      });
+      global.fetch = mockFetch;
+
+      const testDate = new DateOnly(2026, 1, 15);
+      const workouts = [
+        {
+          id: 1,
+          title: 'Morning Run',
+          workoutType: 'Run',
+          workoutDate: new DateOnly(2026, 1, 15),
+          originallyPlannedDay: '2026-01-15',
+          plannedDuration: 1,
+          isSelected: true,
+          timeOfDay: 'morning',
+        },
+      ];
+
+      const { container } = render(
+        <Calendar 
+          workouts={workouts} 
+          initialDate={testDate}
+        />
+      );
+
+      // Wait for initial render and API calls
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled();
+      });
+
+      // Count initial API calls (should be 1 for initial weekly targets fetch)
+      const initialCallCount = mockFetch.mock.calls.filter(
+        call => call[0] && call[0].includes('/api/weekly-targets')
+      ).length;
+
+      // Get the workout badge
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+
+      // Use fake timers for drag operations
+      jest.useFakeTimers();
+
+      // Simulate dragging (start drag and drag over multiple areas without dropping)
+      act(() => {
+        fireEvent.dragStart(workoutBadge);
+        jest.advanceTimersByTime(100); // Advance past the time slot display delay
+      });
+
+      // Drag over multiple time slots to simulate moving around
+      const timeSlots = container.querySelectorAll('.time-slot');
+      for (let i = 0; i < Math.min(5, timeSlots.length); i++) {
+        act(() => {
+          fireEvent.dragOver(timeSlots[i]);
+        });
+      }
+
+      // End drag without dropping
+      act(() => {
+        fireEvent.dragEnd(workoutBadge);
+      });
+
+      jest.useRealTimers();
+
+      // Count API calls after drag operations
+      const finalCallCount = mockFetch.mock.calls.filter(
+        call => call[0] && call[0].includes('/api/weekly-targets')
+      ).length;
+
+      // Verify no additional API calls were made during drag operations
+      expect(finalCallCount).toBe(initialCallCount);
+
+      delete global.fetch;
+    });
   });
 
   describe('Time of Day Functionality', () => {
