@@ -1441,8 +1441,6 @@ describe('Calendar Component', () => {
 
       // Verify no additional API calls were made during drag operations
       expect(finalCallCount).toBe(initialCallCount);
-
-      delete global.fetch;
     });
   });
 
