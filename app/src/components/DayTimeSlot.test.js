@@ -110,27 +110,30 @@ describe('DayTimeSlot Component', () => {
       })
     });
 
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={testDayObj}
-          timeSlot="morning"
-          workouts={[]}
-          triClubEvents={[]}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
-    });
+    render(
+      <DayTimeSlot
+        dayObj={testDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
+    });
+    
+    // Wait for weather data to load
+    await waitFor(() => {
+      expect(screen.getByText(/68°F/)).toBeInTheDocument();
     });
   });
 
@@ -168,24 +171,22 @@ describe('DayTimeSlot Component', () => {
       json: async () => mockWeatherData
     });
 
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={testDayObj}
-          timeSlot="morning"
-          workouts={[]}
-          triClubEvents={[]}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
-    });
+    render(
+      <DayTimeSlot
+        dayObj={testDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/45°F/)).toBeInTheDocument();
@@ -198,24 +199,22 @@ describe('DayTimeSlot Component', () => {
   });
 
   test('should not fetch weather for unscheduled slot', async () => {
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={mockDayObj}
-          timeSlot="unscheduled"
-          workouts={[]}
-          triClubEvents={[]}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
-    });
+    render(
+      <DayTimeSlot
+        dayObj={mockDayObj}
+        timeSlot="unscheduled"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Unscheduled')).toBeInTheDocument();
@@ -338,28 +337,31 @@ describe('DayTimeSlot Component', () => {
       { id: 2, title: 'Strength Training' }
     ];
 
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={mockDayObj}
-          timeSlot="morning"
-          workouts={mockWorkouts}
-          triClubEvents={[]}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
-    });
+    render(
+      <DayTimeSlot
+        dayObj={mockDayObj}
+        timeSlot="morning"
+        workouts={mockWorkouts}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Morning Run')).toBeInTheDocument();
       expect(screen.getByText('Strength Training')).toBeInTheDocument();
+    });
+    
+    // Wait for weather data to load
+    await waitFor(() => {
+      expect(screen.getByText(/68°F/)).toBeInTheDocument();
     });
   });
 
@@ -393,27 +395,30 @@ describe('DayTimeSlot Component', () => {
       { formattedTime: '7:00am', activity: 'Ride' }
     ];
 
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={mockDayObj}
-          timeSlot="morning"
-          workouts={[]}
-          triClubEvents={mockTriClubEvents}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
-    });
+    render(
+      <DayTimeSlot
+        dayObj={mockDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={mockTriClubEvents}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/7:00am tri club ride/)).toBeInTheDocument();
+    });
+    
+    // Wait for weather data to load
+    await waitFor(() => {
+      expect(screen.getByText(/68°F/)).toBeInTheDocument();
     });
   });
 
@@ -423,28 +428,32 @@ describe('DayTimeSlot Component', () => {
     
     apiCall.mockRejectedValue(new Error('API Error'));
 
-    await act(async () => {
-      render(
-        <DayTimeSlot
-          dayObj={mockDayObj}
-          timeSlot="morning"
-          workouts={[]}
-          triClubEvents={[]}
-          draggedWorkout={null}
-          dragOverDate={null}
-          dragOverTimeSlot={null}
-          onDragOver={mockOnDragOver}
-          onDragLeave={mockOnDragLeave}
-          onDrop={mockOnDrop}
-          renderWorkoutBadge={mockRenderWorkoutBadge}
-          getTimeOfDayLabel={mockGetTimeOfDayLabel}
-        />
-      );
+    render(
+      <DayTimeSlot
+        dayObj={mockDayObj}
+        timeSlot="morning"
+        workouts={[]}
+        triClubEvents={[]}
+        draggedWorkout={null}
+        dragOverDate={null}
+        dragOverTimeSlot={null}
+        onDragOver={mockOnDragOver}
+        onDragLeave={mockOnDragLeave}
+        onDrop={mockOnDrop}
+        renderWorkoutBadge={mockRenderWorkoutBadge}
+        getTimeOfDayLabel={mockGetTimeOfDayLabel}
+      />
+    );
+
+    // Wait for all async operations and state updates to complete
+    // The component will call the API, fail, log an error, and update state
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Error fetching weather:', expect.any(Error));
+      expect(screen.queryByText(/°F/)).not.toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
-    });
+    // Verify that the time slot header is rendered
+    expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
     
     consoleSpy.mockRestore();
   });
@@ -913,6 +922,19 @@ describe('DayTimeSlot Component', () => {
   });
 
   describe('Layout Bug Regression Tests', () => {
+    beforeEach(() => {
+      // Mock API for these layout tests so components don't fail when fetching weather
+      apiCall.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          date: getDaysFromNow(5),
+          morning: { temperature: 65, rain_probability: 10, windspeed: 8, weather_code: 0 },
+          afternoon: { temperature: 72, rain_probability: 15, windspeed: 10, weather_code: 1 },
+          evening: { temperature: 68, rain_probability: 20, windspeed: 9, weather_code: 2 }
+        })
+      });
+    });
+
     test('unscheduled time slot header should be visible', () => {
       const { container } = render(
         <DayTimeSlot
@@ -944,7 +966,7 @@ describe('DayTimeSlot Component', () => {
       expect(timeSlotElement).toContainElement(headerElement);
     });
 
-    test('time slot should have proper overflow handling', () => {
+    test('time slot should have proper overflow handling', async () => {
       const { container } = render(
         <DayTimeSlot
           dayObj={mockDayObj}
@@ -962,6 +984,11 @@ describe('DayTimeSlot Component', () => {
         />
       );
 
+      // Wait for weather to load
+      await waitFor(() => {
+        expect(screen.getByText(/68°F/)).toBeInTheDocument();
+      });
+
       const timeSlot = container.querySelector('.time-slot.evening');
       expect(timeSlot).toBeInTheDocument();
       
@@ -970,7 +997,7 @@ describe('DayTimeSlot Component', () => {
       expect(workoutContainer).toBeInTheDocument();
     });
 
-    test('multiple time slots in a day should not overlap', () => {
+    test('multiple time slots in a day should not overlap', async () => {
       const { container: morningContainer } = render(
         <DayTimeSlot
           dayObj={mockDayObj}
@@ -987,6 +1014,11 @@ describe('DayTimeSlot Component', () => {
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
+
+      // Wait for morning weather to load
+      await waitFor(() => {
+        expect(screen.getByText(/65°F/)).toBeInTheDocument();
+      });
 
       const { container: eveningContainer } = render(
         <DayTimeSlot
@@ -1005,12 +1037,17 @@ describe('DayTimeSlot Component', () => {
         />
       );
 
+      // Wait for evening weather to load
+      await waitFor(() => {
+        expect(screen.getByText(/68°F/)).toBeInTheDocument();
+      });
+
       // Both time slots should render independently
       expect(morningContainer.querySelector('.time-slot.morning')).toBeInTheDocument();
       expect(eveningContainer.querySelector('.time-slot.evening')).toBeInTheDocument();
     });
 
-    test('time slot with multiple workouts should contain all workout elements', () => {
+    test('time slot with multiple workouts should contain all workout elements', async () => {
       const multipleWorkouts = [mockWorkout1, mockWorkout2, {
         id: 3,
         title: 'Third Workout',
@@ -1043,6 +1080,11 @@ describe('DayTimeSlot Component', () => {
           getTimeOfDayLabel={mockGetTimeOfDayLabel}
         />
       );
+
+      // Wait for weather to load
+      await waitFor(() => {
+        expect(screen.getByText(/68°F/)).toBeInTheDocument();
+      });
 
       // Verify all workouts are rendered
       const workoutContainer = container.querySelector('.time-slot-workouts');

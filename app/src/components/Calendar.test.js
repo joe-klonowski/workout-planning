@@ -4,6 +4,14 @@ import Calendar from './Calendar';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
 
+// Mock weather utilities to disable weather fetching in all tests
+jest.mock('../utils/weatherUtils', () => ({
+  getWeatherInfo: jest.fn(),
+  isWeatherAvailable: jest.fn(() => false), // Disable weather for all dates
+  isHourlyWeatherAvailable: jest.fn(() => false),
+  getMaxWeatherForecastDate: jest.fn(() => '2026-01-31')
+}));
+
 // Mock the API module to prevent actual API calls during tests
 jest.mock('../config/api', () => {
   const mockWeatherData = {
