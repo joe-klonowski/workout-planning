@@ -8,7 +8,7 @@ import AddWorkoutModal from './AddWorkoutModal';
 import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import CalendarHeader from './CalendarHeader';
-import CalendarDay from './CalendarDay';
+import CalendarGrid from './CalendarGrid';
 import '../styles/Calendar.css';
 
 /**
@@ -229,22 +229,6 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
     year: 'numeric',
   }).format(currentDate);
 
-  // Get workouts for a specific day
-  const getWorkoutsForDay = (day, dayYear, dayMonth) => {
-    if (!day) return [];
-    // Create the date string in YYYY-MM-DD format without timezone conversion
-    const dateStr = `${dayYear}-${String(dayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayWorkouts = workoutsByDate[dateStr] || [];
-    
-    // Sort workouts: selected first, then unselected at bottom
-    return dayWorkouts.sort((a, b) => {
-      // If both have same selection status, maintain original order
-      if (a.isSelected === b.isSelected) return 0;
-      // Selected workouts come first (isSelected = true should come before false)
-      return a.isSelected ? -1 : 1;
-    });
-  };
-
   // Get all workouts for the current week (for weekly summary)
   const getWorkoutsForCurrentWeek = () => {
     if (viewMode !== 'week') return [];
@@ -258,11 +242,8 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
     for (let i = 0; i < 7; i++) {
       const dayDate = new Date(weekStart);
       dayDate.setDate(dayDate.getDate() + i);
-      const dayWorkouts = getWorkoutsForDay(
-        dayDate.getDate(),
-        dayDate.getFullYear(),
-        dayDate.getMonth()
-      );
+      const dateStr = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, '0')}-${String(dayDate.getDate()).padStart(2, '0')}`;
+      const dayWorkouts = workoutsByDate[dateStr] || [];
       weekWorkouts.push(...dayWorkouts);
     }
     
@@ -307,46 +288,25 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           }}
         />
 
-        <div className="day-of-week-headers">
-          <div className="day-of-week">Mon</div>
-          <div className="day-of-week">Tue</div>
-          <div className="day-of-week">Wed</div>
-          <div className="day-of-week">Thu</div>
-          <div className="day-of-week">Fri</div>
-          <div className="day-of-week">Sat</div>
-          <div className="day-of-week">Sun</div>
-        </div>
-
-        <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
-          {days.map((dayObj, index) => {
-            const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
-            const isToday = dayObj.date.toDateString() === new Date().toDateString();
-            
-            return (
-              <CalendarDay
-                key={index}
-                dayObj={dayObj}
-                workouts={dayWorkouts}
-                triClubSchedule={triClubSchedule}
-                viewMode={viewMode}
-                isToday={isToday}
-                showTimeSlots={showTimeSlots}
-                dragState={{
-                  draggedWorkout,
-                  dragOverDate,
-                  dragOverTimeSlot
-                }}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onWorkoutClick={handleWorkoutClick}
-                onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-                onWorkoutDragStart={handleDragStart}
-                onWorkoutDragEnd={handleDragEnd}
-              />
-            );
-          })}
-        </div>
+        <CalendarGrid
+          days={days}
+          workoutsByDate={workoutsByDate}
+          viewMode={viewMode}
+          triClubSchedule={triClubSchedule}
+          showTimeSlots={showTimeSlots}
+          dragState={{
+            draggedWorkout,
+            dragOverDate,
+            dragOverTimeSlot
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onWorkoutClick={handleWorkoutClick}
+          onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+          onWorkoutDragStart={handleDragStart}
+          onWorkoutDragEnd={handleDragEnd}
+        />
 
       <WorkoutDetailModal
         workout={selectedWorkout}
