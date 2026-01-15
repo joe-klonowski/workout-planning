@@ -58,9 +58,14 @@ function WeatherWidget({ date, workoutType, isOpen }) {
       return;
     }
 
+    // Track if component is still mounted
+    let isMounted = true;
+
     const fetchWeather = async () => {
-      setLoading(true);
-      setError(null);
+      if (isMounted) {
+        setLoading(true);
+        setError(null);
+      }
       try {
         const url = API_ENDPOINTS.WEATHER_BY_DATE(date);
         const response = await apiCall(url);
@@ -71,20 +76,32 @@ function WeatherWidget({ date, workoutType, isOpen }) {
         
         const data = await response.json();
         
-        // Cache the weather data
-        weatherCache.set(date, null, data);
-        
-        setWeather(data);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          // Cache the weather data
+          weatherCache.set(date, null, data);
+          
+          setWeather(data);
+        }
       } catch (err) {
         console.error('Error fetching weather:', err);
-        setError('Unable to load weather data');
-        setWeather(null);
+        if (isMounted) {
+          setError('Unable to load weather data');
+          setWeather(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchWeather();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [date, isOpen, refreshTrigger]);
 
   if (!isOpen) {

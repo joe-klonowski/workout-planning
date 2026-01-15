@@ -100,6 +100,9 @@ function DayTimeSlot({
     setLoading(true);
     setError(false);
 
+    // Track if component is still mounted
+    let isMounted = true;
+
     const fetchWeather = async () => {
       try {
         let weatherData;
@@ -110,9 +113,11 @@ function DayTimeSlot({
           const response = await apiCall(url);
           
           if (!response.ok) {
-            setError(true);
-            setWeather(null);
-            setIsDailyForecast(false);
+            if (isMounted) {
+              setError(true);
+              setWeather(null);
+              setIsDailyForecast(false);
+            }
             return;
           }
           
@@ -124,30 +129,44 @@ function DayTimeSlot({
           const response = await apiCall(url);
           
           if (!response.ok) {
-            setError(true);
-            setWeather(null);
+            if (isMounted) {
+              setError(true);
+              setWeather(null);
+            }
             return;
           }
           
           weatherData = await response.json();
         }
         
-        // Cache the weather data
-        weatherCache.set(dateStr, timeSlot, weatherData);
-        
-        setWeather(weatherData);
-        setError(false);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          // Cache the weather data
+          weatherCache.set(dateStr, timeSlot, weatherData);
+          
+          setWeather(weatherData);
+          setError(false);
+        }
       } catch (err) {
         console.error('Error fetching weather:', err);
-        setError(true);
-        setWeather(null);
-        setIsDailyForecast(false);
+        if (isMounted) {
+          setError(true);
+          setWeather(null);
+          setIsDailyForecast(false);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchWeather();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [dateStr, timeSlot, refreshTrigger]);
 
   const isBeingDraggedOver = draggedWorkout && 

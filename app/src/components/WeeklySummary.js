@@ -20,6 +20,9 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
 
   // Fetch weekly targets
   useEffect(() => {
+    // Track if component is still mounted
+    let isMounted = true;
+
     const fetchWeeklyTargets = async () => {
       try {
         const response = await fetch(API_ENDPOINTS.WEEKLY_TARGETS);
@@ -28,26 +31,36 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
         }
         const data = await response.json();
         
-        // API now returns an array of weekly targets
-        // Find the matching week based on weekStartDate
-        if (Array.isArray(data) && weekStartDate) {
-          const weekStartStr = weekStartDate.toISOString();
-          const matchingWeek = data.find(week => week.week_start_date === weekStartStr);
-          if (matchingWeek) {
-            setWeeklyTargets(matchingWeek.weekly_targets);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          // API now returns an array of weekly targets
+          // Find the matching week based on weekStartDate
+          if (Array.isArray(data) && weekStartDate) {
+            const weekStartStr = weekStartDate.toISOString();
+            const matchingWeek = data.find(week => week.week_start_date === weekStartStr);
+            if (matchingWeek) {
+              setWeeklyTargets(matchingWeek.weekly_targets);
+            } else {
+              setWeeklyTargets(null);
+            }
           } else {
             setWeeklyTargets(null);
           }
-        } else {
-          setWeeklyTargets(null);
         }
       } catch (error) {
         console.error('Error fetching weekly targets:', error);
-        setTargetsError(error.message);
+        if (isMounted) {
+          setTargetsError(error.message);
+        }
       }
     };
 
     fetchWeeklyTargets();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [weekStartDate]);
 
   // Filter for selected workouts only
