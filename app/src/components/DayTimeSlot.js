@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 import { getWeatherInfo, isWeatherAvailable, isHourlyWeatherAvailable } from '../utils/weatherUtils';
+import { weatherCache } from '../utils/weatherCache';
 import WorkoutBadge from './WorkoutBadge';
 import '../styles/DayTimeSlot.css';
 
@@ -30,14 +31,37 @@ function DayTimeSlot({
   const [isDailyForecast, setIsDailyForecast] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Convert date to stable string for dependency tracking
+  const dateStr = dayObj.date.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+  // Periodically check if weather data is stale and trigger refresh
+  useEffect(() => {
+    if (timeSlot !== 'morning' && timeSlot !== 'afternoon' && timeSlot !== 'evening') {
+      return;
+    }
+    
+    if (!isWeatherAvailable(dateStr)) {
+      return;
+    }
+
+    // Check every 5 minutes if the weather data is stale
+    const staleCheckInterval = setInterval(() => {
+      if (weatherCache.isStale(dateStr, timeSlot)) {
+        // Trigger a refresh by updating the refreshTrigger state
+        setRefreshTrigger(prev => prev + 1);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(staleCheckInterval);
+  }, [dateStr, timeSlot]);
 
   // Fetch weather - use hourly (time-of-day) for days 0-7, daily for days 8-16
   useEffect(() => {
     if (timeSlot !== 'morning' && timeSlot !== 'afternoon' && timeSlot !== 'evening') {
       return; // Skip unscheduled
     }
-
-    const dateStr = dayObj.date.toISOString().split('T')[0]; // YYYY-MM-DD format
     
     // Check if weather is available for this date before making API call
     if (!isWeatherAvailable(dateStr)) {
@@ -45,6 +69,19 @@ function DayTimeSlot({
       setIsDailyForecast(false);
       setError(false);
       setLoading(false);
+      return;
+    }
+
+    // Check cache first
+    const cachedWeather = weatherCache.get(dateStr, timeSlot);
+    if (cachedWeather) {
+      setWeather(cachedWeather);
+      setError(false);
+      setLoading(false);
+      
+      // Determine if this is daily forecast based on whether hourly forecast is available
+      const hasHourlyForecast = isHourlyWeatherAvailable(dateStr);
+      setIsDailyForecast(!hasHourlyForecast);
       return;
     }
 
@@ -95,6 +132,9 @@ function DayTimeSlot({
           weatherData = await response.json();
         }
         
+        // Cache the weather data
+        weatherCache.set(dateStr, timeSlot, weatherData);
+        
         setWeather(weatherData);
         setError(false);
       } catch (err) {
@@ -108,7 +148,7 @@ function DayTimeSlot({
     };
 
     fetchWeather();
-  }, [dayObj.date, timeSlot]);
+  }, [dateStr, timeSlot, refreshTrigger]);
 
   const isBeingDraggedOver = draggedWorkout && 
     dragOverDate === dayObj.date.toISOString() && 
