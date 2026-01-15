@@ -3,6 +3,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import DayTimeSlot from './DayTimeSlot';
 import { DateOnly } from '../utils/DateOnly';
 import { API_ENDPOINTS, apiCall } from '../config/api';
+import { weatherCache } from '../utils/weatherCache';
 
 // Mock the API module
 jest.mock('../config/api', () => ({
@@ -16,6 +17,7 @@ jest.mock('../config/api', () => ({
 describe('DayTimeSlot Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    weatherCache.clear();
   });
 
   // Helper function to get a date string X days from now (in local timezone)

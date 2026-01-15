@@ -3,23 +3,29 @@ import { weatherCache } from './weatherCache';
 // Create a simple localStorage mock
 let mockStore = {};
 
-global.localStorage = {
-  getItem: (key) => mockStore[key] || null,
-  setItem: (key, value) => {
-    mockStore[key] = value.toString();
-  },
-  removeItem: (key) => {
-    delete mockStore[key];
-  },
-  clear: () => {
-    mockStore = {};
-  }
+// Create localStorage mock with proper mockStore reference
+const createLocalStorageMock = () => {
+  return {
+    getItem: (key) => mockStore[key] || null,
+    setItem: (key, value) => {
+      mockStore[key] = value.toString();
+    },
+    removeItem: (key) => {
+      delete mockStore[key];
+    },
+    clear: () => {
+      Object.keys(mockStore).forEach(key => delete mockStore[key]);
+    }
+  };
 };
 
-// Mock Object.keys to return the keys from our mockStore when called on localStorage
+// Initial setup of localStorage
+global.localStorage = createLocalStorageMock();
+
+// Mock Object.keys to return the keys from mockStore when called on localStorage
 const originalObjectKeys = Object.keys;
 global.Object.keys = function(obj) {
-  if (obj === global.localStorage) {
+  if (obj === global.localStorage || obj === localStorage) {
     return originalObjectKeys(mockStore);
   }
   return originalObjectKeys(obj);
@@ -27,7 +33,15 @@ global.Object.keys = function(obj) {
 
 describe('weatherCache', () => {
   beforeEach(() => {
-    mockStore = {};
+    // Clear mockStore properties without reassigning the object
+    Object.keys(mockStore).forEach(key => delete mockStore[key]);
+    
+    // Re-apply our mock to override any default
+    Object.defineProperty(global, 'localStorage', {
+      value: createLocalStorageMock(),
+      writable: true
+    });
+    
     weatherCache.clear();
     weatherCache.loadFromLocalStorage();
     // Clear any intervals
@@ -38,7 +52,8 @@ describe('weatherCache', () => {
   });
 
   afterEach(() => {
-    mockStore = {};
+    // Clear mockStore properties without reassigning the object
+    Object.keys(mockStore).forEach(key => delete mockStore[key]);
     weatherCache.clear();
     // Clear any intervals
     if (weatherCache.cleanupInterval) {

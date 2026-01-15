@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import WeatherWidget from './WeatherWidget';
 import { API_ENDPOINTS, apiCall } from '../config/api';
+import { weatherCache } from '../utils/weatherCache';
 
 // Mock the API module
 jest.mock('../config/api', () => ({
@@ -14,6 +15,7 @@ jest.mock('../config/api', () => ({
 describe('WeatherWidget', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    weatherCache.clear();
   });
 
   // Helper function to get a date string X days from now (in local timezone)
