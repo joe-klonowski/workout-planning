@@ -3,14 +3,12 @@ import PropTypes from 'prop-types';
 import { groupWorkoutsByDate } from '../utils/csvParser';
 import { DateOnly } from '../utils/DateOnly';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
-import WorkoutCard from './WorkoutCard';
 import WorkoutDetailModal from './WorkoutDetailModal';
 import AddWorkoutModal from './AddWorkoutModal';
 import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
-import DayTimeSlot from './DayTimeSlot';
-import WorkoutBadge from './WorkoutBadge';
 import CalendarHeader from './CalendarHeader';
+import CalendarDay from './CalendarDay';
 import '../styles/Calendar.css';
 
 /**
@@ -286,157 +284,10 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
     };
   };
 
-  // Group workouts by time of day
-  const groupWorkoutsByTimeOfDay = (workouts) => {
-    const groups = {
-      morning: [],
-      afternoon: [],
-      evening: [],
-      unscheduled: []
-    };
-    
-    workouts.forEach(workout => {
-      const timeOfDay = workout.timeOfDay || 'unscheduled';
-      if (groups[timeOfDay]) {
-        groups[timeOfDay].push(workout);
-      } else {
-        groups.unscheduled.push(workout);
-      }
-    });
-    
-    return groups;
-  };
-
-  // Get label for time of day
-  const getTimeOfDayLabel = (timeSlot) => {
-    const labels = {
-      morning: '🌅 Morning',
-      afternoon: '☀️ Afternoon',
-      evening: '🌙 Evening',
-      unscheduled: 'Unscheduled'
-    };
-    return labels[timeSlot] || timeSlot;
-  };
-
-  // Convert 24-hour time to 12-hour format with am/pm
-  const formatTime12Hour = (time24) => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'pm' : 'am';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}${period}`;
-  };
-
-  // Categorize time into time slot (morning, afternoon, evening)
-  const getTimeSlot = (time24) => {
-    const hour = parseInt(time24.split(':')[0]);
-    if (hour >= 5 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 17) return 'afternoon';
-    if (hour >= 17 && hour < 22) return 'evening';
-    return 'unscheduled';
-  };
-
-  // Get tri club events for a specific day, grouped by time slot
-  const getTriClubEventsByTimeSlot = (dayDate) => {
-    if (!triClubSchedule || !triClubSchedule.schedule) return {
-      morning: [],
-      afternoon: [],
-      evening: [],
-      unscheduled: []
-    };
-    
-    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][dayDate.getDay()];
-    const events = triClubSchedule.schedule[dayOfWeek] || [];
-    
-    const grouped = {
-      morning: [],
-      afternoon: [],
-      evening: [],
-      unscheduled: []
-    };
-    
-    events.forEach(event => {
-      const timeSlot = getTimeSlot(event.time);
-      grouped[timeSlot].push({
-        ...event,
-        formattedTime: formatTime12Hour(event.time)
-      });
-    });
-    
-    return grouped;
-  };
-
-  // Format duration to hours and minutes
-  const formatDuration = (hours) => {
-    if (hours === 0) return '';
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    if (h > 0 && m > 0) {
-      return `${h}h ${m}m`;
-    } else if (h > 0) {
-      return `${h}h`;
-    } else {
-      return `${m}m`;
-    }
-  };
-
-  // Render a workout badge
   // Handler for clicking on a workout badge
   const handleWorkoutClick = (workout) => {
     setSelectedWorkout(workout);
     setIsModalOpen(true);
-  };
-
-  // Render a time slot drop zone with workouts
-  const renderTimeSlot = (dayObj, timeSlot, workouts) => {
-    const isBeingDraggedOver = draggedWorkout && 
-      dragOverDate === dayObj.date.toISOString() && 
-      dragOverTimeSlot === timeSlot;
-    
-    // Get tri club events for this time slot
-    const triClubEventsBySlot = getTriClubEventsByTimeSlot(dayObj.date);
-    const triClubEvents = triClubEventsBySlot[timeSlot] || [];
-    const hasContent = workouts.length > 0 || triClubEvents.length > 0;
-    
-    return (
-      <div
-        key={timeSlot}
-        className={`time-slot ${timeSlot} ${isBeingDraggedOver ? 'drag-over' : ''}`}
-        onDragOver={(e) => handleDragOver(e, dayObj.date, timeSlot)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, dayObj, timeSlot)}
-      >
-        {hasContent && (
-          <div className="time-slot-header">{getTimeOfDayLabel(timeSlot)}</div>
-        )}
-        {triClubEvents.length > 0 && (
-          <div className="tri-club-events">
-            {triClubEvents.map((event, idx) => (
-              <div key={idx} className="tri-club-event">
-                {event.formattedTime} tri club {event.activity.toLowerCase()}
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="time-slot-workouts">
-          {workouts.map((workout, idx) => (
-            <WorkoutBadge
-              key={idx}
-              workout={workout}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onWorkoutClick={() => handleWorkoutClick(workout)}
-              onSelectionToggle={onWorkoutSelectionToggle}
-              draggedWorkoutId={draggedWorkout?.id}
-            />
-          ))}
-        </div>
-        {draggedWorkout && !hasContent && (
-          <div className="time-slot-placeholder">
-            {getTimeOfDayLabel(timeSlot)}
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -470,131 +321,32 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           {days.map((dayObj, index) => {
             const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
             const isToday = dayObj.date.toDateString() === new Date().toDateString();
-          
-          if (viewMode === 'week') {
-            // Week view rendering - always show time slots with weather
-            const workoutGroups = groupWorkoutsByTimeOfDay(dayWorkouts);
-            const triClubEventsBySlot = getTriClubEventsByTimeSlot(dayObj.date);
             
             return (
-              <div
+              <CalendarDay
                 key={index}
-                className={`calendar-day ${isToday ? 'is-today' : ''} time-slot-mode`}
-              >
-                <div className="day-number">{dayObj.day}</div>
-                <div className="time-slots-container">
-                  <DayTimeSlot
-                    dayObj={dayObj}
-                    timeSlot="morning"
-                    workouts={workoutGroups.morning}
-                    triClubEvents={triClubEventsBySlot.morning}
-                    draggedWorkout={draggedWorkout}
-                    dragOverDate={dragOverDate}
-                    dragOverTimeSlot={dragOverTimeSlot}
-                    onDragOver={(e) => handleDragOver(e, dayObj.date, 'morning')}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, dayObj, 'morning')}
-                    onWorkoutDragStart={handleDragStart}
-                    onWorkoutDragEnd={handleDragEnd}
-                    onWorkoutClick={handleWorkoutClick}
-                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-                    getTimeOfDayLabel={getTimeOfDayLabel}
-                  />
-                  <DayTimeSlot
-                    dayObj={dayObj}
-                    timeSlot="afternoon"
-                    workouts={workoutGroups.afternoon}
-                    triClubEvents={triClubEventsBySlot.afternoon}
-                    draggedWorkout={draggedWorkout}
-                    dragOverDate={dragOverDate}
-                    dragOverTimeSlot={dragOverTimeSlot}
-                    onDragOver={(e) => handleDragOver(e, dayObj.date, 'afternoon')}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, dayObj, 'afternoon')}
-                    onWorkoutDragStart={handleDragStart}
-                    onWorkoutDragEnd={handleDragEnd}
-                    onWorkoutClick={handleWorkoutClick}
-                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-                    getTimeOfDayLabel={getTimeOfDayLabel}
-                  />
-                  <DayTimeSlot
-                    dayObj={dayObj}
-                    timeSlot="evening"
-                    workouts={workoutGroups.evening}
-                    triClubEvents={triClubEventsBySlot.evening}
-                    draggedWorkout={draggedWorkout}
-                    dragOverDate={dragOverDate}
-                    dragOverTimeSlot={dragOverTimeSlot}
-                    onDragOver={(e) => handleDragOver(e, dayObj.date, 'evening')}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, dayObj, 'evening')}
-                    onWorkoutDragStart={handleDragStart}
-                    onWorkoutDragEnd={handleDragEnd}
-                    onWorkoutClick={handleWorkoutClick}
-                    onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-                    getTimeOfDayLabel={getTimeOfDayLabel}
-                  />
-                  {workoutGroups.unscheduled.length > 0 && (
-                    <DayTimeSlot
-                      dayObj={dayObj}
-                      timeSlot="unscheduled"
-                      workouts={workoutGroups.unscheduled}
-                      triClubEvents={[]}
-                      draggedWorkout={draggedWorkout}
-                      dragOverDate={dragOverDate}
-                      dragOverTimeSlot={dragOverTimeSlot}
-                      onDragOver={(e) => handleDragOver(e, dayObj.date, 'unscheduled')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, dayObj, 'unscheduled')}
-                      onWorkoutDragStart={handleDragStart}
-                      onWorkoutDragEnd={handleDragEnd}
-                      onWorkoutClick={handleWorkoutClick}
-                      onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-                      getTimeOfDayLabel={getTimeOfDayLabel}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          } else {
-            // Month view rendering - simpler, no time slots in month view
-            const isCurrentMonth = dayObj.isCurrentMonth;
-
-            return (
-              <div
-                key={index}
-                className={`calendar-day has-date ${
-                  isToday ? 'is-today' : ''
-                } ${!isCurrentMonth ? 'other-month' : ''} ${dragOverDate === dayObj.date.toISOString() && !dragOverTimeSlot ? 'drag-over' : ''}`}
-                onDragOver={(e) => handleDragOver(e, dayObj.date, null)}
+                dayObj={dayObj}
+                workouts={dayWorkouts}
+                triClubSchedule={triClubSchedule}
+                viewMode={viewMode}
+                isToday={isToday}
+                showTimeSlots={showTimeSlots}
+                dragState={{
+                  draggedWorkout,
+                  dragOverDate,
+                  dragOverTimeSlot
+                }}
+                onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, dayObj, null)}
-              >
-                <div className="day-number">{dayObj.day}</div>
-                <div className="workouts-container">
-                  {dayWorkouts.length > 0 ? (
-                    <div className="workouts-list">
-                      {dayWorkouts.map((workout, idx) => (
-                        <WorkoutBadge
-                          key={idx}
-                          workout={workout}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onWorkoutClick={() => handleWorkoutClick(workout)}
-                          onSelectionToggle={onWorkoutSelectionToggle}
-                          draggedWorkoutId={draggedWorkout?.id}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="no-workouts">Rest day</div>
-                  )}
-                </div>
-              </div>
+                onDrop={handleDrop}
+                onWorkoutClick={handleWorkoutClick}
+                onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+                onWorkoutDragStart={handleDragStart}
+                onWorkoutDragEnd={handleDragEnd}
+              />
             );
-          }
-        })}
-      </div>
+          })}
+        </div>
 
       <WorkoutDetailModal
         workout={selectedWorkout}
