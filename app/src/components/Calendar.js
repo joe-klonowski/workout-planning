@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { groupWorkoutsByDate } from '../utils/csvParser';
 import { DateOnly } from '../utils/DateOnly';
-import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import WorkoutDetailModal from './WorkoutDetailModal';
 import AddWorkoutModal from './AddWorkoutModal';
 import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import CalendarHeader from './CalendarHeader';
 import CalendarGrid from './CalendarGrid';
+import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
+import { useCalendarDragDrop } from '../hooks/useCalendarDragDrop';
 import '../styles/Calendar.css';
 
 /**
@@ -28,17 +29,17 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
 })(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts }) {
-  const [currentDate, setCurrentDate] = useState(initialDate.toDate());
+  // Use custom hooks for navigation and drag-drop
+  const navigation = useCalendarNavigation(initialDate);
+  const dragDrop = useCalendarDragDrop();
+  
+  // Local component state
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
   const [isImportWorkoutModalOpen, setIsImportWorkoutModalOpen] = useState(false);
   const [addWorkoutInitialDate, setAddWorkoutInitialDate] = useState(null);
-  const [draggedWorkout, setDraggedWorkout] = useState(null);
-  const [showTimeSlots, setShowTimeSlots] = useState(false); // Separate state to control time slot visibility
-  const [dragOverDate, setDragOverDate] = useState(null);
-  const [dragOverTimeSlot, setDragOverTimeSlot] = useState(null);
 
   // Update selectedWorkout when workouts array changes (e.g., location update)
   useEffect(() => {
@@ -53,6 +54,9 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   // Group workouts by date
   const workoutsByDate = groupWorkoutsByDate(workouts);
 
+  // Get current date from navigation hook
+  const currentDate = navigation.currentDate;
+
   // Get the first day of the month and number of days
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -62,104 +66,15 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   // Convert to Monday-start week (0 = Monday, 6 = Sunday)
   const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
-  // Navigation handlers
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
-  // Navigation handlers for week view
-  const goToPreviousWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() - 7);
-    setCurrentDate(newDate);
-  };
-
-  const goToNextWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + 7);
-    setCurrentDate(newDate);
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  // Drag and drop handlers
-  const handleDragStart = (e, workout) => {
-    setDraggedWorkout(workout);
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/html', e.target.innerHTML);
-    }
-    // Add a subtle visual effect
-    e.target.style.opacity = '0.4';
-    // Show time slots after a tiny delay to let drag operation establish
-    setTimeout(() => {
-      setShowTimeSlots(true);
-    }, 50);
-  };
-
-  const handleDragEnd = (e) => {
-    e.target.style.opacity = '1';
-    setDraggedWorkout(null);
-    setShowTimeSlots(false);
-    setDragOverDate(null);
-    setDragOverTimeSlot(null);
-  };
-
-  const handleDragOver = (e, date, timeSlot = null) => {
-    e.preventDefault();
-    if (e.dataTransfer) {
-      e.dataTransfer.dropEffect = 'move';
-    }
-    setDragOverDate(date.toISOString());
-    setDragOverTimeSlot(timeSlot);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverDate(null);
-    setDragOverTimeSlot(null);
-  };
-
+  // Wrapper for handleDrop to pass callbacks
   const handleDrop = (e, dayObj, timeSlot = null) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverDate(null);
-    setDragOverTimeSlot(null);
-    setShowTimeSlots(false);
-    
-    if (!draggedWorkout) {
-      setDraggedWorkout(null);
-      return;
-    }
-    
-    // Create a Date object for the new date
-    const newDate = new Date(dayObj.year, dayObj.month, dayObj.day);
-    
-    // Compare the actual Date values to see if they're the same day
-    const currentDate = draggedWorkout.workoutDate.toDate();
-    const sameDay = currentDate.getFullYear() === dayObj.year &&
-                    currentDate.getMonth() === dayObj.month &&
-                    currentDate.getDate() === dayObj.day;
-    
-    // Check if time slot changed
-    const timeSlotChanged = draggedWorkout.timeOfDay !== timeSlot;
-    
-    // Update date if changed
-    if (!sameDay && onWorkoutDateChange) {
-      onWorkoutDateChange(draggedWorkout.id, newDate);
-    }
-    
-    // Update time of day if changed
-    if (timeSlotChanged && onWorkoutTimeOfDayChange) {
-      onWorkoutTimeOfDayChange(draggedWorkout.id, timeSlot);
-    }
-    
-    setDraggedWorkout(null);
+    dragDrop.handleDrop(e, dayObj, timeSlot, onWorkoutDateChange, onWorkoutTimeOfDayChange);
+  };
+
+  // Handler for clicking on a workout badge
+  const handleWorkoutClick = (workout) => {
+    setSelectedWorkout(workout);
+    setIsModalOpen(true);
   };
 
   // Build calendar grid
@@ -265,12 +180,6 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
     };
   };
 
-  // Handler for clicking on a workout badge
-  const handleWorkoutClick = (workout) => {
-    setSelectedWorkout(workout);
-    setIsModalOpen(true);
-  };
-
   return (
     <div className="calendar-wrapper">
       <div className="calendar">
@@ -278,9 +187,9 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           monthYear={monthYear}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
-          onNavPrevious={viewMode === 'week' ? goToPreviousWeek : goToPreviousMonth}
-          onNavNext={viewMode === 'week' ? goToNextWeek : goToNextMonth}
-          onGoToToday={goToToday}
+          onNavPrevious={viewMode === 'week' ? navigation.goToPreviousWeek : navigation.goToPreviousMonth}
+          onNavNext={viewMode === 'week' ? navigation.goToNextWeek : navigation.goToNextMonth}
+          onGoToToday={navigation.goToToday}
           onOpenImport={() => setIsImportWorkoutModalOpen(true)}
           onOpenAddWorkout={() => {
             setAddWorkoutInitialDate(null);
@@ -293,19 +202,19 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           workoutsByDate={workoutsByDate}
           viewMode={viewMode}
           triClubSchedule={triClubSchedule}
-          showTimeSlots={showTimeSlots}
+          showTimeSlots={dragDrop.showTimeSlots}
           dragState={{
-            draggedWorkout,
-            dragOverDate,
-            dragOverTimeSlot
+            draggedWorkout: dragDrop.draggedWorkout,
+            dragOverDate: dragDrop.dragOverDate,
+            dragOverTimeSlot: dragDrop.dragOverTimeSlot
           }}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          onDragOver={dragDrop.handleDragOver}
+          onDragLeave={dragDrop.handleDragLeave}
           onDrop={handleDrop}
           onWorkoutClick={handleWorkoutClick}
           onWorkoutSelectionToggle={onWorkoutSelectionToggle}
-          onWorkoutDragStart={handleDragStart}
-          onWorkoutDragEnd={handleDragEnd}
+          onWorkoutDragStart={dragDrop.handleDragStart}
+          onWorkoutDragEnd={dragDrop.handleDragEnd}
         />
 
       <WorkoutDetailModal
