@@ -23,6 +23,8 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
 - Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
+- Completed workouts should show actual duration instead of planned duration.
+- Workouts with no title should get a default title.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
@@ -44,6 +46,7 @@ So some of the future feature work here is to enable that plan.
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
 
 ## Known issues
+- I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
