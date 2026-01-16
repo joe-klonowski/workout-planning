@@ -1,6 +1,10 @@
 /* WeeklySummary Component Styles */
 
+/* Make summary same width as a day column */
 .weekly-summary {
+  flex: 0 0 calc((100% - 140px) / 7);
+  min-width: 180px;
+  max-width: 250px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -215,6 +219,8 @@
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .weekly-summary {
+    flex: 0 0 200px;
+    max-width: 200px;
     padding: 12px;
     gap: 12px;
     min-height: auto;

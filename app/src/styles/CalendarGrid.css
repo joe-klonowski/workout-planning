@@ -1,0 +1,42 @@
+/* CalendarGrid Component Styles */
+
+.day-of-week-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.day-of-week {
+  font-weight: bold;
+  text-align: center;
+  padding: 12px;
+  background-color: #333;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  min-height: 600px;
+}
+
+.calendar-grid.week {
+  min-height: 350px;
+}
+
+.calendar-grid.month {
+  min-height: 600px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-grid {
+    gap: 5px;
+    min-height: auto;
+  }
+}

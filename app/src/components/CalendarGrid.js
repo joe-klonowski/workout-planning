@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { DateOnly } from '../utils/DateOnly';
 import CalendarDay from './CalendarDay';
-import '../styles/Calendar.css';
+import '../styles/CalendarGrid.css';
 
 /**
  * CalendarGrid component renders the calendar grid with day-of-week headers

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import '../styles/CalendarHeader.css';
 
 /**
  * CalendarHeader displays the calendar navigation controls, view mode toggle, and action buttons

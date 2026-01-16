@@ -110,3 +110,42 @@
   color: #333;
   margin-bottom: 3px;
 }
+
+/* Ensure container for time slots is present */
+.time-slots-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+/* Time-grouped workouts (non-dragging view) */
+.time-grouped-workouts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #6c757d;
+}
+
+.time-group-header {
+  font-size: 10px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-group .workout-badge {
+  margin: 0;
+}

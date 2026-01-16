@@ -5,7 +5,7 @@ import { groupWorkoutsByTimeOfDay, getTimeOfDayLabel } from '../utils/workoutFor
 import { getTriClubEventsByTimeSlot } from '../utils/triClubUtils';
 import DayTimeSlot from './DayTimeSlot';
 import WorkoutBadge from './WorkoutBadge';
-import '../styles/Calendar.css';
+import '../styles/CalendarDay.css';
 
 /**
  * CalendarDay component represents a single day cell in the calendar

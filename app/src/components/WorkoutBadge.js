@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import '../styles/WorkoutBadge.css';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { formatDuration } from '../utils/workoutFormatters';
 
