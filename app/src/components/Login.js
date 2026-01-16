@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiCall, API_ENDPOINTS } from '../config/api';
 import '../styles/Login.css';
+import logger from '../utils/logger';
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -16,28 +17,22 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log('📤 Attempting login with username:', username);
-        console.log('📤 Request body: { username, password: (redacted) }');
-      }
+      logger.log('📤 Attempting login with username:', username);
+      logger.log('📤 Request body: { username, password: (redacted) }');
       
       const response = await apiCall(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
 
-      if (process.env.NODE_ENV !== 'test') {
-        console.log('📥 Response status:', response.status);
-        console.log('📥 Response headers:', {
-          'content-type': response.headers.get('content-type'),
-          'server': response.headers.get('server')
-        });
-      }
+      logger.log('📥 Response status:', response.status);
+      logger.log('📥 Response headers:', {
+        'content-type': response.headers.get('content-type'),
+        'server': response.headers.get('server')
+      });
       
       const data = await response.json();
-      if (process.env.NODE_ENV !== 'test') {
-        console.log('📥 Response body:', data);
-      }
+      logger.log('📥 Response body:', data);
 
       if (!response.ok) {
         setError(data.error || `An error occurred (status: ${response.status})`);
@@ -57,7 +52,7 @@ function Login({ onLoginSuccess }) {
 
     } catch (err) {
       setError('Failed to connect to the server');
-      console.error('Auth error:', err);
+      logger.error('Auth error:', err);
     } finally {
       setLoading(false);
     }
