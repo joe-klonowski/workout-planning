@@ -586,6 +586,9 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
+      // Suppress expected console.error for network failure
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
       // Should not throw an error
       render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
@@ -598,6 +601,8 @@ describe('WeeklySummary', () => {
       await waitFor(() => {
         expect(fetch).toHaveBeenCalled();
       });
+
+      consoleErrorSpy.mockRestore();
     });
 
     test('handles API response error gracefully', async () => {
@@ -612,6 +617,9 @@ describe('WeeklySummary', () => {
         createMockWorkout({ plannedDuration: 1.0 }),
       ];
 
+      // Suppress expected console.error for API response failure
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
       render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       // Component should still render without targets
@@ -620,6 +628,8 @@ describe('WeeklySummary', () => {
       await waitFor(() => {
         expect(fetch).toHaveBeenCalled();
       });
+
+      consoleErrorSpy.mockRestore();
     });
 
     test('does not display targets when API returns empty array', async () => {

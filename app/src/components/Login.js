@@ -16,22 +16,28 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      console.log('📤 Attempting login with username:', username);
-      console.log('📤 Request body: { username, password: (redacted) }');
+      if (process.env.NODE_ENV !== 'test') {
+        console.log('📤 Attempting login with username:', username);
+        console.log('📤 Request body: { username, password: (redacted) }');
+      }
       
       const response = await apiCall(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
 
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', {
-        'content-type': response.headers.get('content-type'),
-        'server': response.headers.get('server')
-      });
+      if (process.env.NODE_ENV !== 'test') {
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response headers:', {
+          'content-type': response.headers.get('content-type'),
+          'server': response.headers.get('server')
+        });
+      }
       
       const data = await response.json();
-      console.log('📥 Response body:', data);
+      if (process.env.NODE_ENV !== 'test') {
+        console.log('📥 Response body:', data);
+      }
 
       if (!response.ok) {
         setError(data.error || `An error occurred (status: ${response.status})`);

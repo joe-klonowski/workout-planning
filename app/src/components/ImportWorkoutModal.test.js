@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ImportWorkoutModal from './ImportWorkoutModal';
 
@@ -270,11 +270,15 @@ describe('ImportWorkoutModal', () => {
       expect(screen.getByText('Successfully imported 5 workouts')).toBeInTheDocument();
     });
     
-    // Fast-forward time by 2 seconds
-    jest.advanceTimersByTime(2000);
-    
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-    
+    // Fast-forward time by 2 seconds (wrap in act to avoid state update warnings)
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    await waitFor(() => {
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
     jest.useRealTimers();
   });
 
@@ -332,8 +336,18 @@ describe('ImportWorkoutModal', () => {
       expect(cancelButton).toBeDisabled();
     });
     
-    // Resolve the import
-    resolveImport({ message: 'Success', imported: 1 });
+    // Resolve the import (wrap in act)
+    act(() => {
+      resolveImport({ message: 'Success', imported: 1 });
+    });
+
+    await waitFor(() => {
+      const importButtonAfter = screen.getByRole('button', { name: 'Import Workouts' });
+      // After a successful import the file selection is cleared, so the import button
+      // should be disabled (no file selected) while the cancel button becomes enabled.
+      expect(importButtonAfter).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancel' })).not.toBeDisabled();
+    });
   });
 
   test('displays import instructions', () => {

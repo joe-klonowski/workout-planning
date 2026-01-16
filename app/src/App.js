@@ -4,6 +4,7 @@ import Login from './components/Login';
 import { API_ENDPOINTS, apiCall } from './config/api';
 import { DateOnly } from './utils/DateOnly';
 import './App.css';
+import logger from './utils/logger';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,7 +37,7 @@ function App() {
           setIsAuthenticated(true);
           setCurrentUser(data.user);
         } catch (err) {
-          console.error('Error verifying token:', err);
+          logger.error('Error verifying token:', err);
           localStorage.removeItem('auth_token');
           setIsAuthenticated(false);
           setCurrentUser(null);
@@ -71,15 +72,15 @@ function App() {
 
     const loadWorkouts = async () => {
       try {
-        console.log('Fetching workouts from:', API_ENDPOINTS.WORKOUTS);
+        logger.log('Fetching workouts from:', API_ENDPOINTS.WORKOUTS);
         const response = await apiCall(API_ENDPOINTS.WORKOUTS);
-        console.log('Response status:', response.status);
+        logger.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`Failed to load workouts: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Received data:', data);
-        console.log('Number of workouts:', data.workouts?.length);
+        logger.log('Received data:', data);
+        logger.log('Number of workouts:', data.workouts?.length);
         
         // Transform API data to match existing workout format
         const transformedWorkouts = data.workouts.map(workout => {
@@ -107,7 +108,7 @@ function App() {
           };
         });
         
-        console.log('Transformed workouts:', transformedWorkouts.length);
+        logger.log('Transformed workouts:', transformedWorkouts.length);
         setWorkouts(transformedWorkouts);
         setError(null);
       } catch (err) {
@@ -123,8 +124,8 @@ function App() {
         }
         
         setError(errorMessage);
-        console.error('Error loading workouts:', err);
-        console.error('Error details:', {
+        logger.error('Error loading workouts:', err);
+        logger.error('Error details:', {
           message: err.message,
           stack: err.stack,
           name: err.name
@@ -143,17 +144,17 @@ function App() {
 
     const loadTriClubSchedule = async () => {
       try {
-        console.log('Fetching tri club schedule from:', API_ENDPOINTS.TRI_CLUB_SCHEDULE);
+        logger.log('Fetching tri club schedule from:', API_ENDPOINTS.TRI_CLUB_SCHEDULE);
         const response = await apiCall(API_ENDPOINTS.TRI_CLUB_SCHEDULE);
         if (!response.ok) {
-          console.warn('Failed to load tri club schedule:', response.status);
+        logger.warn('Failed to load tri club schedule:', response.status);
           return; // Silently fail - schedule is optional
         }
         const data = await response.json();
-        console.log('Received tri club schedule:', data);
+        logger.log('Received tri club schedule:', data);
         setTriClubSchedule(data);
       } catch (err) {
-        console.warn('Error loading tri club schedule:', err);
+        logger.warn('Error loading tri club schedule:', err);
         // Silently fail - schedule is optional
       }
     };
@@ -182,7 +183,7 @@ function App() {
         )
       );
     } catch (err) {
-      console.error('Error updating workout selection:', err);
+      logger.error('Error updating workout selection:', err);
       alert('Failed to update workout selection. Please try again.');
     }
   };
@@ -217,7 +218,7 @@ function App() {
         })
       );
     } catch (err) {
-      console.error('Error updating workout date:', err);
+      logger.error('Error updating workout date:', err);
       alert('Failed to move workout. Please try again.');
     }
   };
@@ -248,7 +249,7 @@ function App() {
         })
       );
     } catch (err) {
-      console.error('Error updating workout time:', err);
+      logger.error('Error updating workout time:', err);
       alert('Failed to update workout time. Please try again.');
     }
   };
@@ -278,7 +279,7 @@ function App() {
         })
       );
     } catch (err) {
-      console.error('Error updating workout location:', err);
+      logger.error('Error updating workout location:', err);
       alert('Failed to update workout location. Please try again.');
     }
   };
@@ -299,7 +300,7 @@ function App() {
       const result = await response.json();
       alert(`Successfully exported ${result.eventsCreated} workout events to Apple Calendar!`);
     } catch (err) {
-      console.error('Error exporting to calendar:', err);
+      logger.error('Error exporting to calendar:', err);
       throw err; // Re-throw so the modal can display the error
     }
   };
@@ -354,7 +355,7 @@ function App() {
 
       setWorkouts(prev => [...prev, transformedWorkout]);
     } catch (err) {
-      console.error('Error creating custom workout:', err);
+      logger.error('Error creating custom workout:', err);
       alert('Failed to create custom workout. Please try again.');
     }
   };
@@ -412,7 +413,7 @@ function App() {
       
       return result;
     } catch (err) {
-      console.error('Error importing workouts:', err);
+      logger.error('Error importing workouts:', err);
       throw err;
     }
   };
