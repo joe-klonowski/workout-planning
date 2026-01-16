@@ -39,7 +39,6 @@ So some of the future feature work here is to enable that plan.
 - Consider adding contract tests for the API boundary between the frontend and backend.
 - Add end-to-end tests using something like selenium that can run in the browser or a headless browser.
   - Hopefully that Copilot can use so that these tests can be useful to copilot as well as human developers.
-- Add a test hook / CI check to fail on console errors or warnings produced during tests. This would catch noisy or unmocked tests early (for example, unhandled fetch calls producing "Unknown endpoint" errors, or React "not wrapped in act(...)" warnings). Because there is existing test noise, implement this cautiously: start in a non-blocking "warn" mode or use an allowlist of known messages, then tighten the check to fail on new/unexpected console output as the test suite is cleaned up. Implementation ideas: capture per-test console calls in Jest setup (e.g., in `setupTests.js`) and surface failures in CI or as a Jest reporter.
 
 ## Tech debt
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
