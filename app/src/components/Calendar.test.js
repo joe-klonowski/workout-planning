@@ -343,336 +343,7 @@ describe('Calendar Component', () => {
     expect(jan15).toHaveTextContent('Morning Run');
   });
 
-  describe('Workout Display with Titles and Styling', () => {
-    const testWorkouts = [
-      {
-        title: 'Morning Run',
-        workoutType: 'Run',
-        workoutDate: new DateOnly(2026, 1, 15),
-      },
-      {
-        title: 'Evening Swim',
-        workoutType: 'Swim',
-        workoutDate: new DateOnly(2026, 1, 15),
-      },
-    ];
 
-    it('should display workout titles instead of just counts', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      expect(screen.getByText('Morning Run')).toBeInTheDocument();
-      expect(screen.getByText('Evening Swim')).toBeInTheDocument();
-    });
-
-    it('should display workout badges with correct styling classes', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Switch to month view to test workout badges
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-      
-      const workoutBadges = container.querySelectorAll('.workout-badge');
-      expect(workoutBadges.length).toBeGreaterThan(0);
-    });
-
-    it('should display workout icons with emoji', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-      
-      const workoutIcons = container.querySelectorAll('.workout-icon');
-      expect(workoutIcons.length).toBeGreaterThan(0);
-    });
-
-    it('should apply correct background color and border to workout badges', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-      
-      const workoutBadges = container.querySelectorAll('.workout-badge');
-      expect(workoutBadges.length).toBeGreaterThan(0);
-      
-      // Verify that badges have inline styles
-      workoutBadges.forEach(badge => {
-        const style = badge.getAttribute('style');
-        expect(style).toContain('background-color');
-        expect(style).toContain('border-left');
-      });
-    });
-
-    it('should display different colors for different workout types', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-      
-      const runBadges = Array.from(container.querySelectorAll('.workout-badge')).filter(badge =>
-        badge.textContent.includes('Morning Run')
-      );
-      
-      const swimBadges = Array.from(container.querySelectorAll('.workout-badge')).filter(badge =>
-        badge.textContent.includes('Evening Swim')
-      );
-      
-      expect(runBadges.length).toBe(1);
-      expect(swimBadges.length).toBe(1);
-      
-      // Get styles
-      const runStyle = runBadges[0].getAttribute('style');
-      const swimStyle = swimBadges[0].getAttribute('style');
-      
-      // Styles should be different (different colors for different workout types)
-      expect(runStyle).not.toBe(swimStyle);
-    });
-
-    it('should display all workouts for a single day', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Jan 15 has 2 workouts
-      expect(screen.getByText('Morning Run')).toBeInTheDocument();
-      expect(screen.getByText('Evening Swim')).toBeInTheDocument();
-    });
-
-    it('should display workout titles in the correct element', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      const workoutTitles = container.querySelectorAll('.workout-title');
-      expect(workoutTitles.length).toBeGreaterThan(0);
-      
-      // Verify specific titles are present
-      const titleTexts = Array.from(workoutTitles).map(t => t.textContent);
-      expect(titleTexts).toContain('Morning Run');
-      expect(titleTexts).toContain('Evening Swim');
-    });
-
-    it('should handle workout display in week and month view', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // In week view, titles are displayed
-      expect(screen.getByText('Morning Run')).toBeInTheDocument();
-      expect(screen.getByText('Evening Swim')).toBeInTheDocument();
-    });
-
-    it('should apply styling to workout badges', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={testWorkouts} initialDate={testDate} />);
-      
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-      
-      const workoutBadges = container.querySelectorAll('.workout-badge');
-      expect(workoutBadges.length).toBeGreaterThan(0);
-      
-      // Verify badges have the correct class for hover styling
-      workoutBadges.forEach(badge => {
-        expect(badge.classList.contains('workout-badge')).toBe(true);
-      });
-    });
-  });
-
-  describe('Integration with CSV Parser Format', () => {
-    it('should correctly display workouts with lowercase properties from csvParser', () => {
-      // This test verifies that the Calendar component works with the actual
-      // lowercase property names produced by parseWorkoutsCSV from csvParser.js
-      const parsedWorkouts = [
-        {
-          title: 'Swim Endurance 208: 2800yds as 6x400m',
-          workoutType: 'Swim',
-          description: 'ENDURANCE SWIM',
-          plannedDuration: 0.635,
-          plannedDistance: 2560.32,
-          workoutDate: new DateOnly(2026, 1, 1),
-          coachComments: '',
-          athleteComments: '',
-        },
-        {
-          title: 'Run Track 3x1600m MILERS (PACE)',
-          workoutType: 'Run',
-          description: 'MILE REPEATS',
-          plannedDuration: 0.66,
-          plannedDistance: 7644.01,
-          workoutDate: new DateOnly(2026, 1, 2),
-          coachComments: '',
-          athleteComments: '',
-        },
-      ];
-
-      const testDate = new DateOnly(2026, 1, 1);
-      render(<Calendar workouts={parsedWorkouts} initialDate={testDate} />);
-
-      // Verify titles are displayed
-      expect(screen.getByText('Swim Endurance 208: 2800yds as 6x400m')).toBeInTheDocument();
-      expect(screen.getByText('Run Track 3x1600m MILERS (PACE)')).toBeInTheDocument();
-    });
-
-    it('should apply correct colors and icons for each workout type in parsed format', () => {
-      const parsedWorkouts = [
-        {
-          title: 'Swim Test',
-          workoutType: 'Swim',
-          workoutDate: new DateOnly(2026, 1, 15),
-        },
-        {
-          title: 'Run Test',
-          workoutType: 'Run',
-          workoutDate: new DateOnly(2026, 1, 15),
-        },
-        {
-          title: 'Bike Test',
-          workoutType: 'Bike',
-          workoutDate: new DateOnly(2026, 1, 15),
-        },
-        {
-          title: 'Strength Test',
-          workoutType: 'Strength',
-          workoutDate: new DateOnly(2026, 1, 15),
-        },
-      ];
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={parsedWorkouts} initialDate={testDate} />);
-
-      // Verify all workout types are rendered
-      expect(screen.getByText('Swim Test')).toBeInTheDocument();
-      expect(screen.getByText('Run Test')).toBeInTheDocument();
-      expect(screen.getByText('Bike Test')).toBeInTheDocument();
-      expect(screen.getByText('Strength Test')).toBeInTheDocument();
-
-      // Switch to month view to test badges
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-
-      // Verify badges exist and have styling
-      const workoutBadges = container.querySelectorAll('.workout-badge');
-      expect(workoutBadges.length).toBe(4);
-
-      // Each badge should have different styles
-      const styles = Array.from(workoutBadges).map(badge => badge.getAttribute('style'));
-      const uniqueStyles = new Set(styles);
-      expect(uniqueStyles.size).toBe(4); // All should be different
-    });
-
-    it('should display correct icons for each parsed workout type', () => {
-      const parsedWorkouts = [
-        { title: 'Swim', workoutType: 'Swim', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Run', workoutType: 'Run', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Bike', workoutType: 'Bike', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Strength', workoutType: 'Strength', workoutDate: new DateOnly(2026, 1, 15) },
-      ];
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={parsedWorkouts} initialDate={testDate} />);
-
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-
-      const icons = container.querySelectorAll('.workout-icon');
-      expect(icons.length).toBe(4);
-
-      // Check for specific emoji icons
-      const iconTexts = Array.from(icons).map(icon => icon.textContent);
-      expect(iconTexts).toContain('🏊'); // Swim
-      expect(iconTexts).toContain('🏃'); // Run
-      expect(iconTexts).toContain('🚴'); // Bike
-      expect(iconTexts).toContain('💪'); // Strength
-    });
-
-    it('should not display gray clipboard icon but colored badges with emojis', () => {
-      // This test verifies the visual fix - no more generic gray bars with clipboard
-      const workouts = [
-        { title: 'Test Swim', workoutType: 'Swim', workoutDate: new DateOnly(2026, 1, 15) },
-      ];
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={workouts} initialDate={testDate} />);
-
-      // Switch to month view
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-
-      // Should have workout badges
-      const badges = container.querySelectorAll('.workout-badge');
-      expect(badges.length).toBe(1);
-
-      // Badge should have color styling (backgroundColor and borderLeft)
-      const style = badges[0].getAttribute('style');
-      expect(style).toContain('background-color');
-      expect(style).toContain('border-left');
-      expect(style).toContain('rgb'); // Should have color, not just generic
-
-      // Should have icon element with emoji
-      const icon = container.querySelector('.workout-badge .workout-icon');
-      expect(icon).toBeTruthy();
-      expect(icon.textContent).toBe('🏊'); // Swim emoji
-      expect(icon.textContent).not.toBe('📋'); // Not clipboard emoji
-
-      // Should have title element
-      const title = container.querySelector('.workout-badge .workout-title');
-      expect(title).toBeTruthy();
-      expect(title.textContent).toBe('Test Swim');
-    });
-
-    it('should handle all workout types with distinct visual styling', () => {
-      // Verify multiple workout types on the same day display correctly
-      const workoutsByType = [
-        { title: 'Swim Workout', workoutType: 'Swim', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Run Workout', workoutType: 'Run', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Bike Workout', workoutType: 'Bike', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Strength Workout', workoutType: 'Strength', workoutDate: new DateOnly(2026, 1, 15) },
-        { title: 'Rest Day', workoutType: 'Day Off', workoutDate: new DateOnly(2026, 1, 16) },
-        { title: 'Other Workout', workoutType: 'Other', workoutDate: new DateOnly(2026, 1, 17) },
-      ];
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(<Calendar workouts={workoutsByType} initialDate={testDate} />);
-
-      // Verify all titles are present
-      expect(screen.getByText('Swim Workout')).toBeInTheDocument();
-      expect(screen.getByText('Run Workout')).toBeInTheDocument();
-      expect(screen.getByText('Bike Workout')).toBeInTheDocument();
-      expect(screen.getByText('Strength Workout')).toBeInTheDocument();
-      expect(screen.getByText('Other Workout')).toBeInTheDocument();
-
-      // Switch to month view to test badges
-      const monthButton = screen.getByText('Month');
-      fireEvent.click(monthButton);
-
-      // Verify all have workout badges with styling
-      const badges = container.querySelectorAll('.workout-badge');
-      expect(badges.length).toBe(6);
-
-      badges.forEach((badge, idx) => {
-        const style = badge.getAttribute('style');
-        expect(style).toContain('background-color');
-        expect(style).toContain('border-left');
-
-        // Verify icon exists
-        const icon = badge.querySelector('.workout-icon');
-        expect(icon).toBeTruthy();
-        expect(icon.textContent.length).toBeGreaterThan(0);
-
-        // Verify title exists
-        const title = badge.querySelector('.workout-title');
-        expect(title).toBeTruthy();
-        expect(title.textContent.length).toBeGreaterThan(0);
-      });
-    });
-  });
 
   describe('Workout Modal Interaction', () => {
     it('should open modal when workout card is clicked', () => {
@@ -862,110 +533,9 @@ describe('Calendar Component', () => {
       });
     });
 
-    it('should display location badge on bike workout card when location is set', () => {
-      const bikeWithIndoorLocation = {
-        id: 1,
-        title: 'Indoor Bike',
-        workoutType: 'Bike',
-        workoutDate: new DateOnly(2026, 1, 15),
-        plannedDuration: 1.5,
-        plannedDistanceInMeters: 40000,
-        workoutDescription: 'Zwift workout',
-        coachComments: '',
-        workoutLocation: 'indoor',
-      };
-
-      const bikeWithOutdoorLocation = {
-        id: 2,
-        title: 'Outdoor Bike',
-        workoutType: 'Bike',
-        workoutDate: new DateOnly(2026, 1, 16),
-        plannedDuration: 2,
-        plannedDistanceInMeters: 50000,
-        workoutDescription: 'Road ride',
-        coachComments: '',
-        workoutLocation: 'outdoor',
-      };
-
-      const bikeWithoutLocation = {
-        id: 3,
-        title: 'Unspecified Bike',
-        workoutType: 'Bike',
-        workoutDate: new DateOnly(2026, 1, 17),
-        plannedDuration: 1,
-        plannedDistanceInMeters: 30000,
-        workoutDescription: 'Bike workout',
-        coachComments: '',
-        workoutLocation: null,
-      };
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(
-        <Calendar 
-          workouts={[bikeWithIndoorLocation, bikeWithOutdoorLocation, bikeWithoutLocation]} 
-          initialDate={testDate}
-        />
-      );
-
-      // Check for indoor location badge
-      const workoutBadges = container.querySelectorAll('.workout-badge');
-      expect(workoutBadges.length).toBeGreaterThan(0);
-      
-      // Find the indoor bike workout badge
-      const indoorBadge = Array.from(workoutBadges).find(badge => 
-        badge.textContent.includes('Indoor Bike')
-      );
-      expect(indoorBadge).toBeTruthy();
-      expect(indoorBadge.textContent).toContain('Indoor');
-      expect(indoorBadge.textContent).toContain('🏠');
-      
-      // Find the outdoor bike workout badge
-      const outdoorBadge = Array.from(workoutBadges).find(badge => 
-        badge.textContent.includes('Outdoor Bike')
-      );
-      expect(outdoorBadge).toBeTruthy();
-      expect(outdoorBadge.textContent).toContain('Outdoor');
-      expect(outdoorBadge.textContent).toContain('🌤️');
-      
-      // Verify that bike without location doesn't show location badge
-      const unspecifiedBadge = Array.from(workoutBadges).find(badge => 
-        badge.textContent.includes('Unspecified Bike')
-      );
-      expect(unspecifiedBadge).toBeTruthy();
-      // Should not have the specific Indoor/Outdoor text (just the title)
-      const locationSpan = unspecifiedBadge.querySelector('.workout-location');
-      expect(locationSpan).toBeNull();
-    });
-
-    it('should not display location badge on non-bike workouts even if location is set', () => {
-      const runWithLocation = {
-        id: 1,
-        title: 'Morning Run',
-        workoutType: 'Run',
-        workoutDate: new DateOnly(2026, 1, 15),
-        plannedDuration: 1,
-        plannedDistanceInMeters: 10000,
-        workoutDescription: 'Easy run',
-        coachComments: '',
-        workoutLocation: 'outdoor', // Location set but should not display for runs
-      };
-
-      const testDate = new DateOnly(2026, 1, 15);
-      const { container } = render(
-        <Calendar 
-          workouts={[runWithLocation]} 
-          initialDate={testDate}
-        />
-      );
-
-      const workoutBadge = container.querySelector('.workout-badge');
-      expect(workoutBadge).toBeTruthy();
-      expect(workoutBadge.textContent).toContain('Morning Run');
-      
-      // Should not have location badge for non-bike workouts
-      const locationSpan = workoutBadge.querySelector('.workout-location');
-      expect(locationSpan).toBeNull();
-    });
+    // DELETED: Tests about workout location badges on cards
+    // These are WorkoutBadge's responsibility and are already tested in WorkoutBadge.test.js
+    // Calendar's responsibility is just to pass workouts to WorkoutBadge, not to display the location badges itself
   });
 
   describe('PropTypes validation', () => {
@@ -1499,26 +1069,11 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
-    it('should group workouts by time of day when they have timeOfDay set', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      render(<Calendar workouts={workoutsWithTime} initialDate={testDate} />);
-      
-      // Check for time-of-day group headers (with emojis)
-      // In week view, there are multiple time slots for each day
-      const morningHeaders = screen.getAllByText('🌅 Morning');
-      const afternoonHeaders = screen.getAllByText('☀️ Afternoon');
-      const eveningHeaders = screen.getAllByText('🌙 Evening');
-      expect(morningHeaders.length).toBeGreaterThan(0);
-      expect(afternoonHeaders.length).toBeGreaterThan(0);
-      expect(eveningHeaders.length).toBeGreaterThan(0);
-      
-      // Check workouts are displayed
-      expect(screen.getByText('Morning Run')).toBeInTheDocument();
-      expect(screen.getByText('Afternoon Swim')).toBeInTheDocument();
-      expect(screen.getByText('Evening Bike')).toBeInTheDocument();
-      expect(screen.getByText('Unscheduled Strength')).toBeInTheDocument();
-    });
+    // DELETED: "should group workouts by time of day when they have timeOfDay set"
+    // This is DayTimeSlot's responsibility - it renders the time slot header.
+    // DayTimeSlot.test.js already verifies time slot headers are rendered.
 
+    // KEPT: Tests Calendar's drag coordination showing time slots
     it('should show time slots when dragging a workout', () => {
       jest.useFakeTimers();
       const mockTimeChange = jest.fn();
@@ -1549,6 +1104,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
+    // KEPT: Tests Calendar's coordination of time-of-day change callback
     it('should call onWorkoutTimeOfDayChange when dropping on a time slot', () => {
       jest.useFakeTimers();
       const mockTimeChange = jest.fn();
@@ -1585,6 +1141,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
+    // KEPT: Tests Calendar's coordination of both date and time change
     it('should update both date and time when dropping on different day time slot', () => {
       jest.useFakeTimers();
       const mockTimeChange = jest.fn();
@@ -1627,6 +1184,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
+    // KEPT: Tests Calendar's handling of unscheduled slot drops
     it('should handle unscheduled time slot correctly', () => {
       jest.useFakeTimers();
       const mockTimeChange = jest.fn();
@@ -1662,6 +1220,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
+    // KEPT: Tests Calendar's time slot display coordination in week view
     it('should always show time slot drop zones in week view', () => {
       const testDate = new DateOnly(2026, 1, 15);
       
@@ -1681,6 +1240,7 @@ describe('Calendar Component', () => {
       expect(timeSlotModeElements.length).toBeGreaterThan(0);
     });
 
+    // KEPT: Tests Calendar's time slot show timing during drag
     it('should show time slots shortly after drag starts', async () => {
       jest.useFakeTimers();
       const testDate = new DateOnly(2026, 1, 15);
@@ -1717,6 +1277,7 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
+    // KEPT: Tests Calendar's time slot hide on drop
     it('should hide time slots when workout is dropped', async () => {
       jest.useFakeTimers();
       const mockTimeChange = jest.fn();
@@ -1753,50 +1314,9 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
-    it('should not show unscheduled workout box when not dragging', () => {
-      const testDate = new DateOnly(2026, 1, 15);
-      const workoutsWithUnscheduled = [
-        {
-          id: 1,
-          title: 'Morning Run',
-          workoutType: 'Run',
-          workoutDate: new DateOnly(2026, 1, 15),
-          originallyPlannedDay: '2026-01-15',
-          plannedDuration: 1,
-          isSelected: true,
-          timeOfDay: 'morning',
-        },
-        {
-          id: 2,
-          title: 'Unscheduled Strength',
-          workoutType: 'Strength',
-          workoutDate: new DateOnly(2026, 1, 15),
-          originallyPlannedDay: '2026-01-15',
-          plannedDuration: 0.5,
-          isSelected: true,
-          // No timeOfDay - this is unscheduled
-        },
-      ];
-      
-      const { container } = render(
-        <Calendar 
-          workouts={workoutsWithUnscheduled} 
-          initialDate={testDate}
-        />
-      );
-      
-      // Morning slot should have header with Morning (in week view)
-      const morningHeaders = screen.getAllByText('🌅 Morning');
-      expect(morningHeaders.length).toBeGreaterThan(0);
-      
-      // Both workouts should be visible
-      expect(screen.getByText('Morning Run')).toBeInTheDocument();
-      expect(screen.getByText('Unscheduled Strength')).toBeInTheDocument();
-      
-      // Should have time slots for morning, afternoon, evening
-      const timeSlots = container.querySelectorAll('.time-slot');
-      expect(timeSlots.length).toBeGreaterThan(0);
-    });
+    // DELETED: "should not show unscheduled workout box when not dragging"
+    // This test is about DayTimeSlot rendering behavior, not Calendar's responsibility.
+    // DayTimeSlot.test.js already tests that time slots and their workouts are rendered correctly.
   });
 
   describe('Tri Club Schedule', () => {
@@ -2051,68 +1571,7 @@ describe('Calendar Component', () => {
       });
     });
 
-    test('unscheduled label should be visible when unscheduled workouts exist', () => {
-      const testDate = new DateOnly(2026, 1, 12);
-      const workouts = [
-        {
-          id: 1,
-          title: 'Morning Run',
-          workoutType: 'Run',
-          workoutDate: new DateOnly(2026, 1, 12),
-          plannedDuration: 0.75,
-          timeOfDay: 'morning'
-        },
-        {
-          id: 2,
-          title: 'Evening Swim',
-          workoutType: 'Swim',
-          workoutDate: new DateOnly(2026, 1, 12),
-          plannedDuration: 0.55,
-          timeOfDay: 'evening'
-        },
-        {
-          id: 3,
-          title: 'Evening Strength',
-          workoutType: 'Strength',
-          workoutDate: new DateOnly(2026, 1, 12),
-          plannedDuration: 1,
-          timeOfDay: 'evening'
-        },
-        {
-          id: 4,
-          title: 'Unscheduled Bike',
-          workoutType: 'Bike',
-          workoutDate: new DateOnly(2026, 1, 12),
-          plannedDuration: 1.25,
-          timeOfDay: null
-        }
-      ];
-
-      const { container } = render(
-        <Calendar
-          workouts={workouts}
-          onSelectWorkout={() => {}}
-          onDeselectWorkout={() => {}}
-          onChangeWorkoutTime={() => {}}
-          initialDate={testDate}
-        />
-      );
-
-      // Verify the unscheduled workout exists in the calendar
-      expect(container.textContent).toContain('Unscheduled Bike');
-
-      // Verify unscheduled time slot exists in DOM if there are unscheduled workouts
-      const unscheduledSlots = container.querySelectorAll('.time-slot.unscheduled');
-      expect(unscheduledSlots.length).toBeGreaterThan(0);
-      
-      const unscheduledSlot = unscheduledSlots[0];
-      
-      // Verify the header exists within the slot
-      const header = unscheduledSlot.querySelector('.time-slot-header');
-      expect(header).toBeTruthy();
-      expect(header.textContent).toContain('Unscheduled');
-    });
-
+    // KEPT: Tests Calendar's layout structure and responsibility for organizing time slots
     test('time slots container should have proper structure for overflow management', () => {
       const testDate = new DateOnly(2026, 1, 12);
       const workouts = [
@@ -2159,6 +1618,7 @@ describe('Calendar Component', () => {
       });
     });
 
+    // KEPT: Tests Calendar's coordination of time slot display
     test('multiple workouts in evening slot should not overlap with unscheduled slot', () => {
       const testDate = new DateOnly(2026, 1, 12);
       const workouts = [
@@ -2234,6 +1694,7 @@ describe('Calendar Component', () => {
       expect(eveningSlot).not.toBe(unscheduledSlot);
     });
 
+    // KEPT: Tests Calendar's coordination that all time slot headers are visible
     test('day with many workouts should maintain all time slot headers visible', () => {
       const testDate = new DateOnly(2026, 1, 12);
       const workouts = [
@@ -2267,5 +1728,9 @@ describe('Calendar Component', () => {
       const unscheduledLabels = screen.queryAllByText('Unscheduled');
       expect(unscheduledLabels.length).toBeGreaterThan(0);
     });
+
+    // DELETED: "unscheduled label should be visible when unscheduled workouts exist"
+    // This test is about DayTimeSlot rendering its label, not Calendar's responsibility.
+    // DayTimeSlot.test.js already tests that time slot headers are rendered correctly.
   });
 });
