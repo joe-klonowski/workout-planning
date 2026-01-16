@@ -46,7 +46,7 @@ So some of the future feature work here is to enable that plan.
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
 
 ## Known issues
-- I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked.
+- I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
 
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
