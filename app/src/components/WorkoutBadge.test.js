@@ -221,6 +221,21 @@ describe('WorkoutBadge', () => {
       expect(titleElement.parentElement).toHaveAttribute('role', 'button');
       expect(titleElement.parentElement).toHaveAttribute('tabIndex', '0');
     });
+
+    it('should display TSS badge when workout has TSS', () => {
+      const workoutWithTss = { ...mockWorkout, tss: 85.4 };
+      const { container } = render(<WorkoutBadge workout={workoutWithTss} {...mockHandlers} />);
+      const badge = container.querySelector('.tss-badge');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveTextContent('85 TSS');
+    });
+
+    it('should not display TSS badge when workout has no TSS', () => {
+      const workoutNoTss = { ...mockWorkout, tss: null };
+      const { container } = render(<WorkoutBadge workout={workoutNoTss} {...mockHandlers} />);
+      const badge = container.querySelector('.tss-badge');
+      expect(badge).toBeNull();
+    });
   });
 
   describe('drag and drop', () => {

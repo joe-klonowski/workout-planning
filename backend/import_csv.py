@@ -43,6 +43,18 @@ def import_workouts_from_csv(csv_file_path):
                     skipped_count += 1
                     continue
                 
+                # Parse optional performance fields
+                if_val = float(row['IF']) if row.get('IF') else None
+                time_total_hours = float(row['TimeTotalInHours']) if row.get('TimeTotalInHours') else None
+                tss_val = float(row['TSS']) if row.get('TSS') else None
+
+                # Calculate TSS if missing and IF/time data available (TSS = duration_hours * IF^2 * 100)
+                if tss_val is None and if_val and time_total_hours:
+                    try:
+                        tss_val = time_total_hours * (if_val ** 2) * 100
+                    except Exception:
+                        tss_val = None
+
                 # Create new workout
                 workout = Workout(
                     title=row.get('Title', ''),
@@ -52,10 +64,10 @@ def import_workouts_from_csv(csv_file_path):
                     planned_distance_meters=float(row['PlannedDistanceInMeters']) if row.get('PlannedDistanceInMeters') else None,
                     originally_planned_day=originally_planned_day,
                     coach_comments=row.get('CoachComments', ''),
-                    tss=float(row['TSS']) if row.get('TSS') else None,
-                    intensity_factor=float(row['IF']) if row.get('IF') else None
+                    tss=tss_val,
+                    intensity_factor=if_val
                 )
-                
+
                 db.session.add(workout)
                 imported_count += 1
                 

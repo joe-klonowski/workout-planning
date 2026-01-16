@@ -119,6 +119,13 @@ function WorkoutBadge({
       >
         <span className="workout-title">{workout.title}</span>
       </div>
+
+      {/* TSS badge for completed workouts (displayed when TSS is available) */}
+      {workout.tss && (
+        <span className="tss-badge" title={`TSS: ${Math.round(workout.tss)}`}>
+          {Math.round(workout.tss)} TSS
+        </span>
+      )}
     </div>
   );
 }

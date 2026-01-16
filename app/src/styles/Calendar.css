@@ -269,16 +269,8 @@
   min-height: auto;
   transition: transform 0.15s, box-shadow 0.15s;
   position: relative;
-}
-
-.workout-badge .selection-button {
-  padding: 2px 6px;
-  border: 1.5px solid;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
+  /* let the card grow to fit content (including TSS badge placed in flow) */
+  padding-bottom: 8px;
   background: white;
   line-height: 1;
   z-index: 10;
@@ -321,20 +313,26 @@
   word-break: break-word;
   line-height: 1.2;
   overflow-wrap: break-word;
+  font-weight: 700;
+  font-size: 13px;
+
 }
 
-.no-workouts {
-  color: #999;
-  font-size: 12px;
-  font-style: italic;
-  text-align: center;
-  margin-top: auto;
-}
-
-/* Time Slot Styles */
-.calendar-grid.dragging .calendar-day.time-slot-mode {
-  display: flex;
-  flex-direction: column;
+/* TSS badge shown on completed workouts (now in document flow) */
+.workout-badge .tss-badge {
+  align-self: flex-end; /* align to right */
+  margin-top: 8px; /* separate from title */
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 9;
+  pointer-events: auto;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
 }
 
 .time-slots-container {

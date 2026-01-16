@@ -295,6 +295,26 @@ def test_import_workouts_no_duplicates(client, sample_csv_data):
     assert data['count'] == 2
 
 
+def test_import_workouts_calculates_tss_when_missing(client):
+    """If TSS is missing in CSV but IF and TimeTotalInHours are present, TSS should be calculated and stored"""
+    csv = (
+        "Title,WorkoutType,WorkoutDescription,PlannedDuration,PlannedDistanceInMeters,WorkoutDay,CoachComments,TSS,IF,TimeTotalInHours\n"
+        '"Power Ride","Bike","Hard intervals",1.0,20000.0,2026-01-12,"",,0.8,1.0'
+    )
+    response = client.post('/api/workouts/import', data=csv, content_type='text/csv')
+    assert response.status_code == 201
+    data = json.loads(response.data)
+    assert data['imported'] == 1
+
+    # Verify TSS calculated correctly
+    response = client.get('/api/workouts')
+    data = json.loads(response.data)
+    assert data['count'] == 1
+    workout = data['workouts'][0]
+    expected_tss = 1.0 * (0.8 ** 2) * 100
+    assert round(workout['tss'], 3) == round(expected_tss, 3)
+
+
 def test_update_selection(client, sample_workout):
     """Test creating/updating a workout selection"""
     selection_data = {
