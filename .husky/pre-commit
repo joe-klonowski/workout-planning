@@ -1,5 +1,21 @@
+echo "Checking staged files to decide whether to run frontend pre-commit checks..."
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMRT)
+
+# If no staged files, skip checks
+if [ -z "$STAGED_FILES" ]; then
+  echo "No staged files. Skipping frontend pre-commit checks."
+  exit 0
+fi
+
+# Only run frontend checks if any staged files are frontend-related
+# Current rule: files under `app/` or root package files trigger frontend checks
+echo "$STAGED_FILES" | grep -E '^(app/|package.json|yarn.lock|package-lock.json)' > /dev/null || {
+  echo "No frontend files changed. Skipping frontend pre-commit checks."
+  exit 0
+}
+
 echo "Running console baseline pre-commit check..."
-# Run frontend tests with a short timeout and fail mode for baseline comparison
 CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
   echo "Pre-commit check failed: console baseline check failed. Commit aborted."
   exit 1
