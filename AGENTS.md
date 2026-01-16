@@ -23,5 +23,16 @@ This file contains instructions for agentic coding systems that are editing code
 - Aim for at least 90% test coverage.
 - When fixing a bug, always update or add tests to reproduce the bug and verify that those tests fail before making code changes to fix the bug. Then rerun the tests to verify that the bug is fixed.
 
+### Testing etiquette: avoid noisy tests
+- **Do not add tests that introduce console errors, warnings, or other noisy output when the test suite passes.** Tests should be quiet and deterministic in normal (passing) runs.
+- **Mock external APIs used by components.** Components calling network endpoints (e.g., weekly targets, weather endpoints, tri-club schedule, selections) must have corresponding mocks in tests. Unhandled fetch calls commonly produce "Unknown endpoint" errors and console noise.
+- **Wrap asynchronous state updates in `act(...)`.** When tests invoke callbacks that trigger component state changes, wrap the invocation in `act(async () => { ... })` to prevent React "not wrapped in act(...)" warnings.
+- **Avoid asserting side effects that print to console unless explicitly mocking `console`**; if a test needs to assert logging behavior, mock `console.error`/`console.warn` and restore them afterward.
+- **Examples of warnings to avoid:**
+  - "Unknown endpoint" (unmocked fetch)
+  - "An update to <Component> inside a test was not wrapped in act(...)" (missing act wrappers)
+  - Any unexpected `console.error` / `console.warn` during a successful test run
+- If you encounter noisy warnings during a test run, fix the test by adding proper mocks or `act(...)` wrappers rather than suppressing the warning globally.
+
 ## Markdown files
 - Avoid numbering section headers in Markdown, because it makes it more difficult to add or remove sections (you have to change all the numbers of the other sections).
