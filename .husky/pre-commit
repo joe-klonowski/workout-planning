@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "Running console baseline pre-commit check..."
 # Run frontend tests with a short timeout and fail mode for baseline comparison
 CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
