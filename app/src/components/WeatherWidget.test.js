@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import WeatherWidget from './WeatherWidget';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 import { weatherCache } from '../utils/weatherCache';
@@ -88,13 +88,15 @@ describe('WeatherWidget', () => {
 
     apiCall.mockResolvedValueOnce(mockResponse);
 
-    render(
-      <WeatherWidget 
-        date={testDate} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    await act(async () => {
+      render(
+        <WeatherWidget 
+          date={testDate} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Partly cloudy')).toBeInTheDocument();
@@ -139,13 +141,17 @@ describe('WeatherWidget', () => {
 
     apiCall.mockResolvedValueOnce(mockResponse1);
 
-    const { rerender } = render(
-      <WeatherWidget 
-        date={testDate1} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    let rerender;
+    await act(async () => {
+      const renderResult = render(
+        <WeatherWidget 
+          date={testDate1} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+      rerender = renderResult.rerender;
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Clear sky')).toBeInTheDocument();
@@ -154,13 +160,15 @@ describe('WeatherWidget', () => {
     // Change the date
     apiCall.mockResolvedValueOnce(mockResponse2);
 
-    rerender(
-      <WeatherWidget 
-        date={testDate2} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    await act(async () => {
+      rerender(
+        <WeatherWidget 
+          date={testDate2} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Partly cloudy')).toBeInTheDocument();
@@ -185,13 +193,15 @@ describe('WeatherWidget', () => {
 
     apiCall.mockResolvedValueOnce(mockResponse);
 
-    render(
-      <WeatherWidget 
-        date={testDate} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    await act(async () => {
+      render(
+        <WeatherWidget 
+          date={testDate} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
 
     await waitFor(() => {
       expect(apiCall).toHaveBeenCalledWith(
@@ -255,13 +265,18 @@ describe('WeatherWidget', () => {
       return `${year}-${month}-${day}`;
     })();
 
-    const { container, rerender } = render(
-      <WeatherWidget 
-        date={nearDateString} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    let container, rerender;
+    await act(async () => {
+      const renderResult = render(
+        <WeatherWidget 
+          date={nearDateString} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+      container = renderResult.container;
+      rerender = renderResult.rerender;
+    });
 
     // Wait for initial fetch
     await waitFor(() => {
@@ -278,13 +293,15 @@ describe('WeatherWidget', () => {
       return `${year}-${month}-${day}`;
     })();
 
-    rerender(
-      <WeatherWidget 
-        date={farDateString} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    await act(async () => {
+      rerender(
+        <WeatherWidget 
+          date={farDateString} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
 
     // Should not make another API call
     await waitFor(() => {
@@ -315,13 +332,15 @@ describe('WeatherWidget', () => {
 
     apiCall.mockResolvedValueOnce(mockResponse);
 
-    render(
-      <WeatherWidget 
-        date={futureDate} 
-        workoutType="Run" 
-        isOpen={true} 
-      />
-    );
+    await act(async () => {
+      render(
+        <WeatherWidget 
+          date={futureDate} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
 
     // Should make API call
     await waitFor(() => {

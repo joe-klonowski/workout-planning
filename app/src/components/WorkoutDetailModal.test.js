@@ -4,6 +4,9 @@ import WorkoutDetailModal from './WorkoutDetailModal';
 import { getWorkoutTypeStyle } from '../utils/workoutTypes';
 import { DateOnly } from '../utils/DateOnly';
 
+// Mock WeatherWidget to avoid triggering its async state updates in these tests
+jest.mock('./WeatherWidget', () => () => null);
+
 describe('WorkoutDetailModal Component', () => {
   const mockWorkout = {
     title: 'Morning Run 5k',
