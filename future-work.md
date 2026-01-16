@@ -23,6 +23,9 @@ So some of the future feature work here is to enable that plan.
 - Add support for mobile.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
 - Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
+- Add TSS (training stress score) for completed workouts.
+  - Workout cards for completed workouts should display the training stress score (or TSS) in a small badge in the lower right of the workout card.
+  - Workout detail modal for completed workouts should display TSS.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
