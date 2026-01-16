@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running console baseline pre-commit check..."
+# Run frontend tests with a short timeout and fail mode for baseline comparison
+CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
+  echo "Pre-commit check failed: console baseline check failed. Commit aborted."
+  exit 1
+}

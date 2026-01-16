@@ -1,0 +1,254 @@
+[
+  {
+    "testName": "Calendar Component should render without crashing",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display the current month and year",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display navigation buttons",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display weekday headers",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should navigate to previous month",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should navigate to next month",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display workout titles for days with workouts",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display rest day for days without workouts",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should correctly match workout dates regardless of timezone",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should highlight today",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should handle empty workouts array",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should handle undefined workouts prop",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display day numbers correctly",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should navigate multiple months correctly",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should go to today when today button is clicked",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should handle workouts on different months",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should handle year boundary transitions",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component should display workouts correctly in month view",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should open modal when workout card is clicked",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should display correct workout details in modal",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should close modal when close button is clicked",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should close modal when clicking overlay",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should allow keyboard navigation to open modal",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should display different modal for each clicked workout",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Workout Modal Interaction should update modal content when workout location changes",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept valid workouts array with required fields",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept workouts with all optional fields",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept empty workouts array",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept undefined workouts (uses default)",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept DateOnly initialDate prop",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component PropTypes validation should accept workout with DateOnly workoutDate",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should display dates from previous month in first week of month view",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should display dates from next month in last week of month view",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should visually distinguish other-month dates with CSS class",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should show workouts on adjacent month dates if they exist",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should show correct date numbers for previous month days",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should show correct date numbers for next month days",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should not show other-month class on current month dates",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Adjacent month dates in month view should maintain clickability of adjacent month dates",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should make workout badges draggable",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should call onWorkoutDateChange when workout is dropped on a new day",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should add drag-over styling to calendar day during drag",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should not call onWorkoutDateChange when dropped on same day",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should work in month view as well",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Drag and Drop Functionality should not trigger weekly-targets API calls during drag (without drop)",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should show time slots when dragging a workout",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should call onWorkoutTimeOfDayChange when dropping on a time slot",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should update both date and time when dropping on different day time slot",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should handle unscheduled time slot correctly",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should always show time slot drop zones in week view",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should show time slots shortly after drag starts",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Time of Day Functionality should hide time slots when workout is dropped",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events in calendar",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events with 12-hour time format",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events inside appropriate time slot boxes",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should show time slot box even when only tri club event exists (no workouts)",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events with small unobtrusive styling",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should handle missing tri club schedule gracefully",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events for different days of the week",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Tri Club Schedule should render tri club events alongside workouts",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Layout Bug Regression - Time Slot Overflow time slots container should have proper structure for overflow management",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Layout Bug Regression - Time Slot Overflow multiple workouts in evening slot should not overlap with unscheduled slot",
+    "calls": []
+  },
+  {
+    "testName": "Calendar Component Layout Bug Regression - Time Slot Overflow day with many workouts should maintain all time slot headers visible",
+    "calls": []
+  }
+]
