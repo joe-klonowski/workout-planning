@@ -51,5 +51,8 @@ So some of the future feature work here is to enable that plan.
   - Expected behavior: workouts drag and drop to new time slots without problems.
   - Actual behavior: when you drag a workout to a new time slot, it frequently does not move to the new time slot, it stays at the previous one. Sometimes it takes a very long time to move to the new time slot after dragging. If you refresh the page before the workout card moves, you see an error message in the UI.
 
+## Hooks
+- Make precommit hook run only when relevant code or tests change. Don't run precommit hook if, for example, only documentation files changed. For now the precommit hook only checks frontend stuff, so don't run it if only backend code changed.
+
 ## Other
 - Create separate documentation files for users and developers (currently this is all grouped together in README.md).
