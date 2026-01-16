@@ -1,5 +1,10 @@
 {
+  "scripts": {
+    "prepare": "husky install .husky",
+    "test:scripts": "node scripts/test-compare-console-baseline.js"
+  },
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.57.0",
+    "husky": "^9.1.7"
   }
 }
