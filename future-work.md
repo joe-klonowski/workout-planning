@@ -25,6 +25,17 @@ So some of the future feature work here is to enable that plan.
 - Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
 - Completed workouts should show actual duration instead of planned duration.
 - Workouts with no title should get a default title.
+- Add TSS badge to future workouts.
+  - This is the planned or expected TSS number for the workout.
+  - Style should be similar to past workouts.
+  - Workouts that have no TSS score yet should display "NO TSS" in the badge.
+  - User should be able to click on TSS to change and save TSS (enter a number).
+  - Form to enter and save TSS should save when the user presses enter.
+  - Update the weekly summary TSS section to have 3 TSS numbers:
+    - Completed TSS (sum of TSS of completed workouts in that week).
+    - Projected TSS (completed TSS plus sum of expected TSS of planned workouts in that week).
+      - This number should NOT include TSS for deselected workouts.
+    - Friel target TSS.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
