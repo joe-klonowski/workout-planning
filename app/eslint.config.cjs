@@ -46,4 +46,42 @@ module.exports = [
       react: { version: 'detect' },
     },
   },
+
+  // Test files: enable Jest environment so globals (describe/it/expect/jest) are defined
+  {
+    files: ['**/*.test.js', '**/*.test.jsx', '**/*.spec.js', '**/*.spec.jsx'],
+    languageOptions: {
+      globals: {
+        // Jest globals
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        jest: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+
+        // Common browser and test environment globals
+        window: 'readonly',
+        document: 'readonly',
+        localStorage: 'readonly',
+        fetch: 'readonly',
+        File: 'readonly',
+        FormData: 'readonly',
+
+        // Timer and Node globals used in tests
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        global: 'readonly',
+
+        // Console/assertion helpers
+        console: 'readonly',
+        // Add more as needed
+      },
+    },
+  },
 ];
