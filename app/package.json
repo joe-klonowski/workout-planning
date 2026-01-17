@@ -20,6 +20,9 @@
     "lint": "eslint 'src/**/*.{js,jsx}'",
     "lint:fix": "eslint 'src/**/*.{js,jsx}' --fix"
   },
+  "overrides": {
+    "string-width": "4.2.3"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

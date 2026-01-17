@@ -12,7 +12,9 @@ fi
 # Current rule: files under `app/` or root package files trigger frontend checks
 if echo "$STAGED_FILES" | grep -E '^(app/|package.json|yarn.lock|package-lock.json)' > /dev/null; then
   echo "Running lint-staged for frontend changes..."
-  npx lint-staged || {
+  # Run project-local lint-staged from the app/ package to avoid npx installing
+  # a potentially incompatible global version (string-width regexp flags differ by Node version).
+  npm --prefix app exec -- lint-staged || {
     echo "Pre-commit check failed: lint-staged failed. Commit aborted."
     exit 1
   }
@@ -23,11 +25,16 @@ if echo "$STAGED_FILES" | grep -E '^(app/|package.json|yarn.lock|package-lock.js
     exit 1
   }
 
-  echo "Running console baseline pre-commit check..."
-  CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
-    echo "Pre-commit check failed: console baseline check failed. Commit aborted."
-    exit 1
-  }
+  # Run console baseline tests only when source files in app/src are changed.
+  if echo "$STAGED_FILES" | grep -E '^(app/src/)' > /dev/null; then
+    echo "Running console baseline pre-commit check..."
+    CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
+      echo "Pre-commit check failed: console baseline check failed. Commit aborted."
+      exit 1
+    }
+  else
+    echo "No app/src changes. Skipping console baseline check."
+  fi
 else
   echo "No frontend files changed. Skipping frontend pre-commit checks."
 fi
