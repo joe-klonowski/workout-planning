@@ -107,6 +107,39 @@ describe('WeatherWidget', () => {
     expect(screen.getByText(/13 mph/)).toBeInTheDocument();
   });
 
+  test('shows "Feels like" label', async () => {
+    const testDate = getDaysFromNow(1);
+    const mockWeatherData = {
+      date: testDate,
+      temperature: 52.3,
+      rain_probability: 30,
+      windspeed: 12.5,
+      weather_code: 2,
+      description: 'Partly cloudy'
+    };
+
+    const mockResponse = {
+      ok: true,
+      json: async () => mockWeatherData
+    };
+
+    apiCall.mockResolvedValueOnce(mockResponse);
+
+    await act(async () => {
+      render(
+        <WeatherWidget 
+          date={testDate} 
+          workoutType="Run" 
+          isOpen={true} 
+        />
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Feels like')).toBeInTheDocument();
+    });
+  });
+
   test('should refetch when date prop changes', async () => {
     const testDate1 = getDaysFromNow(1);
     const testDate2 = getDaysFromNow(2);

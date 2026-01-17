@@ -145,7 +145,7 @@ function WeatherWidget({ date, workoutType, isOpen }) {
 
       <div className="weather-details">
         <div className="weather-detail-row">
-          <span className="weather-label">Temperature</span>
+          <span className="weather-label">Feels like</span>
           <span className="weather-value">{Math.round(weather.temperature)}°F</span>
         </div>
 
