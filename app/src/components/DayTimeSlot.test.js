@@ -4,6 +4,7 @@ import DayTimeSlot from './DayTimeSlot';
 import { DateOnly } from '../utils/DateOnly';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 import { weatherCache } from '../utils/weatherCache';
+import logger from '../utils/logger';
 
 // Mock the API module
 jest.mock('../config/api', () => ({
@@ -423,8 +424,8 @@ describe('DayTimeSlot Component', () => {
   });
 
   test('should handle weather API errors gracefully', async () => {
-    // Suppress console.error for this test since we expect an error
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Suppress logger.error for this test since we expect an error
+    const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
     
     apiCall.mockRejectedValue(new Error('API Error'));
 
@@ -448,14 +449,14 @@ describe('DayTimeSlot Component', () => {
     // Wait for all async operations and state updates to complete
     // The component will call the API, fail, log an error, and update state
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error fetching weather:', expect.any(Error));
+      expect(loggerSpy).toHaveBeenCalledWith('Error fetching weather:', expect.any(Error));
       expect(screen.queryByText(/°F/)).not.toBeInTheDocument();
     });
 
     // Verify that the time slot header is rendered
     expect(screen.getByText('🌅 Morning')).toBeInTheDocument();
     
-    consoleSpy.mockRestore();
+    loggerSpy.mockRestore();
   });
 
   test('should not fetch weather for past dates', async () => {

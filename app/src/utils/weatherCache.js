@@ -3,6 +3,8 @@
  * Stores weather data with timestamps in localStorage and only refetches if data is older than 4 hours
  */
 
+import logger from './logger';
+
 const CACHE_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
 const CACHE_KEY_PREFIX = 'weather_cache_';
 
@@ -32,7 +34,7 @@ class WeatherCache {
         }
       }
     } catch (error) {
-      console.error('Error loading weather cache from localStorage:', error);
+      logger.error('Error loading weather cache from localStorage:', error);
       this.cache = new Map();
     }
   }
@@ -44,7 +46,7 @@ class WeatherCache {
     try {
       localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(value));
     } catch (error) {
-      console.error('Error saving weather cache to localStorage:', error);
+      logger.error('Error saving weather cache to localStorage:', error);
     }
   }
 
@@ -55,7 +57,7 @@ class WeatherCache {
     try {
       localStorage.removeItem(CACHE_KEY_PREFIX + key);
     } catch (error) {
-      console.error('Error removing weather cache from localStorage:', error);
+      logger.error('Error removing weather cache from localStorage:', error);
     }
   }
 

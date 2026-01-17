@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import WeeklySummary from './WeeklySummary';
 import { DateOnly } from '../utils/DateOnly';
 
@@ -527,24 +527,46 @@ describe('WeeklySummary', () => {
       });
     });
 
-    test('displays TSS target when available', async () => {
+    test('displays TSS section with Completed < Projected and Friel Target when available', async () => {
+      // Freeze system time to a date within the week so calculations are deterministic
+      jest.useFakeTimers('modern');
+      jest.setSystemTime(new Date(2026, 0, 7)); // 2026-01-07
+
       const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
+        // Completed workout on Jan 5
         createMockWorkout({ 
           plannedDuration: 1.0,
           tss: 50
+        }),
+        // Planned future workout on Jan 9 with TSS 30 (should be included in projected but not completed)
+        createMockWorkout({
+          id: 2,
+          plannedDuration: 1.5,
+          tss: 30,
+          isSelected: true,
+          workoutDate: new DateOnly(2026, 1, 9)
         }),
       ];
 
       render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
+      // Wait for the TSS section to appear
       await waitFor(() => {
         expect(screen.getByText(/TSS \(Training Stress Score\)/)).toBeInTheDocument();
       });
 
+      // All three TSS numbers/labels should be present and show correct values
       await waitFor(() => {
-        expect(screen.getByText(/Target: 460/)).toBeInTheDocument();
+        const completedDetail = screen.getByText(/Completed:/).closest('.summary-detail');
+        const projectedDetail = screen.getByText(/Projected:/).closest('.summary-detail');
+        expect(within(completedDetail).getByText('50')).toBeInTheDocument();
+        expect(within(projectedDetail).getByText('80')).toBeInTheDocument();
+        expect(screen.getByText(/Friel Target: 460/)).toBeInTheDocument();
       });
+
+      // Restore timers
+      jest.useRealTimers();
     });
 
     test('displays discipline-specific targets', async () => {
@@ -670,7 +692,11 @@ describe('WeeklySummary', () => {
       expect(screen.queryByText(/Friel Target:/)).not.toBeInTheDocument();
     });
 
-    test('displays actual TSS calculation (excluding Strength workouts)', async () => {
+    test('displays completed and projected TSS correctly (excluding Strength workouts)', async () => {
+      // Freeze system time to a date within the week for deterministic behavior
+      jest.useFakeTimers('modern');
+      jest.setSystemTime(new Date(2026, 0, 7)); // 2026-01-07
+
       const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ 
@@ -694,9 +720,42 @@ describe('WeeklySummary', () => {
       render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
-        // Actual TSS should be sum of non-strength selected workouts (50 + 75 = 125)
-        expect(screen.getByText('125')).toBeInTheDocument();
+        // Completed TSS should be sum of non-strength workouts (50 + 75 = 125)
+        const completedDetail = screen.getByText(/Completed:/).closest('.summary-detail');
+        const projectedDetail = screen.getByText(/Projected:/).closest('.summary-detail');
+        expect(within(completedDetail).getByText('125')).toBeInTheDocument();
+        expect(within(projectedDetail).getByText('125')).toBeInTheDocument();
       });
+
+      // Restore timers
+      jest.useRealTimers();
+    });
+
+    test('projected TSS excludes deselected workouts', async () => {
+      // Freeze system time to a date early in the week so workouts later in the week are 'planned'
+      jest.useFakeTimers('modern');
+      jest.setSystemTime(new Date(2026, 0, 6)); // 2026-01-06
+
+      const weekStartDate = new DateOnly(2026, 1, 5);
+      // Two future workouts on 2026-01-09 (within same week). One is selected, one is deselected.
+      const futureDate = new DateOnly(2026, 1, 9);
+      const workouts = [
+        createMockWorkout({ id: 1, tss: 50, isSelected: true, workoutDate: futureDate }),
+        createMockWorkout({ id: 2, tss: 80, isSelected: false, workoutDate: futureDate }),
+      ];
+
+      render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
+
+      await waitFor(() => {
+        // Completed should be 0 (no completed workouts yet) and projected should include only selected workout (50)
+        const completedDetail = screen.getByText(/Completed:/).closest('.summary-detail');
+        const projectedDetail = screen.getByText(/Projected:/).closest('.summary-detail');
+        expect(within(completedDetail).getByText('0')).toBeInTheDocument();
+        expect(within(projectedDetail).getByText('50')).toBeInTheDocument();
+      });
+
+      // Restore timers
+      jest.useRealTimers();
     });
   });
 });

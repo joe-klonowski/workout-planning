@@ -284,6 +284,33 @@ function App() {
     }
   };
 
+  // Handle TSS updates for a workout
+  const handleUpdateTss = async (workoutId, newTss) => {
+    try {
+      logger.debug(`App: Updating TSS for workout ${workoutId} -> ${newTss}`);
+      const response = await apiCall(API_ENDPOINTS.WORKOUT_BY_ID(workoutId), {
+        method: 'PUT',
+        body: JSON.stringify({ tss: newTss }),
+      });
+
+      logger.debug('App: update TSS response status', response.status);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(`Failed to update TSS: ${response.status} ${errorText}`);
+      }
+
+      const updatedWorkout = await response.json();
+
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(w => (w.id === workoutId ? { ...w, tss: updatedWorkout.tss } : w))
+      );
+    } catch (err) {
+      logger.error('Error updating TSS:', err);
+      // Keep alert for UI visibility in dev
+      alert('Failed to update TSS. Please try again.');
+    }
+  };
+
   // Handle export to calendar
   const handleExportToCalendar = async (dateRange) => {
     try {
@@ -461,6 +488,7 @@ function App() {
               onExportToCalendar={handleExportToCalendar}
               onAddCustomWorkout={handleAddCustomWorkout}
               onImportWorkouts={handleImportWorkouts}
+              onUpdateTss={handleUpdateTss}
             />
           </>
         )}

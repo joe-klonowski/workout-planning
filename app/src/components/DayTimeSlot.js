@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
 import { getWeatherInfo, isWeatherAvailable, isHourlyWeatherAvailable } from '../utils/weatherUtils';
 import { weatherCache } from '../utils/weatherCache';
+import logger from '../utils/logger';
 import WorkoutBadge from './WorkoutBadge';
 import '../styles/DayTimeSlot.css';
 
@@ -25,6 +26,7 @@ function DayTimeSlot({
   onWorkoutDragEnd,
   onWorkoutClick,
   onWorkoutSelectionToggle,
+  onUpdateTss,
   getTimeOfDayLabel 
 }) {
   const [weather, setWeather] = useState(null);
@@ -148,7 +150,7 @@ function DayTimeSlot({
           setError(false);
         }
       } catch (err) {
-        console.error('Error fetching weather:', err);
+        logger.error('Error fetching weather:', err);
         if (isMounted) {
           setError(true);
           setWeather(null);
@@ -238,6 +240,7 @@ function DayTimeSlot({
             onWorkoutClick={() => onWorkoutClick(workout)}
             onSelectionToggle={onWorkoutSelectionToggle}
             draggedWorkoutId={draggedWorkout?.id}
+            onUpdateTss={onUpdateTss}
           />
         ))}
       </div>
@@ -269,6 +272,7 @@ DayTimeSlot.propTypes = {
   onWorkoutDragEnd: PropTypes.func.isRequired,
   onWorkoutClick: PropTypes.func.isRequired,
   onWorkoutSelectionToggle: PropTypes.func,
+  onUpdateTss: PropTypes.func,
   getTimeOfDayLabel: PropTypes.func.isRequired,
 };
 
@@ -278,6 +282,7 @@ DayTimeSlot.defaultProps = {
   draggedWorkout: null,
   dragOverDate: null,
   dragOverTimeSlot: null,
+  onUpdateTss: null,
 };
 
 export default DayTimeSlot;

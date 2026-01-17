@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import WorkoutBadge from './WorkoutBadge';
 
@@ -230,11 +230,27 @@ describe('WorkoutBadge', () => {
       expect(badge).toHaveTextContent('85 TSS');
     });
 
-    it('should not display TSS badge when workout has no TSS', () => {
+    it('should display NO TSS badge when workout has no TSS', () => {
       const workoutNoTss = { ...mockWorkout, tss: null };
       const { container } = render(<WorkoutBadge workout={workoutNoTss} {...mockHandlers} />);
       const badge = container.querySelector('.tss-badge');
-      expect(badge).toBeNull();
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveTextContent('NO TSS');
+    });
+
+    it('should allow editing TSS and call onUpdateTss when Enter is pressed', async () => {
+      const mockUpdate = jest.fn().mockResolvedValue(null);
+      const workoutWithNoTss = { ...mockWorkout, tss: null };
+      const { container, getByLabelText } = render(<WorkoutBadge workout={workoutWithNoTss} {...mockHandlers} onUpdateTss={mockUpdate} />);
+      const badge = container.querySelector('.tss-badge');
+      // Click to edit
+      fireEvent.click(badge);
+      const input = getByLabelText('Edit TSS');
+      fireEvent.change(input, { target: { value: '90' } });
+      await act(async () => {
+        fireEvent.keyDown(input, { key: 'Enter' });
+      });
+      expect(mockUpdate).toHaveBeenCalledWith(1, 90);
     });
 
     it('should not display TSS badge for Strength workouts even if tss is present', () => {

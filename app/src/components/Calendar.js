@@ -28,7 +28,7 @@ import '../styles/Calendar.css';
 function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts, onUpdateTss }) {
   // Use custom hooks for navigation and drag-drop
   const navigation = useCalendarNavigation(initialDate);
   const dragDrop = useCalendarDragDrop();
@@ -216,6 +216,7 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           onWorkoutSelectionToggle={onWorkoutSelectionToggle}
           onWorkoutDragStart={dragDrop.handleDragStart}
           onWorkoutDragEnd={dragDrop.handleDragEnd}
+          onUpdateTss={onUpdateTss}
         />
 
       <WorkoutDetailModal
@@ -290,6 +291,18 @@ Calendar.propTypes = {
   onExportToCalendar: PropTypes.func,
   onAddCustomWorkout: PropTypes.func,
   onImportWorkouts: PropTypes.func,
+  onUpdateTss: PropTypes.func,
+};
+
+Calendar.defaultProps = {
+  onWorkoutSelectionToggle: null,
+  onWorkoutDateChange: null,
+  onWorkoutTimeOfDayChange: null,
+  onWorkoutLocationChange: null,
+  onExportToCalendar: null,
+  onAddCustomWorkout: null,
+  onImportWorkouts: null,
+  onUpdateTss: null,
 };
 
 Calendar.defaultProps = {

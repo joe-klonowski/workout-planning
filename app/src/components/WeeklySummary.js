@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { DateOnly } from '../utils/DateOnly';
 import ExportModal from './ExportModal';
 import { API_ENDPOINTS } from '../config/api';
+import logger from '../utils/logger';
 import '../styles/WeeklySummary.css';
 
 /**
@@ -48,7 +49,7 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
           }
         }
       } catch (error) {
-        console.error('Error fetching weekly targets:', error);
+        logger.error('Error fetching weekly targets:', error);
         if (isMounted) {
           setTargetsError(error.message);
         }
@@ -135,6 +136,36 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
   const orderedTypes = ['Swim', 'Bike', 'Run', 'Strength', 'Other'];
   const displayTypes = orderedTypes.filter(type => workoutTypeStats[type]);
 
+  // Compute TSS summary values (Completed and Projected)
+  let completedTss = 0;
+  let projectedTss = 0;
+
+  if (weeklyTargets && weeklyTargets.tss) {
+    const today = DateOnly.fromDate(new Date());
+
+    // Completed TSS: workouts in this week that have a TSS and are on or before today
+    completedTss = workouts.reduce((sum, w) => {
+      if (w.workoutType === 'Strength') return sum;
+      if (!w.workoutDate || typeof w.tss !== 'number') return sum;
+      if (w.workoutDate.isBefore(today) || w.workoutDate.equals(today)) return sum + (w.tss || 0);
+      return sum;
+    }, 0);
+
+    // Projected TSS: completedTss + sum of expected TSS for planned (selected) future workouts in the week
+    const plannedFutureTss = workouts.reduce((sum, w) => {
+      if (w.workoutType === 'Strength') return sum;
+      if (!w.isSelected) return sum; // exclude deselected workouts
+      if (!w.workoutDate) return sum;
+      // Future workouts (after today) or today's workout if it has no TSS yet
+      if (w.workoutDate.isAfter(today) || (w.workoutDate.equals(today) && typeof w.tss !== 'number')) {
+        return sum + (w.tss || 0);
+      }
+      return sum;
+    }, 0);
+
+    projectedTss = completedTss + plannedFutureTss;
+  }
+
   const handleExport = async (dateRange) => {
     if (onExportToCalendar) {
       await onExportToCalendar(dateRange);
@@ -165,11 +196,13 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
         <div className="summary-detail">{selectedWorkouts.length} workouts</div>
       </div>
 
+
       {weeklyTargets && weeklyTargets.tss && (
         <div className="summary-section tss-section">
           <div className="summary-label">TSS (Training Stress Score)</div>
-          <div className="summary-value">
-            {selectedWorkouts.reduce((sum, w) => sum + (w.workoutType === 'Strength' ? 0 : (w.tss || 0)), 0).toFixed(0)}
+          <div className="summary-row">
+            <div className="summary-detail">Completed: <span className="summary-value">{completedTss.toFixed(0)}</span></div>
+            <div className="summary-detail">Projected: <span className="summary-value">{projectedTss.toFixed(0)}</span></div>
           </div>
           <div className="summary-detail">Friel Target: {weeklyTargets.tss}</div>
         </div>

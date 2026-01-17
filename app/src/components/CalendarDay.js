@@ -40,7 +40,8 @@ function CalendarDay({
   onWorkoutClick,
   onWorkoutSelectionToggle,
   onWorkoutDragStart,
-  onWorkoutDragEnd
+  onWorkoutDragEnd,
+  onUpdateTss
 }) {
   const { draggedWorkout, dragOverDate, dragOverTimeSlot } = dragState;
   
@@ -70,6 +71,7 @@ function CalendarDay({
             onWorkoutDragEnd={onWorkoutDragEnd}
             onWorkoutClick={onWorkoutClick}
             onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+            onUpdateTss={onUpdateTss}
             getTimeOfDayLabel={getTimeOfDayLabel}
           />
           <DayTimeSlot
@@ -87,6 +89,7 @@ function CalendarDay({
             onWorkoutDragEnd={onWorkoutDragEnd}
             onWorkoutClick={onWorkoutClick}
             onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+            onUpdateTss={onUpdateTss}
             getTimeOfDayLabel={getTimeOfDayLabel}
           />
           <DayTimeSlot
@@ -104,6 +107,7 @@ function CalendarDay({
             onWorkoutDragEnd={onWorkoutDragEnd}
             onWorkoutClick={onWorkoutClick}
             onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+            onUpdateTss={onUpdateTss}
             getTimeOfDayLabel={getTimeOfDayLabel}
           />
           {workoutGroups.unscheduled.length > 0 && (
@@ -122,6 +126,7 @@ function CalendarDay({
               onWorkoutDragEnd={onWorkoutDragEnd}
               onWorkoutClick={onWorkoutClick}
               onWorkoutSelectionToggle={onWorkoutSelectionToggle}
+              onUpdateTss={onUpdateTss}
               getTimeOfDayLabel={getTimeOfDayLabel}
             />
           )}
@@ -155,6 +160,7 @@ function CalendarDay({
                   onWorkoutClick={() => onWorkoutClick(workout)}
                   onSelectionToggle={onWorkoutSelectionToggle}
                   draggedWorkoutId={draggedWorkout?.id}
+                  onUpdateTss={onUpdateTss}
                 />
               ))}
             </div>
@@ -202,11 +208,13 @@ CalendarDay.propTypes = {
   onWorkoutSelectionToggle: PropTypes.func,
   onWorkoutDragStart: PropTypes.func.isRequired,
   onWorkoutDragEnd: PropTypes.func.isRequired,
+  onUpdateTss: PropTypes.func,
 };
 
 CalendarDay.defaultProps = {
   showTimeSlots: false,
   triClubSchedule: null,
+  onUpdateTss: null,
 };
 
 export default CalendarDay;

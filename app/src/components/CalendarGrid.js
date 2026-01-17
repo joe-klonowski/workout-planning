@@ -35,7 +35,8 @@ function CalendarGrid({
   onWorkoutClick,
   onWorkoutSelectionToggle,
   onWorkoutDragStart,
-  onWorkoutDragEnd
+  onWorkoutDragEnd,
+  onUpdateTss
 }) {
   /**
    * Get workouts for a specific day
@@ -93,6 +94,7 @@ function CalendarGrid({
               onWorkoutSelectionToggle={onWorkoutSelectionToggle}
               onWorkoutDragStart={onWorkoutDragStart}
               onWorkoutDragEnd={onWorkoutDragEnd}
+              onUpdateTss={onUpdateTss}
             />
           );
         })}
@@ -154,6 +156,11 @@ CalendarGrid.propTypes = {
   onWorkoutSelectionToggle: PropTypes.func.isRequired,
   onWorkoutDragStart: PropTypes.func.isRequired,
   onWorkoutDragEnd: PropTypes.func.isRequired,
+  onUpdateTss: PropTypes.func,
+};
+
+CalendarGrid.defaultProps = {
+  onUpdateTss: null,
 };
 
 export default CalendarGrid;
