@@ -40,7 +40,7 @@ class TestWeatherClient:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10', '2026-01-11'],
-                'temperature_2m_max': [32.5, 35.2],
+                'apparent_temperature_max': [32.5, 35.2],
                 'precipitation_probability_max': [20, 60],
                 'windspeed_10m_max': [10.5, 15.3],
                 'weather_code': [2, 51]
@@ -79,7 +79,7 @@ class TestWeatherClient:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': [date.today().isoformat()],
-                'temperature_2m_max': [32.0],
+                'apparent_temperature_max': [32.0],
                 'precipitation_probability_max': [0],
                 'windspeed_10m_max': [5.0],
                 'weather_code': [0]
@@ -126,7 +126,7 @@ class TestWeatherClient:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10'],
-                'temperature_2m_max': [35.5],
+                'apparent_temperature_max': [35.5],
                 'precipitation_probability_max': [40],
                 'windspeed_10m_max': [12.3],
                 'weather_code': [61]
@@ -154,7 +154,7 @@ class TestWeatherClient:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': [date.today().isoformat()],
-                'temperature_2m_max': [32.0],
+                'apparent_temperature_max': [32.0],
                 'precipitation_probability_max': [0],
                 'windspeed_10m_max': [5.0],
                 'weather_code': [0]
@@ -181,7 +181,7 @@ class TestWeatherClient:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': [],
-                'temperature_2m_max': [],
+                'apparent_temperature_max': [],
                 'precipitation_probability_max': [],
                 'windspeed_10m_max': [],
                 'weather_code': []
@@ -203,7 +203,7 @@ class TestWeatherClient:
                 'timezone': 'America/Chicago',
                 'daily': {
                     'time': [],
-                    'temperature_2m_max': [],
+                    'apparent_temperature_max': [],
                     'precipitation_probability_max': [],
                     'windspeed_10m_max': [],
                     'weather_code': []
@@ -223,7 +223,7 @@ class TestWeatherClient:
             assert params['temperature_unit'] == 'fahrenheit'
             assert params['wind_speed_unit'] == 'mph'
             assert params['timezone'] == 'America/Chicago'
-            assert 'temperature_2m_max' in params['daily']
+            assert 'apparent_temperature_max' in params['daily']
             assert 'precipitation_probability_max' in params['daily']
             assert 'windspeed_10m_max' in params['daily']
             assert 'weather_code' in params['daily']
@@ -280,7 +280,7 @@ class TestHourlyForecast:
                     '2026-01-10T17:00',
                     '2026-01-10T21:00'
                 ],
-                'temperature_2m': [28.5, 30.1, 35.2, 32.0, 25.3],
+                'apparent_temperature': [28.5, 30.1, 35.2, 32.0, 25.3],
                 'precipitation_probability': [10, 15, 20, 30, 40],
                 'windspeed_10m': [8.5, 9.2, 12.5, 14.3, 10.1],
                 'weather_code': [0, 0, 2, 51, 1]
@@ -308,7 +308,7 @@ class TestHourlyForecast:
             'timezone': 'America/Chicago',
             'hourly': {
                 'time': [],
-                'temperature_2m': [],
+                'apparent_temperature': [],
                 'precipitation_probability': [],
                 'windspeed_10m': [],
                 'weather_code': []
@@ -325,7 +325,7 @@ class TestHourlyForecast:
         assert 'start_date' in params
         assert 'end_date' in params
         assert 'hourly' in params
-        assert params['hourly'] == 'temperature_2m,precipitation_probability,windspeed_10m,weather_code'
+        assert params['hourly'] == 'apparent_temperature,precipitation_probability,windspeed_10m,weather_code'
 
 
 class TestTimeOfDayForecast:
@@ -348,7 +348,7 @@ class TestTimeOfDayForecast:
                     '2026-01-10T17:00',  # Evening (5pm)
                     '2026-01-10T19:00'   # Evening (7pm)
                 ],
-                'temperature_2m': [28.0, 32.0, 36.0, 35.0, 30.0, 25.0],
+                'apparent_temperature': [28.0, 32.0, 36.0, 35.0, 30.0, 25.0],
                 'precipitation_probability': [10, 10, 20, 20, 30, 40],
                 'windspeed_10m': [8.0, 10.0, 12.0, 13.0, 14.0, 10.0],
                 'weather_code': [0, 0, 2, 2, 1, 1]
@@ -392,7 +392,7 @@ class TestTimeOfDayForecast:
                     '2026-01-10T08:00',  # Morning only
                     '2026-01-10T10:00'   # Morning only
                 ],
-                'temperature_2m': [30.0, 34.0],
+                'apparent_temperature': [30.0, 34.0],
                 'precipitation_probability': [15, 15],
                 'windspeed_10m': [9.0, 10.0],
                 'weather_code': [1, 1]
@@ -423,7 +423,7 @@ class TestTimeOfDayForecast:
             'timezone': 'America/Chicago',
             'hourly': {
                 'time': [],
-                'temperature_2m': [],
+                'apparent_temperature': [],
                 'precipitation_probability': [],
                 'windspeed_10m': [],
                 'weather_code': []
@@ -519,7 +519,7 @@ class TestTimeOfDayForecast:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-20'],
-                'temperature_2m_max': [35.0],
+                'apparent_temperature_max': [35.0],
                 'precipitation_probability_max': [10],
                 'windspeed_10m_max': [8.0],
                 'weather_code': [1]
@@ -546,7 +546,7 @@ class TestTimeOfDayForecast:
             'timezone': 'America/Chicago',
             'hourly': {
                 'time': ['2026-01-15T12:00'],
-                'temperature_2m': [35.0],
+                'apparent_temperature': [35.0],
                 'precipitation_probability': [10],
                 'windspeed_10m': [8.0],
                 'weather_code': [1]

@@ -22,7 +22,7 @@ So some of the future feature work here is to enable that plan.
 - Summarize how much the user is planning to do each week.
 - Add support for mobile.
 - Show relevant sports in calendar? For planning indoor bike workouts where I'll want something good to watch on TV.
-- Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
+
 - Completed workouts should show actual duration instead of planned duration.
 - Workouts with no title should get a default title.
 - Add TSS badge to future workouts.

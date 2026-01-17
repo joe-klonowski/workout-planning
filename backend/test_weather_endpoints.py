@@ -39,7 +39,7 @@ class TestWeatherEndpoints:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10', '2026-01-11'],
-                'temperature_2m_max': [32.5, 35.2],
+                'apparent_temperature_max': [32.5, 35.2],
                 'precipitation_probability_max': [20, 60],
                 'windspeed_10m_max': [10.5, 15.3],
                 'weather_code': [2, 51]
@@ -65,7 +65,7 @@ class TestWeatherEndpoints:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10'],
-                'temperature_2m_max': [32.5],
+                'apparent_temperature_max': [32.5],
                 'precipitation_probability_max': [20],
                 'windspeed_10m_max': [10.5],
                 'weather_code': [2]
@@ -107,7 +107,7 @@ class TestWeatherEndpoints:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10'],
-                'temperature_2m_max': [35.5],
+                'apparent_temperature_max': [35.5],
                 'precipitation_probability_max': [40],
                 'windspeed_10m_max': [12.3],
                 'weather_code': [61]
@@ -152,7 +152,7 @@ class TestWeatherEndpoints:
             'timezone': 'America/Chicago',
             'daily': {
                 'time': ['2026-01-10'],
-                'temperature_2m_max': [35.5],
+                'apparent_temperature_max': [35.5],
                 'precipitation_probability_max': [40],
                 'windspeed_10m_max': [12.3],
                 'weather_code': [61]
@@ -189,7 +189,7 @@ class TestTimeOfDayWeatherEndpoints:
                     '2026-01-10T17:00',
                     '2026-01-10T19:00'
                 ],
-                'temperature_2m': [28.0, 32.0, 36.0, 35.0, 30.0, 25.0],
+                'apparent_temperature': [28.0, 32.0, 36.0, 35.0, 30.0, 25.0],
                 'precipitation_probability': [10, 10, 20, 20, 30, 40],
                 'windspeed_10m': [8.0, 10.0, 12.0, 13.0, 14.0, 10.0],
                 'weather_code': [0, 0, 2, 2, 1, 1]

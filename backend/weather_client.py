@@ -60,7 +60,7 @@ class WeatherClient:
         Returns:
             Dictionary with forecast data including:
             - dates: List of dates
-            - temperatures: List of max temperatures in Fahrenheit
+            - temperatures: List of max apparent ("feels like") temperatures in Fahrenheit
             - rain_probability: List of probability of rain (0-100)
             - windspeed: List of wind speeds in mph
             - weather_codes: List of WMO weather codes
@@ -95,7 +95,7 @@ class WeatherClient:
                 'longitude': self.lon,
                 'start_date': start_date.isoformat(),
                 'end_date': end_date.isoformat(),
-                'daily': 'temperature_2m_max,precipitation_probability_max,windspeed_10m_max,weather_code',
+                'daily': 'apparent_temperature_max,precipitation_probability_max,windspeed_10m_max,weather_code',
                 'temperature_unit': 'fahrenheit',
                 'wind_speed_unit': 'mph',
                 'timezone': 'America/Chicago'
@@ -110,14 +110,14 @@ class WeatherClient:
             
             data = response.json()
             
-            # Parse daily forecast data
+            # Parse daily forecast data (use apparent/"feels like" temperatures)
             daily = data.get('daily', {})
             return {
                 'latitude': data['latitude'],
                 'longitude': data['longitude'],
                 'timezone': data['timezone'],
                 'dates': daily.get('time', []),
-                'temperatures': daily.get('temperature_2m_max', []),
+                'temperatures': daily.get('apparent_temperature_max', []),
                 'rain_probability': daily.get('precipitation_probability_max', []),
                 'windspeed': daily.get('windspeed_10m_max', []),
                 'weather_codes': daily.get('weather_code', [])
@@ -188,7 +188,7 @@ class WeatherClient:
         Returns:
             Dictionary with hourly forecast data:
             - times: List of ISO format datetime strings
-            - temperatures: List of temperatures in Fahrenheit
+            - temperatures: List of apparent ("feels like") temperatures in Fahrenheit
             - rain_probability: List of probability of rain (0-100)
             - windspeed: List of wind speeds in mph
             - weather_codes: List of WMO weather codes
@@ -223,7 +223,7 @@ class WeatherClient:
                 'longitude': self.lon,
                 'start_date': start_date.isoformat(),
                 'end_date': end_date.isoformat(),
-                'hourly': 'temperature_2m,precipitation_probability,windspeed_10m,weather_code',
+                'hourly': 'apparent_temperature,precipitation_probability,windspeed_10m,weather_code',
                 'temperature_unit': 'fahrenheit',
                 'wind_speed_unit': 'mph',
                 'timezone': 'America/Chicago'
@@ -238,14 +238,14 @@ class WeatherClient:
             
             data = response.json()
             
-            # Parse hourly forecast data
+            # Parse hourly forecast data (use apparent/"feels like" temperatures)
             hourly = data.get('hourly', {})
             return {
                 'latitude': data['latitude'],
                 'longitude': data['longitude'],
                 'timezone': data['timezone'],
                 'times': hourly.get('time', []),
-                'temperatures': hourly.get('temperature_2m', []),
+                'temperatures': hourly.get('apparent_temperature', []),
                 'rain_probability': hourly.get('precipitation_probability', []),
                 'windspeed': hourly.get('windspeed_10m', []),
                 'weather_codes': hourly.get('weather_code', [])
