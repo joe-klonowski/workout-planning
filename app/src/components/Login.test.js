@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Login from './Login';
 
+import { apiCall } from '../config/api';
+
 // Mock the apiCall function
 jest.mock('../config/api', () => ({
   apiCall: jest.fn(),
@@ -8,8 +10,6 @@ jest.mock('../config/api', () => ({
     LOGIN: 'http://localhost:5000/api/auth/login',
   },
 }));
-
-import { apiCall } from '../config/api';
 
 describe('Login Component', () => {
   beforeEach(() => {

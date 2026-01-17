@@ -3,7 +3,7 @@
 **Date:** 2026-01-17
 
 ## TL;DR
-- Total ESLint problems found in `app/src`: **504**.
+- Total ESLint problems found in `app/src`: **503** (after running `eslint --fix`, 1 fix applied).
 - Most problems are in **tests**, dominated by Testing Library rules (`testing-library/*`).
 
 ---
