@@ -1,0 +1,18 @@
+#!/bin/sh
+# Update the stored ESLint error count after each commit.
+echo "Updating .eslint_error_count post-commit (amending last commit if it changed)..."
+
+# Attempt to write the current count to file
+node ./scripts/check-eslint-regression.js --write-file || {
+  echo "Failed to update ESLint count file. You can run 'node ./scripts/check-eslint-regression.js --write-file' manually."
+  exit 0
+}
+
+# If .eslint_error_count has changed compared to HEAD, amend the last commit to include it
+if ! git diff --quiet -- .eslint_error_count; then
+  echo "Amending last commit to include updated .eslint_error_count..."
+  git add .eslint_error_count
+  git commit --amend --no-edit
+else
+  echo ".eslint_error_count unchanged."
+fi

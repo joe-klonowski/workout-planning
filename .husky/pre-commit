@@ -17,6 +17,12 @@ if echo "$STAGED_FILES" | grep -E '^(app/|package.json|yarn.lock|package-lock.js
     exit 1
   }
 
+  echo "Running ESLint regression check (no regressions allowed)..."
+  node ./scripts/check-eslint-regression.js || {
+    echo "Pre-commit check failed: ESLint regression (error count increased). Commit aborted."
+    exit 1
+  }
+
   echo "Running console baseline pre-commit check..."
   CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
     echo "Pre-commit check failed: console baseline check failed. Commit aborted."

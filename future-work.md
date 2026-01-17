@@ -55,12 +55,6 @@ So some of the future feature work here is to enable that plan.
 
 ## Tech debt
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
-- There's a LOT of ESLint warnings.
-  - Fix them.
-  - Come up with a process for deciding which rules we want to observe and which rules we want to ignore.
-    - For each rule, give me (the human developer) a link to documentation about the rule.
-    - When I decide whether to observe or ignore this rule, document that decision somewhere.
-  - Add some mechanism to prevent introduction of new ESLint problems.
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
