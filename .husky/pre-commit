@@ -11,6 +11,12 @@ fi
 # Frontend checks: run only if any staged files are frontend-related
 # Current rule: files under `app/` or root package files trigger frontend checks
 if echo "$STAGED_FILES" | grep -E '^(app/|package.json|yarn.lock|package-lock.json)' > /dev/null; then
+  echo "Running lint-staged for frontend changes..."
+  npx lint-staged || {
+    echo "Pre-commit check failed: lint-staged failed. Commit aborted."
+    exit 1
+  }
+
   echo "Running console baseline pre-commit check..."
   CONSOLE_BASELINE_MODE=fail TEST_TIMEOUT=20 ./test-frontend.sh || {
     echo "Pre-commit check failed: console baseline check failed. Commit aborted."

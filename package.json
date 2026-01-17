@@ -1,10 +1,19 @@
 {
   "scripts": {
     "prepare": "husky install .husky",
-    "test:scripts": "node scripts/test-compare-console-baseline.js"
+    "test:scripts": "node scripts/test-compare-console-baseline.js",
+    "lint": "cd app && npm run lint",
+    "lint:fix": "cd app && npm run lint:fix"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "app/src/**/*.{js,jsx}": [
+      "npm --prefix app run lint:fix --silent",
+      "git add"
+    ]
   }
 }
