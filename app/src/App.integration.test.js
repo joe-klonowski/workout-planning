@@ -111,12 +111,10 @@ describe('App Component', () => {
 
     render(<App />);
     
-    // Initially should show loading state before auth verification
-    // The component renders Login first, then loads workouts after auth
-    await waitFor(() => {
-      // Since auth verification never returns, we should see the login form
-      expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
-    });
+    // Initially should show loading state while auth verification is pending
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    // Login should not be rendered while loading
+    expect(screen.queryByRole('heading', { name: /login/i })).toBeNull();
   });
 
   test('fetches workouts from API on mount', async () => {

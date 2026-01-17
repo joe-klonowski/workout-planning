@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { DateOnly } from '../utils/DateOnly';
 import { groupWorkoutsByTimeOfDay, getTimeOfDayLabel } from '../utils/workoutFormatters';
 import { getTriClubEventsByTimeSlot } from '../utils/triClubUtils';
 import DayTimeSlot from './DayTimeSlot';

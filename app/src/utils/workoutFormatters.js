@@ -24,7 +24,7 @@ export function formatDuration(hours) {
  * @returns {string} Time in 12-hour format (e.g., "2pm")
  */
 export function formatTime12Hour(time24) {
-  const [hours, minutes] = time24.split(':').map(Number);
+  const [hours] = time24.split(':').map(Number);
   const period = hours >= 12 ? 'pm' : 'am';
   const hours12 = hours % 12 || 12;
   return `${hours12}${period}`;

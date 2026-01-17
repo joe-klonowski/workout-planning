@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_ENDPOINTS, apiCall } from '../config/api';
-import { getWeatherInfo, isWeatherAvailable, getMaxWeatherForecastDate } from '../utils/weatherUtils';
+import { getWeatherInfo, isWeatherAvailable } from '../utils/weatherUtils';
 import { weatherCache } from '../utils/weatherCache';
+import logger from '../utils/logger';
 import '../styles/WeatherWidget.css';
 
 /**
@@ -84,7 +85,7 @@ function WeatherWidget({ date, workoutType, isOpen }) {
           setWeather(data);
         }
       } catch (err) {
-        console.error('Error fetching weather:', err);
+        logger.error('Error fetching weather:', err);
         if (isMounted) {
           setError('Unable to load weather data');
           setWeather(null);

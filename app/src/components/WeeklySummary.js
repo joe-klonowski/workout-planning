@@ -185,6 +185,12 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
         </button>
       </div>
 
+      {targetsError && (
+        <div className="summary-section error">
+          Error loading weekly targets: {targetsError}
+        </div>
+      )}
+
       <div className="summary-section total-hours">
         <div className="summary-label">Total Hours</div>
         <div className="summary-value large">{formatDuration(totalHours)}</div>

@@ -122,9 +122,11 @@ export const getMaxWeatherForecastDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-export default {
+const weatherUtils = {
   getWeatherInfo,
   isWeatherAvailable,
   isHourlyWeatherAvailable,
   getMaxWeatherForecastDate
 };
+
+export default weatherUtils;

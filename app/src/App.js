@@ -29,7 +29,6 @@ function App() {
             localStorage.removeItem('auth_token');
             setIsAuthenticated(false);
             setCurrentUser(null);
-            setLoading(false);
             return;
           }
           
@@ -447,6 +446,17 @@ function App() {
 
   // Count custom workouts
   const customWorkoutsCount = workouts.filter(w => w.isCustom).length;
+
+  // Show loading indicator while checking authentication
+  if (loading) {
+    return (
+      <div className="App">
+        <main className="App-main">
+          <p>Loading…</p>
+        </main>
+      </div>
+    );
+  }
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
