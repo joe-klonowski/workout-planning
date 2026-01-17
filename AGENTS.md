@@ -23,6 +23,9 @@ This file contains instructions for agentic coding systems that are editing code
 - Aim for at least 90% test coverage.
 - When fixing a bug, always update or add tests to reproduce the bug and verify that those tests fail before making code changes to fix the bug. Then rerun the tests to verify that the bug is fixed.
 
+## Testing
+- When testing frontend code, always use  `--watchAll=false` so that tests finish without waiting for additional console input.
+
 ### Testing etiquette: avoid noisy tests
 - **Do not add tests that introduce console errors, warnings, or other noisy output when the test suite passes.** Tests should be quiet and deterministic in normal (passing) runs.
 - **Mock external APIs used by components.** Components calling network endpoints (e.g., weekly targets, weather endpoints, tri-club schedule, selections) must have corresponding mocks in tests. Unhandled fetch calls commonly produce "Unknown endpoint" errors and console noise.
