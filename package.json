@@ -12,8 +12,7 @@
   },
   "lint-staged": {
     "app/src/**/*.{js,jsx}": [
-      "npm --prefix app run lint:fix --silent",
-      "git add"
+      "npm --prefix app run lint:fix --silent"
     ]
   }
 }
