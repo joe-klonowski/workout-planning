@@ -25,6 +25,7 @@ So some of the future feature work here is to enable that plan.
 - Show "feels like" (called "apparent temperature" in Open Meteo API) temperatures instead of actual temperatures.
 - Completed workouts should show actual duration instead of planned duration.
 - Workouts with no title should get a default title.
+- Hide TSS for strength workouts in the UI, and don't count TSS for strength workouts towards weekly summaries.
 
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
