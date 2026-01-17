@@ -57,6 +57,9 @@ So some of the future feature work here is to enable that plan.
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
 - There's a LOT of ESLint warnings.
   - Fix them.
+  - Come up with a process for deciding which rules we want to observe and which rules we want to ignore.
+    - For each rule, give me (the human developer) a link to documentation about the rule.
+    - When I decide whether to observe or ignore this rule, document that decision somewhere.
   - Add some mechanism to prevent introduction of new ESLint problems.
 
 ## Known issues
