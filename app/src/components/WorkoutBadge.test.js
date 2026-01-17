@@ -236,6 +236,13 @@ describe('WorkoutBadge', () => {
       const badge = container.querySelector('.tss-badge');
       expect(badge).toBeNull();
     });
+
+    it('should not display TSS badge for Strength workouts even if tss is present', () => {
+      const strengthWorkout = { ...mockWorkout, workoutType: 'Strength', tss: 50 };
+      const { container } = render(<WorkoutBadge workout={strengthWorkout} {...mockHandlers} />);
+      const badge = container.querySelector('.tss-badge');
+      expect(badge).toBeNull();
+    });
   });
 
   describe('drag and drop', () => {

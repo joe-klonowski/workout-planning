@@ -169,7 +169,7 @@ function WeeklySummary({ workouts = [], weekStartDate, weekEndDate, onExportToCa
         <div className="summary-section tss-section">
           <div className="summary-label">TSS (Training Stress Score)</div>
           <div className="summary-value">
-            {selectedWorkouts.reduce((sum, w) => sum + (w.tss || 0), 0).toFixed(0)}
+            {selectedWorkouts.reduce((sum, w) => sum + (w.workoutType === 'Strength' ? 0 : (w.tss || 0)), 0).toFixed(0)}
           </div>
           <div className="summary-detail">Friel Target: {weeklyTargets.tss}</div>
         </div>

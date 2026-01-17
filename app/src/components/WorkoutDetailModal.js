@@ -187,7 +187,7 @@ function WorkoutDetailModal({ workout, isOpen, onClose, onWorkoutLocationChange 
               </div>
             )}
 
-            {workout.tss && (
+            {workout.tss && workout.workoutType !== 'Strength' && (
               <div className="detail-item">
                 <span className="detail-label">TSS</span>
                 <span className="detail-value">{Math.round(workout.tss)}</span>

@@ -670,7 +670,7 @@ describe('WeeklySummary', () => {
       expect(screen.queryByText(/Friel Target:/)).not.toBeInTheDocument();
     });
 
-    test('displays actual TSS calculation', async () => {
+    test('displays actual TSS calculation (excluding Strength workouts)', async () => {
       const weekStartDate = new DateOnly(2026, 1, 5);
       const workouts = [
         createMockWorkout({ 
@@ -683,12 +683,18 @@ describe('WeeklySummary', () => {
           plannedDuration: 2.0,
           tss: 75
         }),
+        createMockWorkout({ 
+          id: 3,
+          plannedDuration: 0.5,
+          tss: 40,
+          workoutType: 'Strength'
+        }),
       ];
 
       render(<WeeklySummary workouts={workouts} weekStartDate={weekStartDate} />);
 
       await waitFor(() => {
-        // Actual TSS should be sum of all selected workouts
+        // Actual TSS should be sum of non-strength selected workouts (50 + 75 = 125)
         expect(screen.getByText('125')).toBeInTheDocument();
       });
     });

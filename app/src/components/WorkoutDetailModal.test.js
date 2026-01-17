@@ -309,6 +309,22 @@ describe('WorkoutDetailModal Component', () => {
     expect(screen.getByText(/86/)).toBeInTheDocument();
   });
 
+  it('should not display TSS for Strength workouts even if tss present', () => {
+    const workout = {
+      ...mockWorkout,
+      workoutType: 'Strength',
+      tss: 80,
+    };
+    render(
+      <WorkoutDetailModal
+        workout={workout}
+        isOpen={true}
+        onClose={() => {}}
+      />
+    );
+    expect(screen.queryByText(/TSS/)).not.toBeInTheDocument();
+  });
+
   it('should display Intensity Factor when available', () => {
     const workout = {
       ...mockWorkout,
