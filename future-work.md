@@ -15,6 +15,10 @@ So some of the future feature work here is to enable that plan.
   - Will require some way to deduplicate workouts in the new CSV with workouts in the existing plan. This will be tricky for workouts where the athlete/user has changed the planned date of the workout.
 - Identify and visually distinguish between workouts from Friel vs tri club vs other.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
+  - Workouts from Joe Friel (who is a coach) can easily be distinguished from other workouts because Friel's workout titles start with two capital letters, a number, and a period. An example workout title is "AE1. Easy ride 1h power", or "MF1. Force reps 1h RPE".
+- The control buttons are taking up too much space in the UI.
+  - Remove the text labels from the import, export and add workout buttons so that the buttons can be smaller.
+  - Move the export button so it's between the import button and the add workout button.
 - Allow user to select a specific time like 7:30am in the workout details modal.
 - Allow user to filter the UI to:
   - Temporarily hide unplanned workouts.
