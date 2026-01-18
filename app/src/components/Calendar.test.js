@@ -343,6 +343,107 @@ describe('Calendar Component', () => {
     expect(jan15).toHaveTextContent('Morning Run');
   });
 
+  it('should allow filtering workouts by source (Friel / Tri club / Other)', async () => {
+    const testDate = new DateOnly(2026, 1, 15);
+
+    const workoutsWithCustom = [
+      ...mockWorkouts,
+      {
+        id: 4,
+        title: 'Custom Workout',
+        workoutType: 'Run',
+        workoutDate: new DateOnly(2026, 1, 15),
+        timeOfDay: 'afternoon',
+        plannedDuration: 1,
+        plannedDistanceInMeters: 10000,
+        workoutDescription: 'User created workout',
+        coachComments: '',
+        isSelected: true,
+        isCustom: true,
+      }
+    ];
+
+    const triClubSchedule = {
+      effective_date: '2026-01-01',
+      schedule: {
+        thursday: [
+          { time: '07:00', activity: 'Swim' }
+        ]
+      }
+    };
+
+    const frielWorkout = {
+      id: 5,
+      title: 'SS1. Form work 30min',
+      workoutType: 'Run',
+      workoutDate: new DateOnly(2026, 1, 15),
+      timeOfDay: 'morning',
+      plannedDuration: 0.5,
+      plannedDistanceInMeters: 3000,
+      workoutDescription: 'Friel coached session',
+      coachComments: '',
+      isSelected: true,
+    };
+
+    const frielWorkout2 = {
+      id: 6,
+      title: 'AA, 3-4 sets',
+      workoutType: 'Strength',
+      workoutDate: new DateOnly(2026, 1, 15),
+      timeOfDay: 'afternoon',
+      plannedDuration: 0.5,
+      plannedDistanceInMeters: 0,
+      workoutDescription: 'Friel strength session',
+      coachComments: '',
+      isSelected: true,
+    };
+
+    render(<Calendar workouts={[...workoutsWithCustom, frielWorkout, frielWorkout2]} triClubSchedule={triClubSchedule} initialDate={testDate} />);
+
+    // By default, all sources are shown
+    expect(screen.getByText('Morning Run')).toBeInTheDocument();
+    expect(screen.getByText('Custom Workout')).toBeInTheDocument();
+    expect(screen.getByText(/tri club swim/i)).toBeInTheDocument();
+    expect(screen.getByText('SS1. Form work 30min')).toBeInTheDocument();
+    expect(screen.getByText('AA, 3-4 sets')).toBeInTheDocument();
+
+    // Open filter menu and toggle Friel off - only Friel workouts should disappear
+    const menuButton = screen.getByRole('button', { name: 'Open source filters' });
+    fireEvent.click(menuButton);
+
+    const frielCheckbox = screen.getByLabelText('Show Friel plan');
+    fireEvent.click(frielCheckbox);
+
+    await waitFor(() => {
+      expect(screen.queryByText('SS1. Form work 30min')).not.toBeInTheDocument();
+      expect(screen.queryByText('AA, 3-4 sets')).not.toBeInTheDocument();
+      // Tri club workout should still be present
+      expect(screen.getByText('Morning Run')).toBeInTheDocument();
+      // Custom workout should still be present
+      expect(screen.getByText('Custom Workout')).toBeInTheDocument();
+      // Tri club schedule should still be visible
+      expect(screen.getByText(/tri club swim/i)).toBeInTheDocument();
+    });
+
+    // Toggle Other off - custom workouts should disappear
+    const otherCheckbox = screen.getByLabelText('Show Other');
+    fireEvent.click(otherCheckbox);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Custom Workout')).not.toBeInTheDocument();
+    });
+
+    // Toggle Tri club off - tri club workouts should disappear but tri club schedule should remain
+    const triClubCheckbox = screen.getByLabelText('Show Tri club');
+    fireEvent.click(triClubCheckbox);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Morning Run')).not.toBeInTheDocument();
+      // Tri club schedule must still be shown despite the filter
+      expect(screen.getByText(/tri club swim/i)).toBeInTheDocument();
+    });
+  });
+
 
 
   describe('Workout Modal Interaction', () => {

@@ -13,6 +13,8 @@ describe('CalendarHeader', () => {
     onOpenImport: jest.fn(),
     onOpenExport: jest.fn(),
     onOpenAddWorkout: jest.fn(),
+    filters: { showFriel: true, showTriClub: true, showOther: true },
+    onFilterChange: jest.fn(),
   };
 
   beforeEach(() => {
@@ -157,6 +159,36 @@ describe('CalendarHeader', () => {
       
       expect(header).toBeInTheDocument();
     });
+
+    it('renders source filter checkboxes inside dropdown and calls onFilterChange when toggled', () => {
+      const onFilterChange = jest.fn();
+      render(<CalendarHeader {...defaultProps} onFilterChange={onFilterChange} />);
+
+      // Open the filter menu
+      const menuButton = screen.getByRole('button', { name: 'Open source filters' });
+      fireEvent.click(menuButton);
+
+      const frielCheckbox = screen.getByLabelText('Show Friel plan');
+      const triClubCheckbox = screen.getByLabelText('Show Tri club');
+      const otherCheckbox = screen.getByLabelText('Show Other');
+
+      expect(frielCheckbox).toBeInTheDocument();
+      expect(triClubCheckbox).toBeInTheDocument();
+      expect(otherCheckbox).toBeInTheDocument();
+
+      // Toggle Friel off
+      fireEvent.click(frielCheckbox);
+      expect(onFilterChange).toHaveBeenCalled();
+
+      // Toggle Tri club off
+      fireEvent.click(triClubCheckbox);
+      expect(onFilterChange).toHaveBeenCalled();
+
+      // Toggle Other off
+      fireEvent.click(otherCheckbox);
+      expect(onFilterChange).toHaveBeenCalled();
+    });
+  
 
     it('applies correct CSS classes to header sections', () => {
       const { container } = render(<CalendarHeader {...defaultProps} />);

@@ -43,6 +43,9 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [addWorkoutInitialDate, setAddWorkoutInitialDate] = useState(null);
 
+  // Source filters state
+  const [filters, setFilters] = useState({ showFriel: true, showTriClub: true, showOther: true });
+
   // Update selectedWorkout when workouts array changes (e.g., location update)
   useEffect(() => {
     if (selectedWorkout && selectedWorkout.id) {
@@ -53,8 +56,35 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
     }
   }, [workouts, selectedWorkout]);
 
+  // Helper: detect Friel workout titles
+  // Friel workouts usually start with two uppercase letters followed by one of:
+  //  - digits and a dot (e.g., "SS1. ...")
+  //  - a comma (e.g., "AA, 3-4 sets")
+  //  - a space followed by digits (less common)
+  const isFrielWorkout = (w) => {
+    if (!w || !w.title) return false;
+    const t = w.title.trim();
+    return /^[A-Z]{2}(?:\d+\.|,|\s+\d)/.test(t);
+  };
+
+  // Apply source filters to workouts
+  const filteredWorkouts = workouts.filter(w => {
+    // Custom workouts are "other"
+    if (w.isCustom) {
+      return filters.showOther;
+    }
+
+    // Friel workouts use a title pattern
+    if (isFrielWorkout(w)) {
+      return filters.showFriel;
+    }
+
+    // Otherwise, consider it tri club
+    return filters.showTriClub;
+  });
+
   // Group workouts by date
-  const workoutsByDate = groupWorkoutsByDate(workouts);
+  const workoutsByDate = groupWorkoutsByDate(filteredWorkouts);
 
   // Get current date from navigation hook
   const currentDate = navigation.currentDate;
@@ -199,6 +229,8 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
             setAddWorkoutInitialDate(null);
             setIsAddWorkoutModalOpen(true);
           }}
+          filters={filters}
+          onFilterChange={(newFilters) => setFilters(newFilters)}
         />
 
         <CalendarGrid

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/CalendarHeader.css';
 
@@ -22,8 +22,11 @@ function CalendarHeader({
   onGoToToday,
   onOpenImport,
   onOpenExport,
-  onOpenAddWorkout
+  onOpenAddWorkout,
+  filters,
+  onFilterChange
 }) {
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   return (
     <div className="calendar-header">
       <div className="header-left">
@@ -77,6 +80,51 @@ function CalendarHeader({
             Month
           </button>
         </div>
+
+        {/* Filter menu button and dropdown */}
+        <div className="filter-menu-container">
+          <button
+            className="filter-menu-button icon-button"
+            aria-label="Open source filters"
+            aria-haspopup="true"
+            aria-expanded={isFilterMenuOpen}
+            onClick={() => setIsFilterMenuOpen(prev => !prev)}
+          >
+            ⚙️
+          </button>
+
+          {isFilterMenuOpen && (
+            <div className="filter-menu" role="menu" aria-label="Workout source filters">
+              <label className="filter-label">
+                <input
+                  type="checkbox"
+                  checked={filters?.showFriel ?? true}
+                  onChange={(e) => onFilterChange && onFilterChange({ ...filters, showFriel: e.target.checked })}
+                  aria-label="Show Friel plan"
+                />
+                Friel
+              </label>
+              <label className="filter-label">
+                <input
+                  type="checkbox"
+                  checked={filters?.showTriClub ?? true}
+                  onChange={(e) => onFilterChange && onFilterChange({ ...filters, showTriClub: e.target.checked })}
+                  aria-label="Show Tri club"
+                />
+                Tri club
+              </label>
+              <label className="filter-label">
+                <input
+                  type="checkbox"
+                  checked={filters?.showOther ?? true}
+                  onChange={(e) => onFilterChange && onFilterChange({ ...filters, showOther: e.target.checked })}
+                  aria-label="Show Other"
+                />
+                Other
+              </label>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -92,6 +140,22 @@ CalendarHeader.propTypes = {
   onOpenImport: PropTypes.func.isRequired,
   onOpenExport: PropTypes.func.isRequired,
   onOpenAddWorkout: PropTypes.func.isRequired,
+  // Source filters
+  filters: PropTypes.shape({
+    showFriel: PropTypes.bool,
+    showTriClub: PropTypes.bool,
+    showOther: PropTypes.bool,
+  }),
+  onFilterChange: PropTypes.func,
+};
+
+CalendarHeader.defaultProps = {
+  filters: {
+    showFriel: true,
+    showTriClub: true,
+    showOther: true,
+  },
+  onFilterChange: null,
 };
 
 export default CalendarHeader;
