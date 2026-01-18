@@ -17,7 +17,7 @@ So some of the future feature work here is to enable that plan.
 - Add ability to filter workouts in the view depending on source (Friel vs tri club vs other).
   - Workouts from Joe Friel (who is a coach) can easily be distinguished from other workouts because Friel's workout titles start with two capital letters, a number, and a period. An example workout title is "AE1. Easy ride 1h power", or "MF1. Force reps 1h RPE".
 - The control buttons are taking up too much space in the UI.
-  - Remove the text labels from the import, export and add workout buttons so that the buttons can be smaller.
+  - Remove the text labels from the import, export and add workout buttons so that the buttons can be smaller. Give the buttons icons so the user can understand what they do (import, export, + sign for add workout).
   - Move the export button so it's between the import button and the add workout button.
 - Allow user to select a specific time like 7:30am in the workout details modal.
 - Allow user to filter the UI to:
