@@ -1,12 +1,11 @@
 This file contains instructions for agentic coding systems that are editing code in this repository or answering questions about the project.
 
 ## General instructions
-- Remove tasks from future-work.md as you complete them.
+- Remove tasks from future-work.md as you complete them. But only do this after the feature is complete and tests are passing. Don't remove the task before you finish the code to implement the task.
 - Always read the following files and load them into context before answering questions or writing code:
   - AGENTS.md
   - README.md
   - future-work.md
-  - start.sh (how to run the full application)
   - If working with the backend:
     - backend/README.md
     - backend/models.py (database schema - critical for understanding data structure)
