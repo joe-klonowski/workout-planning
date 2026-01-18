@@ -21,6 +21,7 @@ function CalendarHeader({
   onNavNext,
   onGoToToday,
   onOpenImport,
+  onOpenExport,
   onOpenAddWorkout
 }) {
   return (
@@ -40,15 +41,27 @@ function CalendarHeader({
       <div className="header-right">
         <button 
           onClick={onOpenImport} 
-          className="import-workout-button"
+          className="import-workout-button icon-button"
+          title="Import from TrainingPeaks"
+          aria-label="Import from TrainingPeaks"
         >
-          📥 Import from TrainingPeaks
+          📥
+        </button>
+        <button
+          onClick={onOpenExport}
+          className="export-button icon-button"
+          title="Export to Apple Calendar"
+          aria-label="Export to Apple Calendar"
+        >
+          📅
         </button>
         <button 
           onClick={onOpenAddWorkout} 
-          className="add-workout-button"
+          className="add-workout-button icon-button"
+          title="Add Workout"
+          aria-label="Add Workout"
         >
-          + Add Workout
+          ➕
         </button>
         <div className="view-toggle">
           <button
@@ -77,6 +90,7 @@ CalendarHeader.propTypes = {
   onNavNext: PropTypes.func.isRequired,
   onGoToToday: PropTypes.func.isRequired,
   onOpenImport: PropTypes.func.isRequired,
+  onOpenExport: PropTypes.func.isRequired,
   onOpenAddWorkout: PropTypes.func.isRequired,
 };
 

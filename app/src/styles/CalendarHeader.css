@@ -89,6 +89,37 @@
   background-color: #218838;
 }
 
+/* Icon-only compact buttons used for import/export/add */
+.icon-button {
+  padding: 6px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.import-workout-button.icon-button {
+  background-color: #28a745;
+}
+
+.export-button.icon-button {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.add-workout-button.icon-button {
+  background-color: #17a2b8;
+}
+
+.icon-button:hover {
+  filter: brightness(0.95);
+}
+
+
 /* View Toggle */
 .view-toggle {
   display: flex;

@@ -8,6 +8,7 @@ import ImportWorkoutModal from './ImportWorkoutModal';
 import WeeklySummary from './WeeklySummary';
 import CalendarHeader from './CalendarHeader';
 import CalendarGrid from './CalendarGrid';
+import ExportModal from './ExportModal';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarDragDrop } from '../hooks/useCalendarDragDrop';
 import '../styles/Calendar.css';
@@ -39,6 +40,7 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddWorkoutModalOpen, setIsAddWorkoutModalOpen] = useState(false);
   const [isImportWorkoutModalOpen, setIsImportWorkoutModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [addWorkoutInitialDate, setAddWorkoutInitialDate] = useState(null);
 
   // Update selectedWorkout when workouts array changes (e.g., location update)
@@ -192,6 +194,7 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
           onNavNext={viewMode === 'week' ? navigation.goToNextWeek : navigation.goToNextMonth}
           onGoToToday={navigation.goToToday}
           onOpenImport={() => setIsImportWorkoutModalOpen(true)}
+          onOpenExport={() => setIsExportModalOpen(true)}
           onOpenAddWorkout={() => {
             setAddWorkoutInitialDate(null);
             setIsAddWorkoutModalOpen(true);
@@ -240,6 +243,18 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
         isOpen={isImportWorkoutModalOpen}
         onClose={() => setIsImportWorkoutModalOpen(false)}
         onImport={onImportWorkouts}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={async (dateRange) => {
+          if (onExportToCalendar) {
+            await onExportToCalendar(dateRange);
+          }
+        }}
+        defaultStartDate={weekDateRange.start}
+        defaultEndDate={weekDateRange.end}
       />
     </div>
 

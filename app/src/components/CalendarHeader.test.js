@@ -11,6 +11,7 @@ describe('CalendarHeader', () => {
     onNavNext: jest.fn(),
     onGoToToday: jest.fn(),
     onOpenImport: jest.fn(),
+    onOpenExport: jest.fn(),
     onOpenAddWorkout: jest.fn(),
   };
 
@@ -39,8 +40,9 @@ describe('CalendarHeader', () => {
 
     it('renders action buttons', () => {
       render(<CalendarHeader {...defaultProps} />);
-      expect(screen.getByText('📥 Import from TrainingPeaks')).toBeInTheDocument();
-      expect(screen.getByText('+ Add Workout')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Import from TrainingPeaks' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Export to Apple Calendar' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add Workout' })).toBeInTheDocument();
     });
 
     it('renders view mode toggle buttons', () => {
@@ -124,16 +126,25 @@ describe('CalendarHeader', () => {
       const onOpenImport = jest.fn();
       render(<CalendarHeader {...defaultProps} onOpenImport={onOpenImport} />);
       
-      fireEvent.click(screen.getByText('📥 Import from TrainingPeaks'));
+      fireEvent.click(screen.getByRole('button', { name: 'Import from TrainingPeaks' }));
       
       expect(onOpenImport).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls onOpenExport when export button is clicked', () => {
+      const onOpenExport = jest.fn();
+      render(<CalendarHeader {...defaultProps} onOpenExport={onOpenExport} />);
+      
+      fireEvent.click(screen.getByRole('button', { name: 'Export to Apple Calendar' }));
+      
+      expect(onOpenExport).toHaveBeenCalledTimes(1);
     });
 
     it('calls onOpenAddWorkout when add workout button is clicked', () => {
       const onOpenAddWorkout = jest.fn();
       render(<CalendarHeader {...defaultProps} onOpenAddWorkout={onOpenAddWorkout} />);
       
-      fireEvent.click(screen.getByText('+ Add Workout'));
+      fireEvent.click(screen.getByRole('button', { name: 'Add Workout' }));
       
       expect(onOpenAddWorkout).toHaveBeenCalledTimes(1);
     });
@@ -160,6 +171,7 @@ describe('CalendarHeader', () => {
       expect(container.querySelector('.nav-button')).toBeInTheDocument();
       expect(container.querySelector('.today-button')).toBeInTheDocument();
       expect(container.querySelector('.import-workout-button')).toBeInTheDocument();
+      expect(container.querySelector('.export-button')).toBeInTheDocument();
       expect(container.querySelector('.add-workout-button')).toBeInTheDocument();
     });
 
@@ -243,10 +255,12 @@ describe('CalendarHeader', () => {
     it('has clickable action buttons', () => {
       render(<CalendarHeader {...defaultProps} />);
       
-      const importButton = screen.getByText('📥 Import from TrainingPeaks');
-      const addButton = screen.getByText('+ Add Workout');
+      const importButton = screen.getByRole('button', { name: 'Import from TrainingPeaks' });
+      const exportButton = screen.getByRole('button', { name: 'Export to Apple Calendar' });
+      const addButton = screen.getByRole('button', { name: 'Add Workout' });
       
       expect(importButton.tagName).toBe('BUTTON');
+      expect(exportButton.tagName).toBe('BUTTON');
       expect(addButton.tagName).toBe('BUTTON');
     });
   });
