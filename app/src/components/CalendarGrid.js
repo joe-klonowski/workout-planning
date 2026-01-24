@@ -60,6 +60,21 @@ function CalendarGrid({
     });
   };
 
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mql = window.matchMedia('(max-width: 420px)');
+    const onChange = (e) => setIsMobile(!!e.matches);
+    // set initial
+    setIsMobile(!!mql.matches);
+    if (mql.addEventListener) mql.addEventListener('change', onChange);
+    else mql.addListener(onChange);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange);
+      else mql.removeListener(onChange);
+    };
+  }, []);
+
   return (
     <>
       <div className="day-of-week-headers">
@@ -72,7 +87,7 @@ function CalendarGrid({
         <div className="day-of-week">Sun</div>
       </div>
 
-      <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
+      <div className={`calendar-grid ${viewMode} ${isMobile ? 'mobile' : ''} ${showTimeSlots ? 'dragging' : ''}`}>
         {days.map((dayObj, index) => {
           const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
           const isToday = dayObj.date.toDateString() === new Date().toDateString();

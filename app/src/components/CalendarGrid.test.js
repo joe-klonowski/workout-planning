@@ -497,6 +497,60 @@ describe('CalendarGrid', () => {
     });
   });
 
+  describe('Responsive behavior', () => {
+    const createMatchMedia = (matches) => (query) => ({
+      matches,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    });
+
+    afterEach(() => {
+      // restore default (some test environments may set this)
+      window.matchMedia = undefined;
+    });
+
+    test('adds mobile class when matchMedia indicates small screen (month view)', () => {
+      window.matchMedia = createMatchMedia(true);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="month"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).toHaveClass('mobile', 'month');
+    });
+
+    test('does not add mobile class when matchMedia indicates wide screen', () => {
+      window.matchMedia = createMatchMedia(false);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="week"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).not.toHaveClass('mobile');
+    });
+  });
+
   describe('Drag state handling', () => {
     test('passes drag state to CalendarDay components', () => {
       const days = createDays(1);

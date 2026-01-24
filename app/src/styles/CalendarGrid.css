@@ -40,3 +40,63 @@
     min-height: auto;
   }
 }
+
+/* Mobile-specific CSS (420px and below) */
+/* We add a `.mobile` class from JS (matchMedia) and keep the media-query fallback */
+.calendar-grid.mobile.month,
+@media (max-width: 420px) {
+  .calendar-grid.month {
+    /* Stack days vertically on small phones for legibility */
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .calendar-grid.week {
+    /* Make week view horizontally scrollable so each day can be usable */
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(140px, 1fr);
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Compact headers / allow horizontal scroll for week headers */
+  .day-of-week-headers {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .day-of-week {
+    min-width: 80px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  /* Ensure day cells are full-width when stacked */
+  .calendar-day {
+    width: 100%;
+    min-height: 72px;
+  }
+}
+
+/* JS-driven mobile class (matchMedia) — gives same behavior even if media queries aren't available */
+.calendar-grid.mobile.month {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.calendar-grid.mobile.week {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, 1fr);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.day-of-week-headers[data-mobile="true"] {
+  /* When JS signals mobile, keep headers compact/horizontal */
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
