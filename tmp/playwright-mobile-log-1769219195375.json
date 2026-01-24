@@ -1,0 +1,130 @@
+{
+  "calendarChecks": {
+    "gridExists": true,
+    "headersDisplay": "grid",
+    "gridOverflowX": true,
+    "gridClientWidth": 342,
+    "gridScrollWidth": 1077,
+    "firstDayWidth": 156,
+    "bodyClientWidth": 402,
+    "anyTightOverlap": false
+  },
+  "overflowElements": [],
+  "apiCalls": [
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/auth/login",
+      "method": "POST"
+    },
+    {
+      "type": "response",
+      "url": "http://localhost:5000/api/auth/login",
+      "status": 200
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-25",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-25",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-25",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weekly-targets",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/workouts",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/tri-club-schedule",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-23",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    },
+    {
+      "type": "request",
+      "url": "http://localhost:5000/api/weather/by-time-of-day/2026-01-24",
+      "method": "GET"
+    }
+  ],
+  "consoleMessages": [
+    "[console:verbose] [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+    "[console:log] 📤 Attempting login with username: joe",
+    "[console:log] 📤 Request body: { username, password: (redacted) }",
+    "[console:log] 📥 Response status: 200",
+    "[console:log] 📥 Response headers: {content-type: application/json, server: null}",
+    "[console:log] 📥 Response body: {message: Login successful, token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkI…E5MX0.m4bSboLBzkzfRKxS9_0XxZNa-iZIhyxxPYxCk2_w6cI, user: Object}",
+    "[console:log] Fetching workouts from: http://localhost:5000/api/workouts",
+    "[console:log] Fetching tri club schedule from: http://localhost:5000/api/tri-club-schedule",
+    "[console:log] Received tri club schedule: {effective_date: 2026-01-01, schedule: Object}",
+    "[console:log] Response status: 200",
+    "[console:log] Received data: {count: 250, workouts: Array(250)}",
+    "[console:log] Number of workouts: 250",
+    "[console:log] Transformed workouts: 250"
+  ]
+}

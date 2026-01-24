@@ -55,7 +55,11 @@
     /* Make week view horizontally scrollable so each day can be usable */
     display: grid;
     grid-auto-flow: column;
+<<<<<<< HEAD
     grid-auto-columns: minmax(140px, 1fr);
+=======
+    grid-auto-columns: minmax(var(--calendar-day-min, 140px), 1fr);
+>>>>>>> 881114a (Fix layout on mobile viewport size.)
     gap: 8px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -70,9 +74,17 @@
   }
 
   .day-of-week {
+<<<<<<< HEAD
     min-width: 80px;
     padding: 8px;
     font-size: 12px;
+=======
+    /* Use the same CSS variable as the grid so headers align with day cells on mobile */
+    min-width: var(--calendar-day-min, 80px);
+    padding: 8px;
+    font-size: 12px;
+    flex: 0 0 var(--calendar-day-min, auto);
+>>>>>>> 881114a (Fix layout on mobile viewport size.)
   }
 
   /* Ensure day cells are full-width when stacked */
@@ -89,7 +101,11 @@
 }
 .calendar-grid.mobile.week {
   grid-auto-flow: column;
+<<<<<<< HEAD
   grid-auto-columns: minmax(140px, 1fr);
+=======
+  grid-auto-columns: minmax(var(--calendar-day-min, 140px), 1fr);
+>>>>>>> 881114a (Fix layout on mobile viewport size.)
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }

@@ -531,6 +531,35 @@ describe('CalendarGrid', () => {
       expect(grid).toHaveClass('mobile', 'month');
     });
 
+<<<<<<< HEAD
+=======
+    test('mobile week headers align with calendar day width', () => {
+      // simulate small screen
+      window.matchMedia = createMatchMedia(true);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="week"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).toHaveClass('mobile', 'week');
+      // component sets a CSS var inline for mobile day min; verify it's present
+      expect(grid.style.getPropertyValue('--calendar-day-min')).toBe('140px');
+
+      const headers = container.querySelectorAll('.day-of-week');
+      expect(headers[0].getAttribute('data-calendar-day-min')).toBe('140px');
+      expect(headers[0].style.minWidth).toBe('140px');
+    });
+
+>>>>>>> 881114a (Fix layout on mobile viewport size.)
     test('does not add mobile class when matchMedia indicates wide screen', () => {
       window.matchMedia = createMatchMedia(false);
       const days = createDays(7);
