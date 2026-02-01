@@ -11,8 +11,8 @@ import { DateOnly } from './utils/DateOnly';
 let mockCallbacks = {};
 let mockWorkoutsReceived = [];
 jest.mock('./components/Calendar', () => {
-  return function MockCalendar({ workouts, onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, ...props }) {
-    mockCallbacks = { onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange };
+  return function MockCalendar({ workouts, onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutSelectionUpdate, ...props }) {
+    mockCallbacks = { onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutSelectionUpdate };
     mockWorkoutsReceived = workouts;
     return (
       <div data-testid="mock-calendar">
@@ -75,6 +75,13 @@ const createFetchMock = (workouts = [], triClubSchedule = null) => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ weather_code: 0, temperature: 60, rain_probability: 0, windspeed: 5 }),
+      });
+    } else if (url.includes('/api/selections/')) {
+      // Support PUTs to selections endpoint for tests
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
       });
     }
     return Promise.reject(new Error('Unknown endpoint'));
@@ -220,6 +227,71 @@ describe('App Component', () => {
     const mockWorkouts = [
       {
         id: 1,
+        title: 'Morning Run',
+        workoutType: 'Run',
+        workoutDescription: 'Easy 5k',
+        plannedDuration: 0.5,
+        plannedDistanceInMeters: 5000,
+        originallyPlannedDay: '2026-01-15',
+        coachComments: 'Take it easy',
+      },
+    ];
+
+    global.fetch = createFetchMock(mockWorkouts);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Loaded 1 workouts')).toBeInTheDocument();
+    });
+  });
+
+  test('sends single PUT when both date and time are updated via combined handler', async () => {
+    const mockWorkouts = [
+      {
+        id: 1,
+        title: 'Morning Run',
+        workoutType: 'Run',
+        workoutDescription: 'Easy 5k',
+        plannedDuration: 0.5,
+        plannedDistanceInMeters: 5000,
+        originallyPlannedDay: '2026-01-15',
+        coachComments: 'Take it easy',
+      },
+    ];
+
+    global.fetch = createFetchMock(mockWorkouts);
+
+    render(<App />);
+
+    // Wait for Calendar mock to receive callbacks
+    await waitFor(() => {
+      expect(mockCallbacks.onWorkoutSelectionUpdate).toBeDefined();
+    });
+
+    // Clear any previous fetch calls so we can observe only the one from the action
+    global.fetch.mockClear();
+
+    // Call the combined update handler (simulates drop that changes both date and time)
+    await act(async () => {
+      await mockCallbacks.onWorkoutSelectionUpdate(1, { currentPlanDay: '2026-01-16', timeOfDay: 'afternoon' });
+    });
+
+    // Find calls to selections endpoint
+    const selectionCalls = global.fetch.mock.calls.filter(call => call[0] && call[0].includes('/api/selections/1'));
+    expect(selectionCalls.length).toBe(1);
+
+    const opts = selectionCalls[0][1];
+    expect(opts.method).toBe('PUT');
+    expect(JSON.parse(opts.body)).toEqual({ currentPlanDay: '2026-01-16', timeOfDay: 'afternoon' });
+  });
+
+  // END inserted tests
+
+  test('handles multiple workouts correctly (continued)', async () => {
+    const mockWorkouts = [
+      {
+        id: 1,
         title: 'Workout 1',
         workoutType: 'Run',
         originallyPlannedDay: '2026-01-15',
@@ -250,12 +322,7 @@ describe('App Component', () => {
       },
     ];
 
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ workouts: mockWorkouts, count: 3 }),
-      })
-    );
+    global.fetch = createFetchMock(mockWorkouts);
 
     render(<App />);
 

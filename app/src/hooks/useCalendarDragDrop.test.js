@@ -153,9 +153,8 @@ describe('useCalendarDragDrop', () => {
   });
 
   describe('handleDrop', () => {
-    it('should call onWorkoutDateChange when date changes', () => {
-      const onWorkoutDateChange = jest.fn();
-      const onWorkoutTimeOfDayChange = jest.fn();
+    it('should call combined handler when date changes', () => {
+      const onWorkoutSelectionUpdate = jest.fn();
       const { result } = renderHook(() => useCalendarDragDrop());
 
       // Start drag
@@ -169,24 +168,24 @@ describe('useCalendarDragDrop', () => {
           mockEvent,
           mockDayObj,
           'morning',
-          onWorkoutDateChange,
-          onWorkoutTimeOfDayChange
+          null,
+          null,
+          onWorkoutSelectionUpdate
         );
       });
 
       expect(mockEvent.preventDefault).toHaveBeenCalled();
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
-      expect(onWorkoutDateChange).toHaveBeenCalledWith(
+      expect(onWorkoutSelectionUpdate).toHaveBeenCalledWith(
         mockWorkout.id,
-        expect.any(Date)
+        expect.objectContaining({ currentPlanDay: expect.any(String) })
       );
       expect(result.current.draggedWorkout).toBeNull();
       expect(result.current.showTimeSlots).toBe(false);
     });
 
-    it('should call onWorkoutTimeOfDayChange when time slot changes', () => {
-      const onWorkoutDateChange = jest.fn();
-      const onWorkoutTimeOfDayChange = jest.fn();
+    it('should call combined handler when time slot changes', () => {
+      const onWorkoutSelectionUpdate = jest.fn();
       const { result } = renderHook(() => useCalendarDragDrop());
 
       // Start drag
@@ -207,20 +206,20 @@ describe('useCalendarDragDrop', () => {
           mockEvent,
           sameDayObj,
           'afternoon',
-          onWorkoutDateChange,
-          onWorkoutTimeOfDayChange
+          null,
+          null,
+          onWorkoutSelectionUpdate
         );
       });
 
-      expect(onWorkoutTimeOfDayChange).toHaveBeenCalledWith(
+      expect(onWorkoutSelectionUpdate).toHaveBeenCalledWith(
         mockWorkout.id,
-        'afternoon'
+        expect.objectContaining({ timeOfDay: 'afternoon' })
       );
     });
 
-    it('should not call callbacks when date and time slot are unchanged', () => {
-      const onWorkoutDateChange = jest.fn();
-      const onWorkoutTimeOfDayChange = jest.fn();
+    it('should not call combined handler when date and time slot are unchanged', () => {
+      const onWorkoutSelectionUpdate = jest.fn();
       const { result } = renderHook(() => useCalendarDragDrop());
 
       // Start drag
@@ -241,13 +240,13 @@ describe('useCalendarDragDrop', () => {
           mockEvent,
           sameDayObj,
           'morning',
-          onWorkoutDateChange,
-          onWorkoutTimeOfDayChange
+          null,
+          null,
+          onWorkoutSelectionUpdate
         );
       });
 
-      expect(onWorkoutDateChange).not.toHaveBeenCalled();
-      expect(onWorkoutTimeOfDayChange).not.toHaveBeenCalled();
+      expect(onWorkoutSelectionUpdate).not.toHaveBeenCalled();
     });
 
     it('should handle drop without dragged workout', () => {
@@ -271,9 +270,8 @@ describe('useCalendarDragDrop', () => {
       expect(result.current.draggedWorkout).toBeNull();
     });
 
-    it('should handle drop without time slot (month view)', () => {
-      const onWorkoutDateChange = jest.fn();
-      const onWorkoutTimeOfDayChange = jest.fn();
+    it('should call combined handler when drop without time slot (month view)', () => {
+      const onWorkoutSelectionUpdate = jest.fn();
       const { result } = renderHook(() => useCalendarDragDrop());
 
       // Start drag
@@ -287,15 +285,15 @@ describe('useCalendarDragDrop', () => {
           mockEvent,
           mockDayObj,
           null,
-          onWorkoutDateChange,
-          onWorkoutTimeOfDayChange
+          null,
+          null,
+          onWorkoutSelectionUpdate
         );
       });
 
-      expect(onWorkoutDateChange).toHaveBeenCalled();
-      expect(onWorkoutTimeOfDayChange).toHaveBeenCalledWith(
+      expect(onWorkoutSelectionUpdate).toHaveBeenCalledWith(
         mockWorkout.id,
-        null
+        expect.objectContaining({ currentPlanDay: expect.any(String), timeOfDay: null })
       );
     });
   });

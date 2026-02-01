@@ -253,6 +253,48 @@ function App() {
     }
   };
 
+  // Handle combined selection updates (date and/or time)
+  const handleWorkoutSelectionUpdate = async (workoutId, updateFields) => {
+    try {
+      const body = { ...updateFields };
+      // Convert unscheduled string to null to match API expectations
+      if (body.timeOfDay === 'unscheduled') {
+        body.timeOfDay = null;
+      }
+
+      const response = await apiCall(API_ENDPOINTS.SELECTIONS(workoutId), {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update selection: ${response.status}`);
+      }
+
+      // Update local state - apply any fields provided
+      setWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout => {
+          if (workout.id === workoutId) {
+            const updated = { ...workout };
+            if (body.currentPlanDay) {
+              updated.currentPlanDay = body.currentPlanDay;
+              const [y, m, d] = body.currentPlanDay.split('-').map(Number);
+              updated.workoutDate = new DateOnly(y, m, d);
+            }
+            if (Object.prototype.hasOwnProperty.call(body, 'timeOfDay')) {
+              updated.timeOfDay = body.timeOfDay;
+            }
+            return updated;
+          }
+          return workout;
+        })
+      );
+    } catch (err) {
+      logger.error('Error updating workout selection:', err);
+      alert('Failed to update workout selection. Please try again.');
+    }
+  };
+
   // Handle workout location change
   const handleWorkoutLocationChange = async (workoutId, workoutLocation) => {
     try {
@@ -515,6 +557,7 @@ function App() {
               onWorkoutSelectionToggle={handleWorkoutSelection}
               onWorkoutDateChange={handleWorkoutDateChange}
               onWorkoutTimeOfDayChange={handleWorkoutTimeOfDayChange}
+              onWorkoutSelectionUpdate={handleWorkoutSelectionUpdate}
               onWorkoutLocationChange={handleWorkoutLocationChange}
               onExportToCalendar={handleExportToCalendar}
               onAddCustomWorkout={handleAddCustomWorkout}

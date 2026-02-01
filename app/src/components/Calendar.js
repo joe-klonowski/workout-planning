@@ -29,7 +29,7 @@ import '../styles/Calendar.css';
 function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => {
   const today = new Date();
   return new DateOnly(today.getFullYear(), today.getMonth() + 1, today.getDate());
-})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts, onUpdateTss }) {
+})(), onWorkoutSelectionToggle, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutSelectionUpdate, onWorkoutLocationChange, onExportToCalendar, onAddCustomWorkout, onImportWorkouts, onUpdateTss }) {
   // Use custom hooks for navigation and drag-drop
   const navigation = useCalendarNavigation(initialDate);
   const dragDrop = useCalendarDragDrop();
@@ -98,9 +98,9 @@ function Calendar({ workouts = [], triClubSchedule = null, initialDate = (() => 
   // Convert to Monday-start week (0 = Monday, 6 = Sunday)
   const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
-  // Wrapper for handleDrop to pass callbacks
+  // Wrapper for handleDrop to pass callbacks (supports combined selection updates)
   const handleDrop = (e, dayObj, timeSlot = null) => {
-    dragDrop.handleDrop(e, dayObj, timeSlot, onWorkoutDateChange, onWorkoutTimeOfDayChange);
+    dragDrop.handleDrop(e, dayObj, timeSlot, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutSelectionUpdate);
   };
 
   // Handler for clicking on a workout badge
@@ -334,6 +334,7 @@ Calendar.propTypes = {
   onWorkoutSelectionToggle: PropTypes.func,
   onWorkoutDateChange: PropTypes.func,
   onWorkoutTimeOfDayChange: PropTypes.func,
+  onWorkoutSelectionUpdate: PropTypes.func.isRequired,
   onWorkoutLocationChange: PropTypes.func,
   onExportToCalendar: PropTypes.func,
   onAddCustomWorkout: PropTypes.func,

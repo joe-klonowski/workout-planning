@@ -870,8 +870,8 @@ describe('Calendar Component', () => {
       expect(workoutBadge).toHaveAttribute('draggable', 'true');
     });
 
-    it('should call onWorkoutDateChange when workout is dropped on a new day', () => {
-      const mockDateChange = jest.fn();
+    it('should call combined handler when workout is dropped on a new day', () => {
+      const mockSelectionUpdate = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       const workouts = [
         {
@@ -889,7 +889,7 @@ describe('Calendar Component', () => {
         <Calendar 
           workouts={workouts} 
           initialDate={testDate}
-          onWorkoutDateChange={mockDateChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       
@@ -909,12 +909,12 @@ describe('Calendar Component', () => {
       fireEvent.dragOver(targetDay);
       fireEvent.drop(targetDay);
       
-      // Verify the callback was called with correct workout ID and new date
-      expect(mockDateChange).toHaveBeenCalledTimes(1);
-      const [workoutId, newDate] = mockDateChange.mock.calls[0];
+      // Verify the combined callback was called with correct workout ID and new date
+      expect(mockSelectionUpdate).toHaveBeenCalledTimes(1);
+      const [workoutId, update] = mockSelectionUpdate.mock.calls[0];
       expect(workoutId).toBe(1);
-      expect(newDate).toBeInstanceOf(Date);
-      expect(newDate.getDate()).toBe(16);
+      expect(update).toHaveProperty('currentPlanDay');
+      expect(update.currentPlanDay.endsWith('-16')).toBe(true);
     });
 
     it('should add drag-over styling to calendar day during drag', () => {
@@ -971,8 +971,8 @@ describe('Calendar Component', () => {
       jest.useRealTimers();
     });
 
-    it('should not call onWorkoutDateChange when dropped on same day', () => {
-      const mockDateChange = jest.fn();
+    it('should not call combined handler when dropped on same day', () => {
+      const mockSelectionUpdate = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       const workouts = [
         {
@@ -990,7 +990,7 @@ describe('Calendar Component', () => {
         <Calendar 
           workouts={workouts} 
           initialDate={testDate}
-          onWorkoutDateChange={mockDateChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       
@@ -1005,11 +1005,11 @@ describe('Calendar Component', () => {
       fireEvent.drop(sameDay);
       
       // Should not call the handler since date didn't change
-      expect(mockDateChange).not.toHaveBeenCalled();
+      expect(mockSelectionUpdate).not.toHaveBeenCalled();
     });
 
     it('should work in month view as well', () => {
-      const mockDateChange = jest.fn();
+      const mockSelectionUpdate = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       const workouts = [
         {
@@ -1027,7 +1027,7 @@ describe('Calendar Component', () => {
         <Calendar 
           workouts={workouts} 
           initialDate={testDate}
-          onWorkoutDateChange={mockDateChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       
@@ -1044,7 +1044,7 @@ describe('Calendar Component', () => {
       fireEvent.dragStart(workoutBadge);
       fireEvent.drop(targetDay);
       
-      expect(mockDateChange).toHaveBeenCalled();
+      expect(mockSelectionUpdate).toHaveBeenCalled();
     });
 
     it('should not trigger weekly-targets API calls during drag (without drop)', async () => {
@@ -1206,16 +1206,16 @@ describe('Calendar Component', () => {
     });
 
     // KEPT: Tests Calendar's coordination of time-of-day change callback
-    it('should call onWorkoutTimeOfDayChange when dropping on a time slot', () => {
+    it('should call combined handler when dropping on a time slot', () => {
       jest.useFakeTimers();
-      const mockTimeChange = jest.fn();
+      const mockSelectionUpdate = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       
       const { container } = render(
         <Calendar 
           workouts={workoutsWithTime} 
           initialDate={testDate}
-          onWorkoutTimeOfDayChange={mockTimeChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       
@@ -1236,38 +1236,40 @@ describe('Calendar Component', () => {
       // Drop on afternoon slot
       fireEvent.drop(timeSlots[0]);
       
-      // Should call time change handler with afternoon
-      expect(mockTimeChange).toHaveBeenCalledWith(1, 'afternoon');
+      // Should call combined handler with timeOfDay
+      expect(mockSelectionUpdate).toHaveBeenCalledWith(1, expect.objectContaining({ timeOfDay: 'afternoon' }));
       
       jest.useRealTimers();
     });
 
     // KEPT: Tests Calendar's coordination of both date and time change
-    it('should update both date and time when dropping on different day time slot', () => {
+    it('should invoke the combined handler when both date and time change', () => {
       jest.useFakeTimers();
+      const mockSelectionUpdate = jest.fn();
       const mockTimeChange = jest.fn();
       const mockDateChange = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
-      
+
       const { container } = render(
         <Calendar 
           workouts={workoutsWithTime} 
           initialDate={testDate}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
           onWorkoutTimeOfDayChange={mockTimeChange}
           onWorkoutDateChange={mockDateChange}
         />
       );
-      
+
       const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
-      
+
       // Start dragging
       fireEvent.dragStart(workoutBadge);
-      
+
       // Advance timers for time slots to appear
       act(() => {
         jest.advanceTimersByTime(100);
       });
-      
+
       // Find time slots from a different day
       const calendarDays = container.querySelectorAll('.calendar-day.time-slot-mode');
       // Get the second day's afternoon slot
@@ -1275,13 +1277,59 @@ describe('Calendar Component', () => {
         const secondDaySlots = calendarDays[1].querySelectorAll('.time-slot.afternoon');
         if (secondDaySlots.length > 0) {
           fireEvent.drop(secondDaySlots[0]);
-          
-          // Both handlers should be called
-          expect(mockTimeChange).toHaveBeenCalled();
-          expect(mockDateChange).toHaveBeenCalled();
+
+          // Combined handler should be called and individual handlers should not
+          expect(mockSelectionUpdate).toHaveBeenCalledTimes(1);
+          expect(mockTimeChange).not.toHaveBeenCalled();
+          expect(mockDateChange).not.toHaveBeenCalled();
         }
       }
-      
+
+      jest.useRealTimers();
+    });
+
+    it('should call onWorkoutSelectionUpdate once when both date and time change and combined handler provided', () => {
+      jest.useFakeTimers();
+      const mockSelectionUpdate = jest.fn();
+      const mockTimeChange = jest.fn();
+      const mockDateChange = jest.fn();
+      const testDate = new DateOnly(2026, 1, 15);
+
+      const { container } = render(
+        <Calendar
+          workouts={workoutsWithTime}
+          initialDate={testDate}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
+          onWorkoutTimeOfDayChange={mockTimeChange}
+          onWorkoutDateChange={mockDateChange}
+        />
+      );
+
+      const workoutBadge = screen.getByText('Morning Run').closest('.workout-badge');
+
+      // Start dragging
+      fireEvent.dragStart(workoutBadge);
+
+      // Advance timers for time slots to appear
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      // Find time slots from a different day
+      const calendarDays = container.querySelectorAll('.calendar-day.time-slot-mode');
+      // Get the second day's afternoon slot
+      if (calendarDays.length > 1) {
+        const secondDaySlots = calendarDays[1].querySelectorAll('.time-slot.afternoon');
+        if (secondDaySlots.length > 0) {
+          fireEvent.drop(secondDaySlots[0]);
+
+          // Combined handler should be called and individual handlers should not
+          expect(mockSelectionUpdate).toHaveBeenCalledTimes(1);
+          expect(mockTimeChange).not.toHaveBeenCalled();
+          expect(mockDateChange).not.toHaveBeenCalled();
+        }
+      }
+
       jest.useRealTimers();
     });
 
@@ -1291,11 +1339,12 @@ describe('Calendar Component', () => {
       const mockTimeChange = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       
+      const mockSelectionUpdate = jest.fn();
       const { container } = render(
         <Calendar 
           workouts={workoutsWithTime} 
           initialDate={testDate}
-          onWorkoutTimeOfDayChange={mockTimeChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       
@@ -1314,8 +1363,8 @@ describe('Calendar Component', () => {
       if (unscheduledSlots.length > 0) {
         fireEvent.drop(unscheduledSlots[0]);
         
-        // Should call with 'unscheduled' which gets converted to null in App.js
-        expect(mockTimeChange).toHaveBeenCalledWith(1, 'unscheduled');
+        // Should call combined handler with 'unscheduled'
+        expect(mockSelectionUpdate).toHaveBeenCalledWith(1, expect.objectContaining({ timeOfDay: 'unscheduled' }));
       }
       
       jest.useRealTimers();
@@ -1381,14 +1430,14 @@ describe('Calendar Component', () => {
     // KEPT: Tests Calendar's time slot hide on drop
     it('should hide time slots when workout is dropped', async () => {
       jest.useFakeTimers();
-      const mockTimeChange = jest.fn();
+      const mockSelectionUpdate = jest.fn();
       const testDate = new DateOnly(2026, 1, 15);
       
       const { container } = render(
         <Calendar 
           workouts={workoutsWithTime} 
           initialDate={testDate}
-          onWorkoutTimeOfDayChange={mockTimeChange}
+          onWorkoutSelectionUpdate={mockSelectionUpdate}
         />
       );
       

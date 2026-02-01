@@ -46,7 +46,7 @@ export function useCalendarDragDrop() {
     setDragOverTimeSlot(null);
   };
 
-  const handleDrop = (e, dayObj, timeSlot = null, onWorkoutDateChange, onWorkoutTimeOfDayChange) => {
+  const handleDrop = (e, dayObj, timeSlot = null, onWorkoutDateChange, onWorkoutTimeOfDayChange, onWorkoutSelectionUpdate) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOverDate(null);
@@ -70,14 +70,26 @@ export function useCalendarDragDrop() {
     // Check if time slot changed
     const timeSlotChanged = draggedWorkout.timeOfDay !== timeSlot;
     
-    // Update date if changed
-    if (!sameDay && onWorkoutDateChange) {
-      onWorkoutDateChange(draggedWorkout.id, newDate);
-    }
-    
-    // Update time of day if changed
-    if (timeSlotChanged && onWorkoutTimeOfDayChange) {
-      onWorkoutTimeOfDayChange(draggedWorkout.id, timeSlot);
+    const dateChanged = !sameDay;
+    const timeChanged = timeSlotChanged;
+
+    // If either date or time changed, require the combined handler and call it with only the fields that changed
+    if (dateChanged || timeChanged) {
+      if (!onWorkoutSelectionUpdate) {
+        throw new Error('onWorkoutSelectionUpdate is required; use the combined selection update API');
+      }
+
+      const updateFields = {};
+      if (dateChanged) {
+        updateFields.currentPlanDay = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
+      }
+      if (timeChanged) {
+        updateFields.timeOfDay = timeSlot; // may be null for unscheduled
+      }
+
+      onWorkoutSelectionUpdate(draggedWorkout.id, updateFields);
+    } else {
+      // No changes
     }
     
     setDraggedWorkout(null);

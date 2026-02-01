@@ -31,6 +31,19 @@ A race between multiple frontend PUT requests to the `/api/selections/<workout_i
 
 - Change `useCalendarDragDrop.handleDrop()` (or wrapper in `Calendar`) to call a **single** handler when both date and time need changing.
 
+Implementation (done) ✅
+
+- `useCalendarDragDrop.handleDrop()` now requires and calls `onWorkoutSelectionUpdate(workoutId, updateFields)` with only the fields that changed (`currentPlanDay`, `timeOfDay`, or both).
+- `Calendar` now accepts `onWorkoutSelectionUpdate` (marked required via PropTypes) and passes it to the hook.
+- `App.js` implements `handleWorkoutSelectionUpdate(workoutId, updateFields)` which issues a single `PUT` to `API_ENDPOINTS.SELECTIONS(workoutId)` and updates local state.
+- Files changed:
+  - `app/src/hooks/useCalendarDragDrop.js` (hook logic changed and now enforces combined handler)
+  - `app/src/components/Calendar.js` (prop wired and PropTypes updated)
+  - `app/src/App.js` (new `handleWorkoutSelectionUpdate` and prop passed)
+  - Tests: see `app/src/hooks/useCalendarDragDrop.test.js`, `app/src/components/Calendar.test.js`, `app/src/App.integration.test.js`.
+
+Why: This reduces the chance of concurrent creation because one request will create the selection and set both fields; also simplifies frontend semantics (one handler, one request).
+
 Suggested change in logic (example):
 
 - Modify `handleDrop` to compute `needsDate` and `needsTime` and if both true call a new handler like `onWorkoutSelectionUpdate(id, { currentPlanDay: 'YYYY-MM-DD', timeOfDay: 'morning' })`.
@@ -78,9 +91,12 @@ op.drop_constraint('uq_workout_selections_workout_id', 'workout_selections', typ
 
 ### Frontend tests
 
-- Unit test for `useCalendarDragDrop.handleDrop()` or `Calendar` integration test verifying **one** fetch call when both date and time change on drop. (Mock `fetch` and assert single call to `API_ENDPOINTS.SELECTIONS(id)` with combined body.)
+- **Done:** Unit and integration tests were added to verify the batching behaviour and assert a single PUT is sent when date and/or time change on drop. Files added/updated:
+  - `app/src/hooks/useCalendarDragDrop.test.js` — unit tests for the hook, asserting the combined `onWorkoutSelectionUpdate` is called with the expected fields.
+  - `app/src/components/Calendar.test.js` — component-level tests verifying the combined handler is invoked (single call) for date, time, and combined drops.
+  - `app/src/App.integration.test.js` — integration test asserting a single `PUT /api/selections/<id>` when the combined handler is used.
 
-- Integration test (RTL / jest) to simulate drag-drop and assert a single request.
+All frontend tests pass locally after the change (28 suites, all passing).
 
 ### Backend tests
 
@@ -188,12 +204,23 @@ Rationale: adding defensive code first avoids transient IntegrityErrors and ensu
 ## Quick operational checklist 🧭
 
 - [x] Add backend defensive `update_selection()` changes + unit & concurrency tests
-- [ ] Add frontend batching on drop + frontend tests
-- [ ] Add test to assert single PUT on combined changes
-- [ ] Add Alembic migration (unique constraint)
+- [x] Add frontend batching on drop + frontend tests (implemented)
+- [x] Add test to assert single PUT on combined changes (implemented)
 - [ ] Deduplicate dev DB and add cleanup script to repo (for manual re-runs)
+  - Dev steps (recommended):
+    1. Backup dev DB: `cp backend/workout_planner.db backend/workout_planner.db.bak-$(date +%Y%m%d%H%M%S)` ✅
+    2. Run the dedupe script / SQL to remove existing duplicate `workout_selections` rows (keep most recent `updated_at`).
+    3. Re-run the duplicate check SQL to ensure zero duplicates.
+- [ ] Add Alembic migration (unique constraint)
+  - **When to run in development:** Run **only after** the following are completed and verified in dev: defensive backend changes are deployed and tests pass; frontend batching & tests are deployed and verified; and the dev DB has been deduplicated (see previous item).
+  - **Local run steps:**
+    1. Ensure you have a fresh backup of `backend/workout_planner.db`.
+    2. Add the migration file (e.g., with `alembic revision --autogenerate -m "add unique constraint workout_selections.workout_id"`).
+    3. Run migration locally: `alembic upgrade head` (or project-specific migration helper) against your dev DB.
+    4. Run backend & integration tests to confirm the migration succeeds and there are no regressions.
+    5. Commit the migration and include migration tests (migration should fail on a DB with duplicates).
 - [ ] Backup production DB and run dedupe there
-- [ ] Apply Alembic migration in production
+- [ ] Apply Alembic migration in production (only after production dedupe and a maintenance window if needed)
 - [ ] Monitor logs for SAWarnings and IntegrityErrors for a few days
 
 ---
