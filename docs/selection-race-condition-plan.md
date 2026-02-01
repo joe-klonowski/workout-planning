@@ -187,7 +187,7 @@ Rationale: adding defensive code first avoids transient IntegrityErrors and ensu
 
 ## Quick operational checklist 🧭
 
-- [ ] Add backend defensive `update_selection()` changes + unit & concurrency tests
+- [x] Add backend defensive `update_selection()` changes + unit & concurrency tests
 - [ ] Add frontend batching on drop + frontend tests
 - [ ] Add test to assert single PUT on combined changes
 - [ ] Add Alembic migration (unique constraint)

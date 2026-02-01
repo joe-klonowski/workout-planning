@@ -4,6 +4,7 @@ Tests for workout planner backend
 import pytest
 import json
 from datetime import date, datetime
+import threading
 from unittest.mock import patch, MagicMock
 from app import create_app
 from models import db, Workout, WorkoutSelection
@@ -382,6 +383,71 @@ def test_deselecting_workout_clears_time_of_day(client, sample_workout):
     data = json.loads(response.data)
     assert data['isSelected'] is False
     assert data['timeOfDay'] is None  # Time of day should be cleared
+
+
+def test_update_selection_no_duplicate_on_sequential_updates(client, app, sample_workout):
+    """Sequential updates should not create duplicate WorkoutSelection rows"""
+    # First update sets the date
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'currentPlanDay': '2026-01-20'}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+
+    # Second update sets the time
+    response = client.put(
+        f'/api/selections/{sample_workout}',
+        data=json.dumps({'timeOfDay': 'morning'}),
+        content_type='application/json'
+    )
+    assert response.status_code == 200
+
+    # Ensure only one selection exists for the workout and fields are as expected
+    with app.app_context():
+        selections = WorkoutSelection.query.filter_by(workout_id=sample_workout).all()
+        assert len(selections) == 1
+        sel = selections[0]
+        assert sel.current_plan_day == date(2026, 1, 20)
+        assert sel.time_of_day == 'morning'
+
+
+def test_update_selection_no_duplicate_on_concurrent_updates(app, sample_workout):
+    """Concurrent PUTs that both attempt to create a selection should not result in duplicate rows.
+
+    Repeat the concurrent pattern multiple times and clear prior selections between iterations
+    so any race condition has a much higher chance of being detected if present.
+    """
+    payload_a = {'currentPlanDay': '2026-01-20'}
+    payload_b = {'timeOfDay': 'morning'}
+
+    def do_put(payload):
+        # Each thread gets its own test client / context
+        with app.test_client() as c:
+            c.put(f'/api/selections/{sample_workout}', data=json.dumps(payload), content_type='application/json')
+
+    iterations = 10
+    for _ in range(iterations):
+        # Ensure a clean slate before each iteration
+        with app.app_context():
+            WorkoutSelection.query.filter_by(workout_id=sample_workout).delete()
+            db.session.commit()
+
+        t1 = threading.Thread(target=do_put, args=(payload_a,))
+        t2 = threading.Thread(target=do_put, args=(payload_b,))
+
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        # Verify we only have a single selection with combined updates
+        with app.app_context():
+            selections = WorkoutSelection.query.filter_by(workout_id=sample_workout).all()
+            assert len(selections) == 1
+            sel = selections[0]
+            assert sel.current_plan_day == date(2026, 1, 20)
+            assert sel.time_of_day == 'morning'
 
 
 def test_delete_selection(client, sample_workout):
