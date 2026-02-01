@@ -248,6 +248,11 @@ describe('ExportModal', () => {
       expect(screen.getByRole('button', { name: 'Exporting...' })).toBeInTheDocument();
     });
     
+    // Spinner should be visible with an accessible role
+    await waitFor(() => {
+      expect(screen.getByRole('status', { name: 'Exporting' })).toBeInTheDocument();
+    });
+
     // Buttons should be disabled
     expect(screen.getByRole('button', { name: 'Exporting...' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();

@@ -892,7 +892,14 @@ def test_export_to_calendar_success(mock_get_credentials, mock_caldav_client, cl
     
     # Setup mock CalDAV client
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 3
+    mock_client_instance.export_workout_plan.return_value = {
+        'createdCount': 3,
+        'results': [
+            {'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'},
+            {'date': '2026-01-11', 'success': True, 'eventId': 'evt-2'},
+            {'date': '2026-01-12', 'success': True, 'eventId': 'evt-3'}
+        ]
+    }
     mock_caldav_client.return_value = mock_client_instance
     
     # Create some test workouts
@@ -956,6 +963,64 @@ def test_export_to_calendar_success(mock_get_credentials, mock_caldav_client, cl
     mock_client_instance.select_calendar.assert_called_once_with('Test Calendar')
     mock_client_instance.export_workout_plan.assert_called_once()
     mock_client_instance.disconnect.assert_called_once()
+
+
+@patch('app.CalDAVClient')
+@patch('app.Config.get_caldav_credentials')
+def test_export_to_calendar_partial_failure(mock_get_credentials, mock_caldav_client, client, app):
+    """Test that partial failures during export are reported back in results"""
+    mock_get_credentials.return_value = {
+        'url': 'https://caldav.test.com/',
+        'username': 'test@example.com',
+        'password': 'test-password',
+        'calendar_name': 'Test Calendar'
+    }
+
+    mock_client_instance = MagicMock()
+    mock_client_instance.export_workout_plan.return_value = {
+        'createdCount': 1,
+        'results': [
+            {'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'},
+            {'date': '2026-01-11', 'success': False, 'error': 'Permission denied'}
+        ]
+    }
+    mock_caldav_client.return_value = mock_client_instance
+
+    # Create some test workouts
+    with app.app_context():
+        workout1 = Workout(
+            title="Morning Swim",
+            workout_type="Swim",
+            workout_description="Easy swim",
+            planned_duration=1.0,
+            originally_planned_day=date(2026, 1, 10)
+        )
+        workout2 = Workout(
+            title="Long Run",
+            workout_type="Run",
+            workout_description="Base run",
+            planned_duration=1.5,
+            planned_distance_meters=15000.0,
+            originally_planned_day=date(2026, 1, 11)
+        )
+        db.session.add_all([workout1, workout2])
+        db.session.commit()
+
+    # Make export request
+    response = client.post('/api/export/calendar', 
+                          data=json.dumps({
+                              'startDate': '2026-01-08',
+                              'endDate': '2026-01-14'
+                          }),
+                          content_type='application/json')
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert 'results' in data
+    # Ensure one failure present with an error message
+    failures = [r for r in data['results'] if not r['success']]
+    assert len(failures) == 1
+    assert 'error' in failures[0]
 
 
 @patch('app.Config.get_caldav_credentials')
@@ -1033,7 +1098,7 @@ def test_export_to_calendar_only_selected_workouts(mock_get_credentials, mock_ca
     }
     
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 1
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 1, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create test workouts - one selected, one not
@@ -1095,7 +1160,7 @@ def test_export_to_calendar_with_moved_workout(mock_get_credentials, mock_caldav
     }
     
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 1
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 1, 'results': [{'date': '2026-01-12', 'success': True, 'eventId': 'evt-1'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create a workout and move it to a different date
@@ -1147,7 +1212,7 @@ def test_export_to_calendar_multiple_workouts_same_day(mock_get_credentials, moc
     }
     
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 1
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 1, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create multiple workouts on the same day
@@ -1241,7 +1306,7 @@ def test_export_to_calendar_uses_specific_calendar_name(mock_get_credentials, mo
     }
     
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 1
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 1, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create a test workout
@@ -1283,7 +1348,7 @@ def test_export_to_calendar_with_null_calendar_name(mock_get_credentials, mock_c
     }
     
     mock_client_instance = MagicMock()
-    mock_client_instance.export_workout_plan.return_value = 1
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 1, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create a test workout
@@ -1332,7 +1397,7 @@ def test_export_to_calendar_deletes_existing_events_in_date_range(mock_get_crede
     
     mock_client_instance = MagicMock()
     mock_client_instance.delete_workout_events_in_range.return_value = 3  # Simulate deleting 3 existing events
-    mock_client_instance.export_workout_plan.return_value = 2
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 2, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}, {'date': '2026-01-11', 'success': True, 'eventId': 'evt-2'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create test workouts
@@ -1396,7 +1461,7 @@ def test_export_to_calendar_only_deletes_events_in_date_range(mock_get_credentia
     
     mock_client_instance = MagicMock()
     mock_client_instance.delete_workout_events_in_range.return_value = 2  # Only 2 events in the range
-    mock_client_instance.export_workout_plan.return_value = 2
+    mock_client_instance.export_workout_plan.return_value = {'createdCount': 2, 'results': [{'date': '2026-01-10', 'success': True, 'eventId': 'evt-1'}, {'date': '2026-01-11', 'success': True, 'eventId': 'evt-2'}]}
     mock_caldav_client.return_value = mock_client_instance
     
     # Create test workouts

@@ -264,29 +264,46 @@ END:VCALENDAR"""
         """
         Export a complete workout plan to calendar
         
-        Creates one all-day event per day that has workouts.
+        Creates one all-day event per day that has workouts. Returns a detailed
+        result for each date so callers can display which days succeeded or failed.
         
         Args:
             workouts_by_date: Dictionary mapping dates to lists of workout dictionaries
             
         Returns:
-            Number of events created
+            Dict with keys:
+              - createdCount: number of events successfully created
+              - results: list of {date: ISO string, success: bool, eventId?: str, error?: str}
         """
         if not self._calendar:
             raise RuntimeError("No calendar selected. Call select_calendar() first.")
         
         created_count = 0
+        results = []
         
         for event_date, workouts in workouts_by_date.items():
             if workouts:  # Only create events for days with workouts
                 try:
-                    self.create_workout_event(event_date, workouts)
+                    event_id = self.create_workout_event(event_date, workouts)
                     created_count += 1
+                    results.append({
+                        'date': event_date.isoformat(),
+                        'success': True,
+                        'eventId': event_id
+                    })
                 except Exception as e:
                     logger.error(f"Failed to create event for {event_date}: {e}")
+                    results.append({
+                        'date': event_date.isoformat(),
+                        'success': False,
+                        'error': str(e)
+                    })
         
         logger.info(f"Exported {created_count} workout events to calendar")
-        return created_count
+        return {
+            'createdCount': created_count,
+            'results': results
+        }
     
     def disconnect(self):
         """

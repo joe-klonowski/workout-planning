@@ -324,7 +324,28 @@ function App() {
       }
 
       const result = await response.json();
-      alert(`Successfully exported ${result.eventsCreated} workout events to Apple Calendar!`);
+      // If the backend returned per-day results, present successes and failures to the user
+      if (result.results && Array.isArray(result.results) && result.results.length > 0) {
+        const successes = result.results.filter(r => r.success);
+        const failures = result.results.filter(r => !r.success);
+        let msg = `Export results for ${result.dateRange?.start || ''} to ${result.dateRange?.end || ''}:\n\n`;
+        if (successes.length > 0) {
+          msg += `Successfully uploaded (${successes.length}):\n`;
+          successes.forEach(s => {
+            msg += `- ${s.date}\n`;
+          });
+          msg += '\n';
+        }
+        if (failures.length > 0) {
+          msg += `Failed to upload (${failures.length}):\n`;
+          failures.forEach(f => {
+            msg += `- ${f.date}: ${f.error || 'Unknown error'}\n`;
+          });
+        }
+        alert(msg);
+      } else {
+        alert(`Successfully exported ${result.eventsCreated} workout events to Apple Calendar!`);
+      }
     } catch (err) {
       logger.error('Error exporting to calendar:', err);
       throw err; // Re-throw so the modal can display the error

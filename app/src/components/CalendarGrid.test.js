@@ -497,6 +497,86 @@ describe('CalendarGrid', () => {
     });
   });
 
+  describe('Responsive behavior', () => {
+    const createMatchMedia = (matches) => (query) => ({
+      matches,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    });
+
+    afterEach(() => {
+      // restore default (some test environments may set this)
+      window.matchMedia = undefined;
+    });
+
+    test('adds mobile class when matchMedia indicates small screen (month view)', () => {
+      window.matchMedia = createMatchMedia(true);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="month"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).toHaveClass('mobile', 'month');
+    });
+
+    test('mobile week headers align with calendar day width', () => {
+      // simulate small screen
+      window.matchMedia = createMatchMedia(true);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="week"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).toHaveClass('mobile', 'week');
+      // component sets a CSS var inline for mobile day min; verify it's present
+      expect(grid.style.getPropertyValue('--calendar-day-min')).toBe('140px');
+
+      const headers = container.querySelectorAll('.day-of-week');
+      expect(headers[0].getAttribute('data-calendar-day-min')).toBe('140px');
+      expect(headers[0].style.minWidth).toBe('140px');
+    });
+
+    test('does not add mobile class when matchMedia indicates wide screen', () => {
+      window.matchMedia = createMatchMedia(false);
+      const days = createDays(7);
+      const { container } = render(
+        <CalendarGrid
+          days={days}
+          workoutsByDate={{}}
+          viewMode="week"
+          triClubSchedule={null}
+          showTimeSlots={false}
+          dragState={mockDragState}
+          {...mockHandlers}
+        />
+      );
+
+      const grid = container.querySelector('.calendar-grid');
+      expect(grid).not.toHaveClass('mobile');
+    });
+  });
+
   describe('Drag state handling', () => {
     test('passes drag state to CalendarDay components', () => {
       const days = createDays(1);

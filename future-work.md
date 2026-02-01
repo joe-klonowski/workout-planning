@@ -56,20 +56,9 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
-- The layout is pretty messed up on mobile. I'm the only user of this app. I've put viewports commonly used by my devices below. I want the UI to work well for both.
-  - Document this in an appropriate file.
-  - Currently the layout on mobile is pretty messed up. Use Playwright MCP to troubleshoot and fix.
 
-# Testing Viewports
+### Calendar export
 
-## Mobile (iPhone 16 Pro)
-- Width: 402px
-- Height: 874px (or 730-800px accounting for Safari UI)
-- Device Scale: 3x
+The calendar export feature doesn't work super well in production. It seems like, when it exports a week of workouts, it frequently only exports like 5 or 6 days and the rest don't get exported.
 
-## Desktop
-- Width: 1920px
-- Height: 1080px
-
-# Other
-- Create separate documentation files for users and developers (currently this is all grouped together in README.md).
+It seems to work fine locally.

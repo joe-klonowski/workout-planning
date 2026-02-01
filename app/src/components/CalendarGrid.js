@@ -60,19 +60,44 @@ function CalendarGrid({
     });
   };
 
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mql = window.matchMedia('(max-width: 420px)');
+    const onChange = (e) => setIsMobile(!!e.matches);
+    // set initial
+    setIsMobile(!!mql.matches);
+    if (mql.addEventListener) mql.addEventListener('change', onChange);
+    else mql.addListener(onChange);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange);
+      else mql.removeListener(onChange);
+    };
+  }, []);
+
+  const mobileDayMin = isMobile && viewMode === 'week' ? '140px' : null;
+  const gridStyle = mobileDayMin ? { '--calendar-day-min': mobileDayMin } : undefined;
+
   return (
     <>
-      <div className="day-of-week-headers">
-        <div className="day-of-week">Mon</div>
-        <div className="day-of-week">Tue</div>
-        <div className="day-of-week">Wed</div>
-        <div className="day-of-week">Thu</div>
-        <div className="day-of-week">Fri</div>
-        <div className="day-of-week">Sat</div>
-        <div className="day-of-week">Sun</div>
+      <div className="day-of-week-headers" data-mobile={isMobile ? 'true' : 'false'}>
+        {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d) => (
+          <div
+            key={d}
+            className="day-of-week"
+            data-calendar-day-min={mobileDayMin || undefined}
+            style={mobileDayMin ? { minWidth: mobileDayMin, flex: `0 0 ${mobileDayMin}` } : undefined}
+          >
+            {d}
+          </div>
+        ))}
       </div>
 
-      <div className={`calendar-grid ${viewMode} ${showTimeSlots ? 'dragging' : ''}`}>
+      <div
+        className={`calendar-grid ${viewMode} ${isMobile ? 'mobile' : ''} ${showTimeSlots ? 'dragging' : ''}`}
+        style={gridStyle}
+        data-calendar-day-min={mobileDayMin || undefined}
+      >
         {days.map((dayObj, index) => {
           const dayWorkouts = getWorkoutsForDay(dayObj.day, dayObj.year, dayObj.month);
           const isToday = dayObj.date.toDateString() === new Date().toDateString();

@@ -802,13 +802,23 @@ def register_routes(app):
             deleted_count = caldav_client.delete_workout_events_in_range(start_date, end_date)
             logger.info(f"Deleted {deleted_count} existing workout events in range {start_date} to {end_date}")
             
-            events_created = caldav_client.export_workout_plan(workouts_by_date)
-            
+            export_result = caldav_client.export_workout_plan(workouts_by_date)
+
+            # Expect a structured result: {'createdCount': int, 'results': [ ... ]}
+            if not isinstance(export_result, dict) or 'createdCount' not in export_result or 'results' not in export_result:
+                logger.error(f"export_workout_plan returned unexpected result: {export_result}")
+                caldav_client.disconnect()
+                return jsonify({'error': 'Internal error exporting workouts'}), 500
+
+            events_created = export_result['createdCount']
+            results = export_result['results']
+
             caldav_client.disconnect()
-            
+
             return jsonify({
                 'message': f'Successfully exported workouts to calendar',
                 'eventsCreated': events_created,
+                'results': results,
                 'dateRange': {
                     'start': start_date.isoformat(),
                     'end': end_date.isoformat()

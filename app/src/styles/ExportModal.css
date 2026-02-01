@@ -113,3 +113,30 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Spinner shown while exporting */
+.export-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: auto; /* push buttons to the right */
+  color: #333;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #e6e6e6;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.exporting-text {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

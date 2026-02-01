@@ -25,6 +25,13 @@ This file contains instructions for agentic coding systems that are editing code
 ## Testing
 - When testing frontend code, always use  `--watchAll=false` so that tests finish without waiting for additional console input.
 
+### Running tests
+- Use the project-provided top-level scripts to run tests so they run in a consistent environment and with the correct non-interactive flags.
+  - Run backend tests: `./test-backend.sh`
+  - Run frontend tests: `./test-frontend.sh`
+  - Run both (recommended for CI and agents): `./test-all.sh`
+- IMPORTANT: Agents must *only* use these scripts when running tests. Do not call `pytest`, `npm test`, or other test runners directly — use the scripts so the environment setup and flags are consistent across machines and CI.
+
 ### Testing etiquette: avoid noisy tests
 - **Do not add tests that introduce console errors, warnings, or other noisy output when the test suite passes.** Tests should be quiet and deterministic in normal (passing) runs.
 - **Mock external APIs used by components.** Components calling network endpoints (e.g., weekly targets, weather endpoints, tri-club schedule, selections) must have corresponding mocks in tests. Unhandled fetch calls commonly produce "Unknown endpoint" errors and console noise.

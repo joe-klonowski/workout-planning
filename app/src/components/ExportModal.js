@@ -125,6 +125,14 @@ function ExportModal({ isOpen, onClose, onExport, defaultStartDate, defaultEndDa
         </div>
 
         <div className="modal-footer">
+          {/* Show spinner when exporting (accessible via role=status) */}
+          {isExporting && (
+            <div className="export-spinner" role="status" aria-label="Exporting">
+              <span className="spinner" aria-hidden="true"></span>
+              <span className="exporting-text">Exporting…</span>
+            </div>
+          )}
+
           <button
             className="cancel-button"
             onClick={handleCancel}
