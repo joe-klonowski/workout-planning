@@ -17,9 +17,26 @@ import sys
 # Configure logging to output to stdout
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s:%(thread)d] - request_id=%(request_id)s - %(message)s',
     stream=sys.stdout
 )
+
+# Add a logging filter to include request IDs when available
+import uuid
+from flask import g
+
+class RequestIDFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            # If inside a Flask request, g.request_id will be set by before_request
+            record.request_id = getattr(g, 'request_id', 'no-request')
+        except RuntimeError:
+            # Not in request context
+            record.request_id = 'no-request'
+        return True
+
+logging.getLogger().addFilter(RequestIDFilter())
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +52,13 @@ def create_app(config_name='development'):
     app = Flask(__name__, static_folder=static_folder, static_url_path='')
     app.config.from_object(config[config_name])
     
+    # Assign a per-request ID to help correlate logs across a single request
+    from flask import g, request
+    @app.before_request
+    def assign_request_id():
+        # If the client supplied an X-Request-ID header, use that; otherwise generate a UUID
+        g.request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())
+
     logger.info(f"App created with config: {config_name}")
     
     # Initialize extensions

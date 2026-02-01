@@ -50,7 +50,8 @@ class CalDAVClient:
             self._principal = self._client.principal()
             logger.info(f"Successfully connected to CalDAV server at {self.url}")
         except Exception as e:
-            logger.error(f"Failed to connect to CalDAV server: {e}")
+            # Log full stack trace for connection failures
+            logger.exception(f"Failed to connect to CalDAV server: {e}")
             raise
     
     def get_calendars(self) -> List[Dict[str, str]]:
@@ -128,36 +129,46 @@ class CalDAVClient:
         # Format workout notes
         notes_lines = []
         for workout in workouts:
-            # Time of day
-            time_of_day = workout.get('timeOfDay', 'Not specified')
-            
-            # Workout type
-            workout_type = workout.get('workoutType', 'Unknown')
-            
-            # Location (if specified)
-            location = workout.get('workoutLocation')
-            
-            # Duration
-            duration_str = None
-            duration_hours = workout.get('plannedDuration')
-            if duration_hours:
-                hours = int(duration_hours)
-                minutes = int((duration_hours - hours) * 60)
-                if hours > 0 and minutes > 0:
-                    duration_str = f"{hours} hour{'s' if hours != 1 else ''} {minutes} minutes"
-                elif hours > 0:
-                    duration_str = f"{hours} hour{'s' if hours != 1 else ''}"
-                else:
-                    duration_str = f"{minutes} minutes"
-            
-            # Build the line: "Morning run, 45 minutes" or "Morning run (outdoor), 45 minutes"
-            line_parts = [f"{time_of_day.capitalize()} {workout_type.lower()}"]
-            if location:
-                line_parts[0] += f" ({location})"
-            if duration_str:
-                line_parts.append(duration_str)
-            
-            notes_lines.append("- " + ", ".join(line_parts))
+            try:
+                # Time of day (coerce None to a sensible default)
+                time_of_day_raw = workout.get('timeOfDay')
+                time_of_day = (time_of_day_raw if time_of_day_raw else 'Not specified')
+                time_of_day = str(time_of_day)
+
+                # Workout type
+                workout_type_raw = workout.get('workoutType')
+                workout_type = (workout_type_raw if workout_type_raw else 'Unknown')
+                workout_type = str(workout_type)
+
+                # Location (if specified)
+                location = workout.get('workoutLocation')
+
+                # Duration
+                duration_str = None
+                duration_hours = workout.get('plannedDuration')
+                if duration_hours:
+                    hours = int(duration_hours)
+                    minutes = int((duration_hours - hours) * 60)
+                    if hours > 0 and minutes > 0:
+                        duration_str = f"{hours} hour{'s' if hours != 1 else ''} {minutes} minutes"
+                    elif hours > 0:
+                        duration_str = f"{hours} hour{'s' if hours != 1 else ''}"
+                    else:
+                        duration_str = f"{minutes} minutes"
+
+                # Build the line: "Morning run, 45 minutes" or "Morning run (outdoor), 45 minutes"
+                line_parts = [f"{time_of_day.capitalize()} {workout_type.lower()}"]
+                if location:
+                    line_parts[0] += f" ({location})"
+                if duration_str:
+                    line_parts.append(duration_str)
+
+                notes_lines.append("- " + ", ".join(line_parts))
+            except Exception as e:
+                # Log a full stack trace to help troubleshoot unexpected data formats
+                logger.exception(f"Error formatting workout for {event_date}: {e}")
+                # Re-raise so callers (and tests) can observe the failure
+                raise
         
         notes = "\n".join(notes_lines)
         
@@ -214,7 +225,8 @@ END:VCALENDAR"""
                     event.delete()
                     deleted_count += 1
             except Exception as e:
-                logger.warning(f"Error processing event: {e}")
+                # Include stack trace to aid in debugging problematic calendar entries
+                logger.warning(f"Error processing event: {e}", exc_info=True)
                 continue
         
         logger.info(f"Deleted {deleted_count} workout events")
@@ -254,7 +266,8 @@ END:VCALENDAR"""
                     event.delete()
                     deleted_count += 1
             except Exception as e:
-                logger.warning(f"Error processing event: {e}")
+                # Include stack trace to aid in debugging problematic calendar entries
+                logger.warning(f"Error processing event: {e}", exc_info=True)
                 continue
         
         logger.info(f"Deleted {deleted_count} workout events in range {start_date} to {end_date}")
@@ -292,7 +305,8 @@ END:VCALENDAR"""
                         'eventId': event_id
                     })
                 except Exception as e:
-                    logger.error(f"Failed to create event for {event_date}: {e}")
+                    # Log full stack trace for the failed event creation
+                    logger.exception(f"Failed to create event for {event_date}: {e}")
                     results.append({
                         'date': event_date.isoformat(),
                         'success': False,

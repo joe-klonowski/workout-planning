@@ -398,6 +398,30 @@ class TestCalDAVClient:
         mock_event.id = "event-id"
         mock_calendar.save_event.return_value = mock_event
         client._calendar = mock_calendar
+
+    def test_create_workout_event_with_none_time_of_day(self, client):
+        """Test that a workout with timeOfDay set to None is handled gracefully"""
+        mock_calendar = Mock()
+        mock_event = Mock()
+        mock_event.id = "event-none"
+        mock_calendar.save_event.return_value = mock_event
+        client._calendar = mock_calendar
+
+        workouts = [
+            {
+                'workoutType': 'Run',
+                'workoutLocation': None,
+                'timeOfDay': None,
+                'plannedDuration': 1.0
+            }
+        ]
+
+        event_id = client.create_workout_event(date(2026, 1, 20), workouts)
+
+        assert event_id == "event-none"
+        ical_data = mock_calendar.save_event.call_args[0][0]
+        # Should default to 'Not specified' for time of day and include the workout
+        assert "Not specified run" in ical_data or "Not specified Run" in ical_data
         
         # Multiple workouts on the same day
         workouts = [

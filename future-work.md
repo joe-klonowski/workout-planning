@@ -63,12 +63,6 @@ The calendar export feature doesn't work super well in production. It seems like
 
 It seems to work fine locally.
 
-To help troubleshoot, make some code changes:
-
-- Add thread IDs or request IDs to logs via logger configuration.
-- It seems like stack traces are not logged in production. Modify logger config so that, when there's an exception in python, it logs a full stack trace.
-- Make sure that the calendar export endpoint's error handling appropriately logs errors, including stack traces.
-
 Here's the related logs from production when this error occurred:
 
 ```
