@@ -59,9 +59,6 @@ So some of the future feature work here is to enable that plan.
 
 ### Calendar export
 
-The calendar export feature doesn't work super well. It seems like, when it exports a week of workouts, it frequently only exports like 5 or 6 days and the rest don't get exported.
+The calendar export feature doesn't work super well in production. It seems like, when it exports a week of workouts, it frequently only exports like 5 or 6 days and the rest don't get exported.
 
-To help debug, update the workout export confirmation message to display more info to the app's user:
-- List days/events which did successfully get uploaded.
-- List days/events which did NOT successfully get uploaded.
-- For days/events that did not get uploaded, show an appropriate error message in the dialog.
+It seems to work fine locally.

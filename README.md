@@ -21,7 +21,12 @@ Currently, the app isn't finished, we're working through iteratively adding feat
 ## Testing
 
 ### Backend Tests
-Run backend tests with pytest:
+Use the project script to run backend tests (recommended):
+```bash
+./test-backend.sh
+```
+
+If you prefer to run pytest directly for local debugging, you can still use:
 ```bash
 cd backend
 source venv/bin/activate
@@ -39,12 +44,23 @@ pytest --cov=.            # With coverage report
 - Alembic migration tests (create tables, upgrade/downgrade, version tracking)
 
 ### Frontend Tests
-Run frontend tests with npm:
+Use the project script to run frontend tests (non-interactive / CI-friendly):
+```bash
+./test-frontend.sh
+```
+
+If you need to run the frontend test runner directly for local interactive debugging, you can use:
 ```bash
 cd app
 npm test                  # Interactive mode
-npm test -- --watchAll=false  # Run once
+npm test -- --watchAll=false  # Run once (CI mode)
 npm test -- --coverage    # With coverage report
+```
+
+To run both frontend and backend tests in sequence, use the convenience script:
+
+```bash
+./test-all.sh
 ```
 
 **Frontend test coverage**: 209 tests

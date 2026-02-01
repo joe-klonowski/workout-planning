@@ -310,9 +310,13 @@ class TestCalDAVClient:
             date(2026, 1, 17): []  # No workouts, should not create event
         }
         
-        created_count = client.export_workout_plan(workouts_by_date)
+        result = client.export_workout_plan(workouts_by_date)
         
-        assert created_count == 2
+        # New structured result expected
+        assert isinstance(result, dict)
+        assert result.get('createdCount') == 2
+        assert isinstance(result.get('results'), list)
+        assert len(result['results']) == 2
         assert mock_calendar.save_event.call_count == 2
     
     def test_export_workout_plan_with_errors(self, client):
@@ -331,10 +335,14 @@ class TestCalDAVClient:
             date(2026, 1, 17): [{'workoutType': 'Bike', 'timeOfDay': 'morning', 'plannedDuration': 1.0}]
         }
         
-        created_count = client.export_workout_plan(workouts_by_date)
+        result = client.export_workout_plan(workouts_by_date)
         
-        # Should successfully create 2 out of 3 events
-        assert created_count == 2
+        # Should successfully create 2 out of 3 events and report the failed one
+        assert isinstance(result, dict)
+        assert result.get('createdCount') == 2
+        failures = [r for r in result.get('results', []) if not r.get('success')]
+        assert len(failures) == 1
+        assert 'Save failed' in failures[0].get('error', '')
     
     def test_disconnect(self, client):
         """Test disconnecting from server"""
