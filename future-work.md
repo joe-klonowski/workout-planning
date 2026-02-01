@@ -56,3 +56,12 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
+
+### Calendar export
+
+The calendar export feature doesn't work super well. It seems like, when it exports a week of workouts, it frequently only exports like 5 or 6 days and the rest don't get exported.
+
+To help debug, update the workout export confirmation message to display more info to the app's user:
+- List days/events which did successfully get uploaded.
+- List days/events which did NOT successfully get uploaded.
+- For days/events that did not get uploaded, show an appropriate error message in the dialog.
