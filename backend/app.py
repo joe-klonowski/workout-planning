@@ -14,28 +14,42 @@ import os
 import logging
 import sys
 
-# Configure logging to output to stdout
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s:%(thread)d] - request_id=%(request_id)s - %(message)s',
-    stream=sys.stdout
-)
-
-# Add a logging filter to include request IDs when available
+# Configure logging to output to stdout with a safe formatter that ensures `request_id` always exists
 import uuid
 from flask import g
 
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s:%(thread)d] - request_id=%(request_id)s - %(message)s'
+
+class SafeFormatter(logging.Formatter):
+    """Formatter that ensures the LogRecord has a `request_id` attribute so
+    logging formatters that include `%(request_id)s` won't raise.
+    """
+    def format(self, record):
+        if not hasattr(record, 'request_id'):
+            try:
+                # Try to grab from flask.g when available
+                record.request_id = getattr(g, 'request_id')
+            except Exception:
+                record.request_id = 'no-request'
+        return super().format(record)
+
+# Replace root handlers with one that uses the SafeFormatter
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(SafeFormatter(LOG_FORMAT))
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.handlers = [handler]
+
+# Add a logging filter to include request IDs when available (keeps compatibility)
 class RequestIDFilter(logging.Filter):
     def filter(self, record):
         try:
-            # If inside a Flask request, g.request_id will be set by before_request
             record.request_id = getattr(g, 'request_id', 'no-request')
         except RuntimeError:
-            # Not in request context
             record.request_id = 'no-request'
         return True
 
-logging.getLogger().addFilter(RequestIDFilter())
+root_logger.addFilter(RequestIDFilter())
 
 logger = logging.getLogger(__name__)
 
