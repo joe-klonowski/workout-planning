@@ -56,18 +56,3 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
-- [DONE] Improve mobile layout — calendar now provides a usable mobile experience: month view stacks days vertically on small screens and week view is horizontally scrollable. JS `matchMedia` detection and CSS fallbacks were added; unit tests cover the responsive behavior (see `CalendarGrid.test.js`). See `app/src/components/CalendarGrid.js` and `app/src/styles/CalendarGrid.css` for details.
-
-# Testing Viewports
-
-## Mobile (iPhone 16 Pro)
-- Width: 402px
-- Height: 874px (or 730-800px accounting for Safari UI)
-- Device Scale: 3x
-
-## Desktop
-- Width: 1920px
-- Height: 1080px
-
-# Other
-- Create separate documentation files for users and developers (currently this is all grouped together in README.md).
