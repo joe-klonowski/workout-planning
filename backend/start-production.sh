@@ -20,14 +20,45 @@ fi
 echo ""
 echo "📦 Running database migrations..."
 echo "--------------------------------"
-alembic upgrade head
 
-# Check if migrations succeeded
-if [ $? -eq 0 ]; then
-    echo "✅ Migrations completed successfully"
+# Check if alembic_version table exists
+echo "Checking migration state..."
+python3 -c "
+from sqlalchemy import create_engine, inspect
+from config import Config
+import sys
+
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+inspector = inspect(engine)
+
+if 'alembic_version' not in inspector.get_table_names():
+    print('⚠️  alembic_version table not found - database needs stamping')
+    sys.exit(2)
+else:
+    print('✓ alembic_version table exists')
+    sys.exit(0)
+"
+
+MIGRATION_CHECK=$?
+
+if [ $MIGRATION_CHECK -eq 2 ]; then
+    echo "📋 Database exists but not tracked by Alembic - stamping to current version..."
+    alembic stamp head
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to stamp database!"
+        exit 1
+    fi
+    echo "✅ Database stamped successfully"
 else
-    echo "❌ Migrations failed! Not starting the application."
-    exit 1
+    echo "Running pending migrations..."
+    alembic upgrade head
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ Migrations completed successfully"
+    else
+        echo "❌ Migrations failed! Not starting the application."
+        exit 1
+    fi
 fi
 
 # Start the application with gunicorn
