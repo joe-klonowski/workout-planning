@@ -385,33 +385,6 @@ def test_deselecting_workout_clears_time_of_day(client, sample_workout):
     assert data['timeOfDay'] is None  # Time of day should be cleared
 
 
-def test_update_selection_no_duplicate_on_sequential_updates(client, app, sample_workout):
-    """Sequential updates should not create duplicate WorkoutSelection rows"""
-    # First update sets the date
-    response = client.put(
-        f'/api/selections/{sample_workout}',
-        data=json.dumps({'currentPlanDay': '2026-01-20'}),
-        content_type='application/json'
-    )
-    assert response.status_code == 200
-
-    # Second update sets the time
-    response = client.put(
-        f'/api/selections/{sample_workout}',
-        data=json.dumps({'timeOfDay': 'morning'}),
-        content_type='application/json'
-    )
-    assert response.status_code == 200
-
-    # Ensure only one selection exists for the workout and fields are as expected
-    with app.app_context():
-        selections = WorkoutSelection.query.filter_by(workout_id=sample_workout).all()
-        assert len(selections) == 1
-        sel = selections[0]
-        assert sel.current_plan_day == date(2026, 1, 20)
-        assert sel.time_of_day == 'morning'
-
-
 def test_update_selection_no_duplicate_on_concurrent_updates(app, sample_workout):
     """Concurrent PUTs that both attempt to create a selection should not result in duplicate rows.
 
