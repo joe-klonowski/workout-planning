@@ -23,6 +23,8 @@ echo "--------------------------------"
 
 # Try to upgrade, and if it fails due to tables already existing, stamp instead
 alembic upgrade head 2>&1 | tee /tmp/migration.log
+# Capture the exit code of the alembic command (PIPESTATUS[0] holds the exit of the leftmost pipe)
+alembic_exit=${PIPESTATUS[0]}
 
 if grep -q "DuplicateTable\|relation .* already exists" /tmp/migration.log; then
     echo ""
@@ -33,12 +35,26 @@ if grep -q "DuplicateTable\|relation .* already exists" /tmp/migration.log; then
         echo "✅ Database stamped to head successfully"
     else
         echo "❌ Failed to stamp database!"
+        echo "---- Migration log ----"
+        cat /tmp/migration.log
+        echo "-----------------------"
         exit 1
     fi
-elif [ $? -eq 0 ]; then
+elif [ $alembic_exit -eq 0 ]; then
     echo "✅ Migrations completed successfully"
 else
+    echo ""
     echo "❌ Migrations failed! Not starting the application."
+    echo ""
+    echo "---- Migration log ----"
+    cat /tmp/migration.log
+    echo "-----------------------"
+    # Helpful hint if unique constraint / duplicate key caused the failure
+    if grep -q -i "duplicate key value\|unique constraint\|duplicate entry\|could not create unique index" /tmp/migration.log; then
+        echo ""
+        echo "⚠️  It looks like a unique-constraint migration failed (likely duplicates in production)."
+        echo "Please deduplicate the 'workout_selections' table before re-deploying. See: docs/selection-race-condition-plan.md"
+    fi
     exit 1
 fi
 
