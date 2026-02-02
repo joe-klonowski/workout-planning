@@ -472,7 +472,13 @@ def register_routes(app):
     @app.route('/api/selections/<int:workout_id>', methods=['PUT', 'POST'])
     def update_selection(workout_id):
         """
-        Create or update a workout selection
+        Create or update a workout selection using an upsert pattern.
+        
+        With a unique constraint on workout_id, the pattern is:
+        1. Try UPDATE first
+        2. If no rows updated, INSERT
+        3. If INSERT fails with IntegrityError (race), retry UPDATE
+        
         Body: {
             "isSelected": true/false,
             "currentPlanDay": "2026-01-15" (optional),
@@ -503,83 +509,37 @@ def register_routes(app):
             if 'userNotes' in data:
                 updates['user_notes'] = data['userNotes']
 
-            selection = None
-
+            # Upsert pattern with unique constraint on workout_id:
+            # 1. Try UPDATE first (most common case)
+            # 2. If no rows updated, INSERT
+            # 3. If IntegrityError (race), retry UPDATE
             if updates:
-                # Try to update first (avoids overwriting an existing row with a newly-created ORM object)
-                try:
-                    updated_rows = WorkoutSelection.query.filter_by(workout_id=workout_id).update(updates, synchronize_session=False)
-                    if updated_rows:
-                        db.session.commit()
-                        selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-                    else:
-                        # No existing selection; try to insert. If a concurrent insert happens,
-                        # catch IntegrityError and then apply an update to merge fields.
-                        try:
-                            selection = WorkoutSelection(workout_id=workout_id)
-                            for k, v in updates.items():
-                                setattr(selection, k, v)
-                            db.session.add(selection)
-                            db.session.commit()
-
-                            # If no IntegrityError occurred but duplicates were created (e.g., sqlite
-                            # allows concurrent inserts), detect and merge duplicate rows so we
-                            # don't lose updates.
-                            dupes = WorkoutSelection.query.filter_by(workout_id=workout_id).order_by(WorkoutSelection.updated_at.desc()).all()
-                            if len(dupes) > 1:
-                                logger.warning("Detected %s duplicate WorkoutSelection rows for workout %s after insert, merging", len(dupes), workout_id)
-                                keeper = dupes[0]
-                                for other in dupes[1:]:
-                                    for attr in ('is_selected', 'current_plan_day', 'time_of_day', 'workout_location', 'user_notes'):
-                                        other_val = getattr(other, attr)
-                                        if getattr(keeper, attr) is None and other_val is not None:
-                                            setattr(keeper, attr, other_val)
-                                    db.session.delete(other)
-                                db.session.commit()
-                                selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-                            else:
-                                selection = dupes[0]
-                        except IntegrityError as ie:
-                            logger.warning("IntegrityError while inserting selection for workout %s: %s", workout_id, ie, exc_info=True)
-                            db.session.rollback()
-                            # Someone else inserted concurrently — update the existing row now
-                            WorkoutSelection.query.filter_by(workout_id=workout_id).update(updates, synchronize_session=False)
-                            db.session.commit()
-                            selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-
-                            # If for any reason there are still duplicates (e.g., no unique constraint),
-                            # attempt to dedupe by merging non-null fields from duplicates into the most
-                            # recently-updated row and deleting the extras.
-                            dupes = WorkoutSelection.query.filter_by(workout_id=workout_id).order_by(WorkoutSelection.updated_at.desc()).all()
-                            if len(dupes) > 1:
-                                logger.warning("Found %s duplicate WorkoutSelection rows for workout %s, merging them", len(dupes), workout_id)
-                                keeper = dupes[0]
-                                for other in dupes[1:]:
-                                    # Merge missing fields from older rows into the keeper
-                                    for attr in ('is_selected', 'current_plan_day', 'time_of_day', 'workout_location', 'user_notes'):
-                                        other_val = getattr(other, attr)
-                                        if getattr(keeper, attr) is None and other_val is not None:
-                                            setattr(keeper, attr, other_val)
-                                    db.session.delete(other)
-                                db.session.commit()
-                                selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-                except Exception:
-                    # Any unexpected DB error should rollback and propagate to outer handler
-                    db.session.rollback()
-                    raise
-            else:
-                # No fields to update; ensure a selection exists (create if missing)
-                selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-                if not selection:
-                    selection = WorkoutSelection(workout_id=workout_id)
-                    db.session.add(selection)
+                updated_rows = WorkoutSelection.query.filter_by(workout_id=workout_id).update(updates, synchronize_session=False)
+                if updated_rows:
                     db.session.commit()
+                else:
+                    # No existing row, try INSERT
+                    try:
+                        selection = WorkoutSelection(workout_id=workout_id, **updates)
+                        db.session.add(selection)
+                        db.session.commit()
+                    except IntegrityError:
+                        # Another thread inserted first - retry UPDATE
+                        db.session.rollback()
+                        WorkoutSelection.query.filter_by(workout_id=workout_id).update(updates, synchronize_session=False)
+                        db.session.commit()
+            else:
+                # No updates, just ensure a selection exists
+                existing = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
+                if not existing:
+                    try:
+                        selection = WorkoutSelection(workout_id=workout_id)
+                        db.session.add(selection)
+                        db.session.commit()
+                    except IntegrityError:
+                        db.session.rollback()  # Another thread created it
 
-            # Return the authoritative selection from the DB
             selection = WorkoutSelection.query.filter_by(workout_id=workout_id).first()
-            if not selection:
-                # Should not happen, but guard defensively
-                return jsonify({'error': 'Selection not found after update'}), 500
 
             return jsonify(selection.to_dict()), 200
 

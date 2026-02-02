@@ -206,7 +206,7 @@ Rationale: adding defensive code first avoids transient IntegrityErrors and ensu
 - [x] Add backend defensive `update_selection()` changes + unit & concurrency tests
 - [x] Add frontend batching on drop + frontend tests (implemented)
 - [x] Add test to assert single PUT on combined changes (implemented)
-- [ ] Deduplicate dev DB and add cleanup script to repo (for manual re-runs)
+- [x] Deduplicate dev DB and add cleanup script to repo (for manual re-runs) — added `scripts/dedupe_workout_selections.py`
   - Dev steps (recommended):
     1. Backup dev DB: `cp backend/workout_planner.db backend/workout_planner.db.bak-$(date +%Y%m%d%H%M%S)` ✅
     2. Run the dedupe script / SQL to remove existing duplicate `workout_selections` rows (keep most recent `updated_at`).
