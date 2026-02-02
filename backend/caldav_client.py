@@ -126,14 +126,34 @@ class CalDAVClient:
         if not self._calendar:
             raise RuntimeError("No calendar selected. Call select_calendar() first.")
         
-        # Format workout notes
+        # Format workout notes and ensure consistent ordering by time of day:
+        # morning, afternoon, evening, Unscheduled
         notes_lines = []
-        for workout in workouts:
+
+        # Define priority for ordering
+        priority = {
+            'morning': 0,
+            'afternoon': 1,
+            'evening': 2,
+            'unscheduled': 3
+        }
+
+        def normalize_time(t):
+            if not t:
+                return 'unscheduled'
+            t_str = str(t).strip().lower()
+            return t_str if t_str in priority else 'unscheduled'
+
+        # Sort workouts according to priority without modifying original list
+        sorted_workouts = sorted(workouts, key=lambda w: priority.get(normalize_time(w.get('timeOfDay')), 3))
+
+        for workout in sorted_workouts:
             try:
-                # Time of day (coerce None to a sensible default)
+                # Time of day (normalized, default to 'unscheduled')
                 time_of_day_raw = workout.get('timeOfDay')
-                time_of_day = (time_of_day_raw if time_of_day_raw else 'Not specified')
-                time_of_day = str(time_of_day)
+                time_of_day = normalize_time(time_of_day_raw)
+                # For display, capitalize first letter (e.g., 'morning' -> 'Morning')
+                time_of_day_display = time_of_day.capitalize()
 
                 # Workout type
                 workout_type_raw = workout.get('workoutType')
@@ -157,7 +177,7 @@ class CalDAVClient:
                         duration_str = f"{minutes} minutes"
 
                 # Build the line: "Morning run, 45 minutes" or "Morning run (outdoor), 45 minutes"
-                line_parts = [f"{time_of_day.capitalize()} {workout_type.lower()}"]
+                line_parts = [f"{time_of_day_display} {workout_type.lower()}"]
                 if location:
                     line_parts[0] += f" ({location})"
                 if duration_str:
@@ -165,11 +185,9 @@ class CalDAVClient:
 
                 notes_lines.append("- " + ", ".join(line_parts))
             except Exception as e:
-                # Log a full stack trace to help troubleshoot unexpected data formats
                 logger.exception(f"Error formatting workout for {event_date}: {e}")
-                # Re-raise so callers (and tests) can observe the failure
                 raise
-        
+
         notes = "\n".join(notes_lines)
         
         # Escape the notes for iCalendar format

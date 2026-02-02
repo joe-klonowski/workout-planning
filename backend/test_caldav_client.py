@@ -420,8 +420,8 @@ class TestCalDAVClient:
 
         assert event_id == "event-none"
         ical_data = mock_calendar.save_event.call_args[0][0]
-        # Should default to 'Not specified' for time of day and include the workout
-        assert "Not specified run" in ical_data or "Not specified Run" in ical_data
+        # Should default to 'Unscheduled' for time of day and include the workout
+        assert "unscheduled run" in ical_data.lower()
         
         # Multiple workouts on the same day
         workouts = [
@@ -464,7 +464,32 @@ class TestCalDAVClient:
         # The description should use literal \n not actual newlines
         assert "\\n" in description_content or description_content.count("-") == 3, \
             "Description should have escaped newlines (\\n) or be on one line with multiple workouts"
-    
+
+    def test_create_workout_event_ordering(self, client):
+        """Test that workouts are ordered morning, afternoon, evening, Unscheduled in the description"""
+        mock_calendar = Mock()
+        mock_event = Mock()
+        mock_event.id = "event-order"
+        mock_calendar.save_event.return_value = mock_event
+        client._calendar = mock_calendar
+
+        workouts = [
+            {'workoutType': 'Run', 'timeOfDay': 'evening', 'plannedDuration': 1.0},
+            {'workoutType': 'Swim', 'timeOfDay': None, 'plannedDuration': 0.5},
+            {'workoutType': 'Bike', 'timeOfDay': 'morning', 'plannedDuration': 2.0},
+            {'workoutType': 'Strength', 'timeOfDay': 'afternoon', 'plannedDuration': 0.75}
+        ]
+
+        client.create_workout_event(date(2026, 1, 21), workouts)
+        ical_data = mock_calendar.save_event.call_args[0][0]
+        # Verify ordering: Morning, Afternoon, Evening, Unscheduled
+        idx_morning = ical_data.lower().find("morning")
+        idx_afternoon = ical_data.lower().find("afternoon")
+        idx_evening = ical_data.lower().find("evening")
+        idx_unscheduled = ical_data.lower().find("unscheduled")
+        assert idx_morning != -1 and idx_afternoon != -1 and idx_evening != -1 and idx_unscheduled != -1
+        assert idx_morning < idx_afternoon < idx_evening < idx_unscheduled
+
     def test_delete_workout_events_in_range(self):
         """Test deleting workout events within a specific date range"""
         client = CalDAVClient('https://test.com', 'user', 'pass')
