@@ -211,7 +211,7 @@ Rationale: adding defensive code first avoids transient IntegrityErrors and ensu
     1. Backup dev DB: `cp backend/workout_planner.db backend/workout_planner.db.bak-$(date +%Y%m%d%H%M%S)` ✅
     2. Run the dedupe script / SQL to remove existing duplicate `workout_selections` rows (keep most recent `updated_at`).
     3. Re-run the duplicate check SQL to ensure zero duplicates.
-- [ ] Add Alembic migration (unique constraint)
+- [x] Add Alembic migration in development environment (unique constraint)
   - **When to run in development:** Run **only after** the following are completed and verified in dev: defensive backend changes are deployed and tests pass; frontend batching & tests are deployed and verified; and the dev DB has been deduplicated (see previous item).
   - **Local run steps:**
     1. Ensure you have a fresh backup of `backend/workout_planner.db`.
