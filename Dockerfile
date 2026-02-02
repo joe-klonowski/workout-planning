@@ -38,5 +38,8 @@ EXPOSE 5000
 # Set environment variable
 ENV FLASK_ENV=production
 
-# Run gunicorn (using shell form to allow $PORT variable expansion)
-CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload app:app
+# Make startup script executable
+RUN chmod +x /app/backend/start-production.sh
+
+# Run startup script (migrations + gunicorn)
+CMD ["/app/backend/start-production.sh"]
