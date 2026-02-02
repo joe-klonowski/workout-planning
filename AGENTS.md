@@ -28,7 +28,24 @@ This file contains instructions for agentic coding systems that are editing code
 ### Running tests
 - Use the project-provided top-level scripts to run tests so they run in a consistent environment and with the correct non-interactive flags.
   - Run backend tests: `./test-backend.sh`
+    - Run a single test function or file:
+      - `./test-backend.sh tests/test_auth.py::TestAuthLogin::test_login_success`
+    - Run a single test file:
+      - `./test-backend.sh tests/test_auth.py`
+    - Filter tests by keyword:
+      - `./test-backend.sh -k login`
+    - Run integration tests (overrides the default exclusion of integration tests):
+      - `./test-backend.sh -m integration`
+    - Show usage/help:
+      - `./test-backend.sh -h` or `./test-backend.sh --help`
   - Run frontend tests: `./test-frontend.sh`
+    - Run tests matching a name/pattern:
+      - `./test-frontend.sh "MyTestNamePattern"`
+    - Run a specific frontend test file (uses jest's `testPathPattern`):
+      - `./test-frontend.sh --testPathPattern="Calendar.test.js"`
+    - Show usage/help:
+      - `./test-frontend.sh -h` or `./test-frontend.sh --help`
+    - Note: the script appends `--watchAll=false` when no watch flag is supplied so runs are CI-friendly.
   - Run both (recommended for CI and agents): `./test-all.sh`
 - IMPORTANT: Agents must *only* use these scripts when running tests. Do not call `pytest`, `npm test`, or other test runners directly — use the scripts so the environment setup and flags are consistent across machines and CI.
 

@@ -26,6 +26,18 @@ Use the project script to run backend tests (recommended):
 ./test-backend.sh
 ```
 
+Run a single test file, test case, or pass pytest args to the top-level script:
+```bash
+# Run one test function
+./test-backend.sh tests/test_auth.py::TestAuthLogin::test_login_success
+# Run a single file
+./test-backend.sh tests/test_auth.py
+# Use -k to filter by substring
+./test-backend.sh -k login
+# If you want to run integration tests, pass -m (this will override the default exclusion)
+./test-backend.sh -m integration
+```
+
 If you prefer to run pytest directly for local debugging, you can still use:
 ```bash
 cd backend
@@ -47,6 +59,14 @@ pytest --cov=.            # With coverage report
 Use the project script to run frontend tests (non-interactive / CI-friendly):
 ```bash
 ./test-frontend.sh
+```
+
+Run a single frontend test or pass arguments that are forwarded to the test runner:
+```bash
+# Run tests matching a name/pattern
+./test-frontend.sh "MyTestNamePattern"
+# Run a specific test file (uses jest testPathPattern under the hood)
+./test-frontend.sh --testPathPattern="Calendar.test.js"
 ```
 
 If you need to run the frontend test runner directly for local interactive debugging, you can use:

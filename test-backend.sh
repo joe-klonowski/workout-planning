@@ -28,9 +28,52 @@ source venv/bin/activate
 echo "Ensuring dependencies are installed..."
 pip install -q -r requirements.txt
 
+# Usage helper
+usage() {
+    cat <<'EOF'
+Usage: ./test-backend.sh [pytest-args]
+
+Examples:
+  ./test-backend.sh
+  ./test-backend.sh tests/test_auth.py
+  ./test-backend.sh tests/test_auth.py::TestAuthLogin::test_login_success
+  ./test-backend.sh -k login
+  ./test-backend.sh -m integration    # overrides default exclusion
+  ./test-backend.sh -h|--help         # show this message
+EOF
+}
+
+# Show help if asked
+for a in "$@"; do
+    case "$a" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+    esac
+done
+
 # Run backend tests
-echo "Running pytest..."
-if pytest -v -m "not integration"; then
+if [ "$#" -gt 0 ]; then
+    echo "Running pytest with args: $@"
+    # If user provided -m (or -m<expr>), don't add the default exclusion
+    has_m=false
+    for a in "$@"; do
+        if [ "$a" = "-m" ] || [[ "$a" == -m* ]]; then
+            has_m=true
+            break
+        fi
+    done
+    if [ "$has_m" = true ]; then
+        RUN_CMD=(pytest -v "$@")
+    else
+        RUN_CMD=(pytest -v -m "not integration" "$@")
+    fi
+else
+    echo "Running pytest (default: exclude integration tests)..."
+    RUN_CMD=(pytest -v -m "not integration")
+fi
+if "${RUN_CMD[@]}"; then
     echo ""
     echo "=========================================="
     echo "✅ Backend tests PASSED"
