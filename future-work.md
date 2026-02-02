@@ -57,3 +57,10 @@ So some of the future feature work here is to enable that plan.
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.
+
+### Logging in prod
+Logging in prod seems to not log request IDs correctly.
+
+Example log from prod:
+
+100.64.0.2 - - [02/Feb/2026:04:27:59 +0000] "PUT /api/selections/64 HTTP/1.1" 200 177 "https://workout-planning-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" - request_id={X-Request-ID}o
