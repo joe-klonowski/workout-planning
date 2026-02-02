@@ -119,3 +119,6 @@ config = {
     'testing': TestConfig,
     'default': DevelopmentConfig
 }
+
+# Explicit exports for type checkers / static analysis
+__all__ = ['Config', 'DevelopmentConfig', 'ProductionConfig', 'TestConfig', 'config']

@@ -53,6 +53,7 @@ So some of the future feature work here is to enable that plan.
 
 ## Tech debt
 - Copilot seems to have a bad habit of picking very old versions of tools. Look at the dependencies and update them.
+- Remove temporary `# type: ignore` annotations added to silence Pylance/Pyright in files such as `backend/app.py` and `backend/config.py`. Instead, configure Pylance/Pyright to use the project's virtual environment and fix the underlying import/type issues so the ignores are no longer necessary. (Low priority tech-debt task)
 
 ## Known issues
 - I've noticed that some workouts, when imported, get duplicated. That is, the data model updates to include both the workout that WAS in the plan and also the workout that was actually completed. Fix this. Possibly the matching logic that matches planned workout to completed workouts just needs to be tweaked. Currently the only workout where I've noticed this problem is a strength workout. So maybe there's something about strength workouts specifically that needs to be fixed.

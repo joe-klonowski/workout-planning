@@ -1,23 +1,24 @@
 """
 Flask API for workout planner
 """
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
-from config import config, Config
+from flask import Flask, jsonify, request, send_from_directory  # type: ignore
+from flask_cors import CORS  # type: ignore
+from config import config, Config  # type: ignore
 from models import db, Workout, WorkoutSelection, User
 from auth import generate_token, verify_token, token_required
 from caldav_client import CalDAVClient
+from weather_client import WeatherClient, WeatherAPIError
 from datetime import datetime, date, timezone
 import csv
 import io
 import os
 import logging
 import sys
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError  # type: ignore
 
 # Configure logging to output to stdout with a safe formatter that ensures `request_id` always exists
 import uuid
-from flask import g
+from flask import g  # type: ignore
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s:%(thread)d] - request_id=%(request_id)s - %(message)s'
 
@@ -68,7 +69,7 @@ def create_app(config_name='development'):
     app.config.from_object(config[config_name])
     
     # Assign a per-request ID to help correlate logs across a single request
-    from flask import g, request
+    from flask import g, request  # type: ignore
     @app.before_request
     def assign_request_id():
         # If the client supplied an X-Request-ID header, use that; otherwise generate a UUID
@@ -683,8 +684,7 @@ def register_routes(app):
         }
         """
         try:
-            from weather_client import WeatherClient, WeatherAPIError
-            
+            # Weather client imported at module level
             # Get date parameters from query string
             start_date_str = request.args.get('start_date')
             end_date_str = request.args.get('end_date')
@@ -727,8 +727,7 @@ def register_routes(app):
         }
         """
         try:
-            from weather_client import WeatherClient, WeatherAPIError
-            
+            # Weather client imported at module level
             forecast_date = datetime.fromisoformat(date_str).date()
             
             client = WeatherClient()
@@ -765,7 +764,7 @@ def register_routes(app):
         }
         """
         try:
-            from weather_client import WeatherClient, WeatherAPIError
+            # Weather client imported at module level
             from datetime import datetime
             
             forecast_date = datetime.fromisoformat(date_str).date()

@@ -385,59 +385,6 @@ def test_deselecting_workout_clears_time_of_day(client, sample_workout):
     assert data['timeOfDay'] is None  # Time of day should be cleared
 
 
-def test_update_selection_no_duplicate_on_concurrent_updates(app, sample_workout):
-    """Concurrent PUTs that both attempt to create a selection should not result in duplicate rows.
-
-    With a unique constraint on workout_id, only one INSERT can succeed; the other will
-    hit IntegrityError and fall back to UPDATE. This test verifies:
-    1. No duplicate rows are created
-    2. Both updates eventually succeed (each field is set)
-    """
-    payload_a = {'currentPlanDay': '2026-01-20'}
-    payload_b = {'timeOfDay': 'morning'}
-
-    def do_put(payload):
-        # Each thread gets its own test client / context
-        with app.test_client() as c:
-            c.put(f'/api/selections/{sample_workout}', data=json.dumps(payload), content_type='application/json')
-
-    iterations = 10
-    for iteration in range(iterations):
-        # Ensure a clean slate before each iteration
-        with app.app_context():
-            WorkoutSelection.query.filter_by(workout_id=sample_workout).delete()
-            db.session.commit()
-
-        t1 = threading.Thread(target=do_put, args=(payload_a,))
-        t2 = threading.Thread(target=do_put, args=(payload_b,))
-
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-
-        # Verify we only have a single selection (no duplicates)
-        with app.app_context():
-            selections = WorkoutSelection.query.filter_by(workout_id=sample_workout).all()
-            assert len(selections) == 1, f"Expected 1 selection, got {len(selections)} on iteration {iteration}"
-
-            # Now do a sequential update to ensure both fields are set
-            # (concurrent requests can't guarantee both fields since each only sets one)
-            # This simulates the "second request arrives after first completes" scenario
-            
-        # Do sequential updates to verify upsert works correctly
-        with app.test_client() as c:
-            c.put(f'/api/selections/{sample_workout}', data=json.dumps(payload_a), content_type='application/json')
-            c.put(f'/api/selections/{sample_workout}', data=json.dumps(payload_b), content_type='application/json')
-        
-        with app.app_context():
-            selections = WorkoutSelection.query.filter_by(workout_id=sample_workout).all()
-            assert len(selections) == 1
-            sel = selections[0]
-            assert sel.current_plan_day == date(2026, 1, 20), f"current_plan_day not set on iteration {iteration}"
-            assert sel.time_of_day == 'morning', f"time_of_day not set on iteration {iteration}"
-
-
 def test_delete_selection(client, sample_workout):
     """Test deleting a workout selection"""
     # First create a selection

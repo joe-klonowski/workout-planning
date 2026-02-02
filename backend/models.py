@@ -21,6 +21,17 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
     
+    def __init__(self, username: str | None = None, password_hash: str | None = None, created_at: datetime | None = None, last_login: datetime | None = None) -> None:
+        """Initialize User with optional fields for type checkers."""
+        if username is not None:
+            self.username = username
+        if password_hash is not None:
+            self.password_hash = password_hash
+        if created_at is not None:
+            self.created_at = created_at
+        if last_login is not None:
+            self.last_login = last_login
+
     def set_password(self, password):
         """Hash and set password"""
         self.password_hash = generate_password_hash(password)
@@ -71,6 +82,29 @@ class Workout(db.Model):
     selection = db.relationship('WorkoutSelection', backref='workout', uselist=False, 
                                cascade='all, delete-orphan')
     
+    def __init__(self,
+                 title: str,
+                 workout_type: str,
+                 originally_planned_day: date,
+                 workout_description: str | None = None,
+                 planned_duration: float | None = None,
+                 planned_distance_meters: float | None = None,
+                 coach_comments: str | None = None,
+                 tss: float | None = None,
+                 intensity_factor: float | None = None,
+                 is_custom: bool = False) -> None:
+        """Explicit initializer to help static type checkers accept keyword args."""
+        self.title = title
+        self.workout_type = workout_type
+        self.workout_description = workout_description
+        self.originally_planned_day = originally_planned_day
+        self.planned_duration = planned_duration
+        self.planned_distance_meters = planned_distance_meters
+        self.coach_comments = coach_comments
+        self.tss = tss
+        self.intensity_factor = intensity_factor
+        self.is_custom = is_custom
+
     def to_dict(self):
         """Convert workout to dictionary"""
         return {
@@ -115,6 +149,21 @@ class WorkoutSelection(db.Model):
     # Timestamps
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    def __init__(self,
+                 workout_id: int,
+                 is_selected: bool = True,
+                 current_plan_day: date | None = None,
+                 time_of_day: str | None = None,
+                 workout_location: str | None = None,
+                 user_notes: str | None = None) -> None:
+        """Explicit initializer for static type checkers."""
+        self.workout_id = workout_id
+        self.is_selected = is_selected
+        self.current_plan_day = current_plan_day
+        self.time_of_day = time_of_day
+        self.workout_location = workout_location
+        self.user_notes = user_notes
+
     def to_dict(self):
         """Convert selection to dictionary"""
         return {
