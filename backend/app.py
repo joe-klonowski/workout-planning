@@ -18,7 +18,7 @@ from sqlalchemy.exc import IntegrityError  # type: ignore
 
 # Configure logging to output to stdout with a safe formatter that ensures `request_id` always exists
 import uuid
-from flask import g  # type: ignore
+from flask import g, has_request_context  # type: ignore
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - [%(threadName)s:%(thread)d] - request_id=%(request_id)s - %(message)s'
 
@@ -28,10 +28,10 @@ class SafeFormatter(logging.Formatter):
     """
     def format(self, record):
         if not hasattr(record, 'request_id'):
-            try:
-                # Try to grab from flask.g when available
-                record.request_id = getattr(g, 'request_id')
-            except Exception:
+            # Check if we're in a Flask request context
+            if has_request_context() and hasattr(g, 'request_id'):
+                record.request_id = g.request_id
+            else:
                 record.request_id = 'no-request'
         return super().format(record)
 
@@ -45,9 +45,10 @@ root_logger.handlers = [handler]
 # Add a logging filter to include request IDs when available (keeps compatibility)
 class RequestIDFilter(logging.Filter):
     def filter(self, record):
-        try:
-            record.request_id = getattr(g, 'request_id', 'no-request')
-        except RuntimeError:
+        # Check if we're in a Flask request context and if request_id is set
+        if has_request_context() and hasattr(g, 'request_id'):
+            record.request_id = g.request_id
+        else:
             record.request_id = 'no-request'
         return True
 
@@ -68,12 +69,35 @@ def create_app(config_name='development'):
     app = Flask(__name__, static_folder=static_folder, static_url_path='')
     app.config.from_object(config[config_name])
     
+    # Disable werkzeug's default access logging - we'll do our own with request IDs
+    werkzeug_logger = logging.getLogger('werkzeug')
+    werkzeug_logger.setLevel(logging.WARNING)  # Only show warnings/errors from werkzeug
+    
     # Assign a per-request ID to help correlate logs across a single request
     from flask import g, request  # type: ignore
     @app.before_request
     def assign_request_id():
         # If the client supplied an X-Request-ID header, use that; otherwise generate a UUID
         g.request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())
+    
+    @app.after_request
+    def add_request_id_header(response):
+        # Add the request ID to the response headers so gunicorn can log it
+        if hasattr(g, 'request_id'):
+            response.headers['X-Request-ID'] = g.request_id
+        return response
+    
+    @app.after_request
+    def log_request(response):
+        # Log the request with request ID while we still have access to g.request_id
+        # This replaces werkzeug's access logging (which logs after context teardown)
+        # The request_id is automatically added by the LOG_FORMAT via RequestIDFilter
+        logger.info(
+            f"{request.remote_addr} - "
+            f"\"{request.method} {request.path} {request.environ.get('SERVER_PROTOCOL')}\" "
+            f"{response.status_code} {response.content_length or '-'}"
+        )
+        return response
 
     logger.info(f"App created with config: {config_name}")
     

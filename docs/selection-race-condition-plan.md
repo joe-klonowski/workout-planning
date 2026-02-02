@@ -220,7 +220,7 @@ Rationale: adding defensive code first avoids transient IntegrityErrors and ensu
     4. Run backend & integration tests to confirm the migration succeeds and there are no regressions.
     5. Commit the migration and include migration tests (migration should fail on a DB with duplicates).
 - [x] Backup production DB and run dedupe there
-- [ ] Apply Alembic migration in production (only after production dedupe and a maintenance window if needed)
+- [x] Apply Alembic migration in production (only after production dedupe and a maintenance window if needed)
 - [ ] Monitor logs for SAWarnings and IntegrityErrors for a few days
 
 ---
