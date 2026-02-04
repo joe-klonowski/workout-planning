@@ -35,6 +35,8 @@ So some of the future feature work here is to enable that plan.
       - This number should NOT include TSS for deselected workouts.
     - Friel target TSS.
 
+- In the frontend, the weather and tri club schedule currently load before the workouts. If possible, we should load the workouts first. Most of the time that's what the user's most interested in. Of course, if launching all the requests in parallel does NOT slow down the workout loading significantly, then it's OK if the other stuff loads first. To the extent that there's contention on backend resources, the backend resources should prioritize making sure the workouts load quickly.
+
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
 - Add first bit of description to workout card.
