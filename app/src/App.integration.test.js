@@ -5,6 +5,7 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import App from './App';
 import { DateOnly } from './utils/DateOnly';
+import { AuthProvider } from './auth/AuthProvider';
 
 // Mock the Calendar component since we're testing App
 // Use module-scoped variables to capture callbacks and workouts
@@ -105,7 +106,11 @@ describe('App Component', () => {
   test('renders app header', async () => {
     global.fetch = createFetchMock();
 
-    render(<App />);
+    render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
     
     await waitFor(() => {
       expect(screen.getByText('Workout Planner')).toBeInTheDocument();
@@ -116,12 +121,58 @@ describe('App Component', () => {
   test('displays loading state initially', async () => {
     global.fetch = jest.fn(() => new Promise(() => {})); // Never resolves
 
-    render(<App />);
+    render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
     
     // Initially should show loading state while auth verification is pending
     expect(screen.getByText('Loading…')).toBeInTheDocument();
     // Login should not be rendered while loading
     expect(screen.queryByRole('heading', { name: /login/i })).toBeNull();
+  });
+
+  test('auth verify times out and redirects silently to login (clears token)', async () => {
+    jest.useFakeTimers();
+
+    // Simulate verify never resolving but listen to AbortSignal so the timeout triggers
+    global.fetch = jest.fn((url, opts = {}) => {
+      if (url.includes('/api/auth/verify')) {
+        return new Promise((resolve, reject) => {
+          if (opts && opts.signal) {
+            opts.signal.addEventListener('abort', () => reject(Object.assign(new Error('AbortError'), { name: 'AbortError' })));
+          }
+          // never resolve otherwise
+        });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({}) });
+    });
+
+    localStorage.setItem('auth_token', 'test-token-timeout');
+
+    render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
+
+    // Loading is shown initially
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+
+    // Advance time to trigger the 5s timeout
+    act(() => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    // Wait for the app to clear loading and show Login
+    await waitFor(() => {
+      expect(screen.queryByText('Loading…')).toBeNull();
+      expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
+      expect(localStorage.getItem('auth_token')).toBeNull();
+    });
+
+    jest.useRealTimers();
   });
 
   test('fetches workouts from API on mount', async () => {
@@ -140,7 +191,11 @@ describe('App Component', () => {
 
     global.fetch = createFetchMock(mockWorkouts);
 
-    render(<App />);
+    render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
 
     await waitFor(() => {
       // Check that fetch was called with the workouts endpoint

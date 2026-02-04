@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import App from './App';
+import { AuthProvider } from './auth/AuthProvider';
 
 beforeEach(() => {
   // Set up mock authentication
@@ -68,14 +69,22 @@ afterEach(() => {
 });
 
 test('renders the Workout Planner title', async () => {
-  render(<App />);
+  render(
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
   
   // This should resolve quickly (10s of ms, not seconds)
   expect(await screen.findByText('Workout Planner')).toBeInTheDocument();
 });
 
 test('renders the app description', async () => {
-  render(<App />);
+  render(
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
   
   expect(await screen.findByText('Plan your workouts from TrainingPeaks')).toBeInTheDocument();
 });
@@ -104,7 +113,11 @@ test('shows detailed export results when exporting to calendar', async () => {
   // Spy on alert
   window.alert = jest.fn();
 
-  render(<App />);
+  render(
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
 
   // Open export modal (wrap in act to avoid state update warnings)
   const exportButton = await screen.findByRole('button', { name: 'Export to Apple Calendar' });

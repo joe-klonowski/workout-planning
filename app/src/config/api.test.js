@@ -3,6 +3,7 @@
  */
 import { API_ENDPOINTS, apiCall } from './api';
 import API_BASE_URL from './api';
+import { act } from '@testing-library/react';
 
 describe('API Configuration', () => {
   // Save original NODE_ENV
@@ -208,5 +209,27 @@ describe('apiCall function', () => {
         body: requestBody,
       })
     );
+  });
+
+  test('aborts fetch after timeout (short timeout test)', async () => {
+    jest.useFakeTimers();
+    // Simulate a fetch that listens to AbortSignal and never resolves unless aborted
+    global.fetch = jest.fn((url, opts = {}) => new Promise((resolve, reject) => {
+      if (opts && opts.signal) {
+        opts.signal.addEventListener('abort', () => reject(Object.assign(new Error('AbortError'), { name: 'AbortError' })));
+      }
+      // never resolve otherwise
+    }));
+
+    // Use a short timeout so test finishes quickly
+    const p = apiCall('http://localhost:5000/api/auth/verify', { timeout: 100 });
+
+    // Advance timers to trigger abort
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+
+    await expect(p).rejects.toBeDefined();
+    jest.useRealTimers();
   });
 });

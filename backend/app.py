@@ -230,16 +230,26 @@ def register_routes(app):
         Verify that the provided token is valid
         Requires: Authorization header with Bearer token
         """
+        import time
+        start = time.time()
         try:
             user = db.session.get(User, current_user_id)
             if not user:
+                duration_ms = (time.time() - start) * 1000
+                logger.warning(f"verify_auth: user not found (duration={duration_ms:.0f}ms, user_id={current_user_id})")
                 return jsonify({'error': 'User not found'}), 404
-            
+
+            duration_ms = (time.time() - start) * 1000
+            if duration_ms > 3000:
+                logger.warning(f"Slow verify_auth: duration={duration_ms:.0f}ms for user_id={current_user_id}")
+            else:
+                logger.info(f"verify_auth completed in {duration_ms:.0f}ms for user_id={current_user_id}")
+
             return jsonify({
                 'valid': True,
                 'user': user.to_dict()
             }), 200
-            
+
         except Exception as e:
             logger.error(f"Token verification error: {e}", exc_info=True)
             return jsonify({'error': str(e)}), 500

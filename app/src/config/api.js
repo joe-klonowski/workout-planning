@@ -42,24 +42,34 @@ export const API_ENDPOINTS = {
  */
 export const apiCall = (url, options = {}) => {
   const token = localStorage.getItem('auth_token');
-  
+  const { timeout = 5000 } = options; // default timeout in ms
+
   // Don't set Content-Type for FormData - let browser set it with boundary
   const isFormData = options.body instanceof FormData;
-  
+
   const headers = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
-  
+
   // Add Authorization header if token exists
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
-  return fetch(url, {
+
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const fetchOptions = {
     ...options,
     headers,
-  });
+    signal,
+  };
+
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  // Ensure timeout is cleared whether fetch resolves or rejects
+  return fetch(url, fetchOptions).finally(() => clearTimeout(timeoutId));
 };
 
 export default API_BASE_URL;

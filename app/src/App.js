@@ -5,63 +5,14 @@ import { API_ENDPOINTS, apiCall } from './config/api';
 import { DateOnly } from './utils/DateOnly';
 import './App.css';
 import logger from './utils/logger';
+import { useAuth } from './auth/AuthProvider';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { isAuthenticated, currentUser, loading: authLoading, logout } = useAuth();
   const [workouts, setWorkouts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [triClubSchedule, setTriClubSchedule] = useState(null);
-
-  // Check if user is already logged in on component mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('auth_token');
-      
-      if (token) {
-        try {
-          // Verify token is still valid
-          const response = await apiCall(API_ENDPOINTS.VERIFY);
-          
-          if (!response.ok) {
-            // Token is invalid or expired
-            localStorage.removeItem('auth_token');
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            return;
-          }
-          
-          const data = await response.json();
-          setIsAuthenticated(true);
-          setCurrentUser(data.user);
-        } catch (err) {
-          logger.error('Error verifying token:', err);
-          localStorage.removeItem('auth_token');
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-        }
-      }
-      setLoading(false);
-    };
-    
-    checkAuth();
-  }, []);
-
-  // Handle successful login
-  const handleLoginSuccess = (user) => {
-    setIsAuthenticated(true);
-    setCurrentUser(user);
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setWorkouts([]);
-    setTriClubSchedule(null);
-  };
 
   // Load workouts from backend API (including custom workouts)
   useEffect(() => {
@@ -511,7 +462,7 @@ function App() {
   const customWorkoutsCount = workouts.filter(w => w.isCustom).length;
 
   // Show loading indicator while checking authentication
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="App">
         <main className="App-main">
@@ -523,7 +474,7 @@ function App() {
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return <Login />;
   }
 
   return (
@@ -536,7 +487,7 @@ function App() {
           </div>
           <div className="header-user">
             <span>Welcome, {currentUser?.username}!</span>
-            <button onClick={handleLogout} className="logout-button">
+            <button onClick={logout} className="logout-button">
               Logout
             </button>
           </div>

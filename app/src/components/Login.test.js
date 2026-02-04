@@ -1,14 +1,15 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Login from './Login';
+import authService from '../services/authService';
+import { AuthProvider } from '../auth/AuthProvider';
 
-import { apiCall } from '../config/api';
-
-// Mock the apiCall function
-jest.mock('../config/api', () => ({
-  apiCall: jest.fn(),
-  API_ENDPOINTS: {
-    LOGIN: 'http://localhost:5000/api/auth/login',
-  },
+// Mock the authService
+jest.mock('../services/authService', () => ({
+  login: jest.fn(),
+  logout: jest.fn(),
+  getToken: jest.fn(),
+  setToken: jest.fn(),
+  clearToken: jest.fn(),
 }));
 
 describe('Login Component', () => {
@@ -18,7 +19,11 @@ describe('Login Component', () => {
   });
 
   test('renders login form', () => {
-    render(<Login onLoginSuccess={jest.fn()} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
     
     expect(screen.getByText('Workout Planner')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
@@ -27,25 +32,24 @@ describe('Login Component', () => {
   });
 
   test('shows info about single-user app', () => {
-    render(<Login onLoginSuccess={jest.fn()} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
     
     expect(screen.getByText(/Don't have an account yet?/i)).toBeInTheDocument();
     expect(screen.getByText(/single-user app/i)).toBeInTheDocument();
   });
 
   test('submits login with username and password', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Map([['content-type', 'application/json']]),
-      json: async () => ({
-        token: 'test-token',
-        user: { id: 1, username: 'joe' },
-      }),
-    });
+    authService.login.mockResolvedValueOnce({ id: 1, username: 'joe' });
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     const usernameInput = screen.getByLabelText('Username');
     const passwordInput = screen.getByLabelText('Password');
@@ -56,72 +60,59 @@ describe('Login Component', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(apiCall).toHaveBeenCalledWith(
-        'http://localhost:5000/api/auth/login',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ username: 'joe', password: 'password123' }),
-        })
-      );
+      expect(authService.login).toHaveBeenCalledWith('joe', 'password123');
     });
   });
 
-  test('stores token in localStorage on successful login', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Map([['content-type', 'application/json']]),
-      json: async () => ({
-        token: 'test-token',
-        user: { id: 1, username: 'joe' },
-      }),
+  test('shows success message on successful login', async () => {
+    authService.login.mockImplementationOnce(() => {
+      // mimic authService setting token
+      localStorage.setItem('auth_token', 'test-token');
+      return Promise.resolve({ id: 1, username: 'joe' });
     });
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'joe' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => {
+      expect(screen.getByText('Login successful!')).toBeInTheDocument();
       expect(localStorage.getItem('auth_token')).toBe('test-token');
     });
   });
 
-  test('calls onLoginSuccess callback on successful login', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Map([['content-type', 'application/json']]),
-      json: async () => ({
-        token: 'test-token',
-        user: { id: 1, username: 'joe' },
-      }),
-    });
+  test('calls authService.login and updates UI', async () => {
+    authService.login.mockResolvedValueOnce({ id: 1, username: 'joe' });
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'joe' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => {
-      expect(mockOnLoginSuccess).toHaveBeenCalledWith({ id: 1, username: 'joe' });
+      expect(authService.login).toHaveBeenCalledWith('joe', 'password123');
     });
   });
 
   test('displays error message on login failure', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      headers: new Map([['content-type', 'application/json']]),
-      json: async () => ({ error: 'Invalid credentials' }),
-    });
+    authService.login.mockRejectedValueOnce(new Error('Invalid credentials'));
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'joe' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrongpassword' } });
@@ -133,17 +124,13 @@ describe('Login Component', () => {
   });
 
   test('disables submit button while loading', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockImplementationOnce(() => 
-      new Promise(resolve => setTimeout(() => {
-        resolve({
-          ok: true,
-          json: async () => ({ token: 'test-token', user: { username: 'joe' } }),
-        });
-      }, 100))
-    );
+    authService.login.mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve({ id: 1, username: 'joe' }), 100)));
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'joe' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
@@ -156,31 +143,42 @@ describe('Login Component', () => {
   });
 
   test('requires username field', () => {
-    render(<Login onLoginSuccess={jest.fn()} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     const usernameInput = screen.getByLabelText('Username');
     expect(usernameInput).toBeRequired();
   });
 
   test('requires password field', () => {
-    render(<Login onLoginSuccess={jest.fn()} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     const passwordInput = screen.getByLabelText('Password');
     expect(passwordInput).toBeRequired();
   });
 
   test('displays connection error when server is unavailable', async () => {
-    const mockOnLoginSuccess = jest.fn();
-    apiCall.mockRejectedValueOnce(new Error('Network error'));
+    authService.login.mockRejectedValueOnce(new Error('Network error'));
 
-    render(<Login onLoginSuccess={mockOnLoginSuccess} />);
+    render(
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    );
 
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'joe' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to connect to the server/i)).toBeInTheDocument();
+      expect(screen.getByText('Network error')).toBeInTheDocument();
     });
   });
 });

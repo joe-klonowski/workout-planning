@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { apiCall, API_ENDPOINTS } from '../config/api';
 import '../styles/Login.css';
 import logger from '../utils/logger';
+import { useAuth } from '../auth/AuthProvider';
 
-function Login({ onLoginSuccess }) {
+function Login() {
+  const { login } = useAuth();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,39 +21,15 @@ function Login({ onLoginSuccess }) {
     try {
       logger.log('📤 Attempting login with username:', username);
       logger.log('📤 Request body: { username, password: (redacted) }');
-      
-      const response = await apiCall(API_ENDPOINTS.LOGIN, {
-        method: 'POST',
-        body: JSON.stringify({ username, password })
-      });
 
-      logger.log('📥 Response status:', response.status);
-      logger.log('📥 Response headers:', {
-        'content-type': response.headers.get('content-type'),
-        'server': response.headers.get('server')
-      });
-      
-      const data = await response.json();
-      logger.log('📥 Response body:', data);
+      const user = await login(username, password);
 
-      if (!response.ok) {
-        setError(data.error || `An error occurred (status: ${response.status})`);
-        setLoading(false);
-        return;
-      }
-      
-      // Store token in localStorage
-      localStorage.setItem('auth_token', data.token);
-      
       setSuccessMessage('Login successful!');
 
-      // Call the callback to notify parent component
-      setTimeout(() => {
-        onLoginSuccess(data.user);
-      }, 500);
-
+      // Keep a small delay for UX parity with previous behavior
+      setTimeout(() => {}, 500);
     } catch (err) {
-      setError('Failed to connect to the server');
+      setError(err.message || 'Failed to connect to the server');
       logger.error('Auth error:', err);
     } finally {
       setLoading(false);
