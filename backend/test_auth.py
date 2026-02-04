@@ -3,6 +3,7 @@ Tests for authentication endpoints
 """
 import pytest
 import json
+import jwt
 from app import create_app
 from models import db, User
 
@@ -237,4 +238,28 @@ class TestGetCurrentUser:
         assert response.status_code == 401
         data = json.loads(response.data)
         assert 'error' in data
+
+
+def test_default_token_lifetime_uses_config(app):
+    """Default token lifetime should use ACCESS_TOKEN_LIFETIME_HOURS from config"""
+    with app.app_context():
+        from auth import generate_token
+        user = User(username='joe')
+        user.set_password('securepassword')
+        db.session.add(user)
+        db.session.commit()
+
+        token = generate_token(user.id)
+        secret_key = app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+
+        exp = payload.get('exp')
+        iat = payload.get('iat')
+        assert exp is not None and iat is not None
+
+        delta = int(exp) - int(iat)
+        expected_hours = int(app.config.get('ACCESS_TOKEN_LIFETIME_HOURS', 720))
+        expected_seconds = expected_hours * 3600
+        # allow a small clock drift (5 seconds)
+        assert abs(delta - expected_seconds) <= 5
 

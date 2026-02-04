@@ -8,17 +8,22 @@ from functools import wraps
 from flask import request, jsonify, current_app
 
 
-def generate_token(user_id, expires_in_hours=24):
+def generate_token(user_id, expires_in_hours=None):
     """
     Generate a JWT token for a user
     
     Args:
         user_id: The user ID to encode in the token
-        expires_in_hours: Token expiration time in hours (default: 24 hours)
+        expires_in_hours: Token expiration time in hours (optional). When None, uses the
+            application config key 'ACCESS_TOKEN_LIFETIME_HOURS' (default 720 hours / 30 days).
     
     Returns:
         JWT token string
     """
+    if expires_in_hours is None:
+        # Default to configured access token lifetime (hours)
+        expires_in_hours = current_app.config.get('ACCESS_TOKEN_LIFETIME_HOURS', 720)
+
     payload = {
         'user_id': user_id,
         'exp': datetime.now(timezone.utc) + timedelta(hours=expires_in_hours),

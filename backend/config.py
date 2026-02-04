@@ -11,6 +11,9 @@ class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
+    # Access token lifetime in hours (default: 30 days)
+    ACCESS_TOKEN_LIFETIME_HOURS = int(os.environ.get('ACCESS_TOKEN_LIFETIME_HOURS', '720'))
+    
     # Database configuration with SSL support for PostgreSQL
     database_url = os.environ.get('DATABASE_URL')
     if database_url and database_url.startswith('postgres://'):
