@@ -38,8 +38,6 @@ So some of the future feature work here is to enable that plan.
 ## Look/feel/CSS
 - Weekly summary on the right needs a bunch of CSS tweaks.
 - Add first bit of description to workout card.
-- When date cell fills, don't limit the height of the date cell and force user to scroll to find workouts. Instead, just make the date cell longer to fit everything.
-- When the app first loads, it makes a bunch of calls to the weather API and then eventually updates all the weather-related components in the frontend one by one as the API returns the necessary data. This is fine and good, except that those components seem to have different size in "waiting for weather data" mode and "have weather data and displaying it" mode. That means that the layout is constantly jumping around as weather widgets update, which is visually distracting and might cause misclicks if the user tries to click on a component while it's moving because of this behavior. Fix this so that the weather widgets are the same size regardless of whether they're waiting for weather data or have weather data.
 
 
 ## Integrations with other apps/platforms
